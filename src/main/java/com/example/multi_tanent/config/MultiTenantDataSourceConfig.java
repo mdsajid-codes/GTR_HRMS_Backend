@@ -1,0 +1,67 @@
+// com/example/multi_tanent/config/MultiTenantDataSourceConfig.java
+package com.example.multi_tanent.config;
+
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.*;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.orm.jpa.*;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Properties;
+
+@Configuration
+@EnableJpaRepositories(
+  basePackages = "com.example.multi_tanent.tenant.repository",
+  entityManagerFactoryRef = "tenantEmf",
+  transactionManagerRef   = "tenantTx"
+)
+public class MultiTenantDataSourceConfig {
+
+  @Bean(name="tenantRoutingDataSource")
+  public TenantRoutingDataSource tenantRoutingDataSource(
+    @Qualifier("masterDataSource") DataSource master
+  ) {
+    TenantRoutingDataSource routing = new TenantRoutingDataSource();
+    // set an EMPTY map so AbstractRoutingDataSource is happy
+    routing.setTargetDataSources(new HashMap<>());   // 👈 not null
+    routing.setDefaultTargetDataSource(master); 
+    routing.afterPropertiesSet();
+    return routing;
+  }
+
+  // @Bean(name="tenantDataSource")
+  // public DataSource tenantDataSource(@Qualifier("tenantRoutingDataSource") TenantRoutingDataSource routing) {
+  //   return routing; // not @Primary
+  // }
+
+  @Bean(name="tenantEmf")
+  public LocalContainerEntityManagerFactoryBean tenantEmf(
+      @Qualifier("tenantRoutingDataSource") DataSource ds
+  ) {
+      var emf = new LocalContainerEntityManagerFactoryBean();
+      emf.setDataSource(ds);
+      emf.setPackagesToScan("com.example.multi_tanent.tenant.entity");
+      emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+
+      Properties p = new Properties();
+      // DO NOT touch DB at boot
+      p.put("hibernate.hbm2ddl.auto", "none"); // or "validate" later
+      // Prevent JDBC metadata access at boot (Hibernate 6)
+      p.put("hibernate.boot.allow_jdbc_metadata_access", "false");
+      // Lock dialect (so Hibernate doesn't try to detect it)
+      p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+      p.put("hibernate.show_sql", "true");
+      p.put("hibernate.format_sql", "true");
+      emf.setJpaProperties(p);
+      return emf;
+  }
+
+  @Bean(name = "tenantTx")
+  public org.springframework.orm.jpa.JpaTransactionManager tenantTx(
+      @Qualifier("tenantEmf") jakarta.persistence.EntityManagerFactory emf
+  ) {
+    return new org.springframework.orm.jpa.JpaTransactionManager(emf);
+  }
+}
