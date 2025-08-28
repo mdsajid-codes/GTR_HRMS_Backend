@@ -18,8 +18,6 @@ public class SecurityConfig {
 
   @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
-  @Bean JwtUtil jwtUtil() { return new JwtUtil(); }
-
   @Bean
   public SecurityFilterChain filterChain(HttpSecurity http, JwtUtil jwt) throws Exception {
     http.csrf(csrf -> csrf.disable())
@@ -29,9 +27,8 @@ public class SecurityConfig {
         .requestMatchers("/api/auth/login").permitAll()
         .requestMatchers("/api/users").hasAnyRole("TENANT_ADMIN", "HR")
         .requestMatchers("/api/users/bulkUsers").hasAnyRole("TENANT_ADMIN", "HR")
-        // Employee endpoints are secured at the method level with @PreAuthorize,
-        // so we can set a general rule here.
         .requestMatchers("/api/employees/**").authenticated()
+        .requestMatchers("/api/departments/**").authenticated()
         
         .anyRequest().denyAll()
       )

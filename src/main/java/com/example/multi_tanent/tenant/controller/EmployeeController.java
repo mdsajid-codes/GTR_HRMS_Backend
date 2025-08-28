@@ -193,7 +193,7 @@ public class EmployeeController {
     // If the user association needs to be changed, that should be a separate, explicit action.
     // The employeeCode is the resource identifier from the path and should not be changed here.
     // If changing an employee code is a required feature, it should be a more explicit and secured operation.
-    // employee.setEmployeeCode(request.getEmployeeCode());
+    employee.setEmployeeCode(request.getEmployeeCode());
     employee.setFirstName(request.getFirstName());
     employee.setMiddleName(request.getMiddleName());
     employee.setLastName(request.getLastName());
