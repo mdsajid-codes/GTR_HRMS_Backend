@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/master/tenants")
+@CrossOrigin(origins = "*")
 public class TenantProvisioningController {
 
     private final TenantProvisioningService service;

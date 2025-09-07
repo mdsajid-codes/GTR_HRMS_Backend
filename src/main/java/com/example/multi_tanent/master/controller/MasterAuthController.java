@@ -1,5 +1,7 @@
 package com.example.multi_tanent.master.controller;
 
+import com.example.multi_tanent.tenant.tenantDto.LoginResponse;
+import com.example.multi_tanent.master.dto.MasterAuthRequest;
 import com.example.multi_tanent.master.entity.MasterUser;
 import com.example.multi_tanent.master.repository.MasterUserRepository;
 import com.example.multi_tanent.security.JwtUtil;
@@ -7,8 +9,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/master/auth")
+@CrossOrigin(origins = "*")
 public class MasterAuthController {
   private final MasterUserRepository repo;
   private final PasswordEncoder encoder;
@@ -30,10 +35,12 @@ public class MasterAuthController {
   }
 
   @PostMapping("/login")
-  public String login(@RequestParam String username, @RequestParam String password) {
-    var u = repo.findByUsername(username).orElseThrow();
-    if (!encoder.matches(password, u.getPasswordHash())) throw new RuntimeException("bad creds");
+  public LoginResponse login(@RequestBody MasterAuthRequest masterAuthRequest) {
+    var u = repo.findByUsername(masterAuthRequest.getUsername()).orElseThrow();
+    if (!encoder.matches(masterAuthRequest.getPassword(), u.getPasswordHash())) throw new RuntimeException("bad creds");
     // tenantId = "master" for master admin tokens
-    return jwt.generateToken(username, "master", java.util.List.of("MASTER_ADMIN"));
+    List<String> roles = List.of("MASTER_ADMIN");
+    String token = jwt.generateToken(masterAuthRequest.getUsername(), "master", roles);
+    return new LoginResponse(token, roles);
   }
 }

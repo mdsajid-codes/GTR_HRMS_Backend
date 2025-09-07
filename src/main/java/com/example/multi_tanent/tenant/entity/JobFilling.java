@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -24,6 +26,8 @@ public class JobFilling {
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "employee_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Employee employee;
 
     @Enumerated(EnumType.STRING)

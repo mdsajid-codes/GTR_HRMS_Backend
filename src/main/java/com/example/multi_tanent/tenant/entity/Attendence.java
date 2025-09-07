@@ -1,9 +1,9 @@
 package com.example.multi_tanent.tenant.entity;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-import com.example.multi_tanent.tenant.entity.enums.EmployeeShift;
-import com.example.multi_tanent.tenant.entity.enums.EmploymentType;
+import com.example.multi_tanent.tenant.entity.enums.AttendanceStatus;
 import com.example.multi_tanent.tenant.entity.enums.WorkMode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -19,15 +19,15 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
-@Table(name = "job_details")
+@Table(name = "attendences")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class JobDetails {
+public class Attendence {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -39,21 +39,19 @@ public class JobDetails {
     @EqualsAndHashCode.Exclude
     private Employee employee;
 
-    private String departmentTitle;
-    private String designationTitle;
+    private LocalDate attendenceDate;
+    private LocalDateTime checkInTime;
+    private LocalDateTime checkOutTime;
 
     @Enumerated(EnumType.STRING)
-    private EmploymentType employmentType;
+    private AttendanceStatus status;
 
-    @Enumerated (EnumType.STRING)
+    @Enumerated(EnumType.STRING)
     private WorkMode workMode;
 
-    private LocalDate doj;
-    private LocalDate endDate;
-    private LocalDate probationEndDate;
-    private Integer noticePeriodDay;
+    private Double totalHours;
+    private String remarks;
 
-    @Enumerated(EnumType.STRING)
-    private EmployeeShift shift;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,6 +29,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/employees")
+@CrossOrigin (origins = "*")
+@Transactional(transactionManager = "tenantTx")
 public class EmployeeController {
   @Autowired
   private EmployeeRepository empRepo;
@@ -128,20 +131,34 @@ public class EmployeeController {
 
   @GetMapping("/all")
   @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+  @Transactional(readOnly = true)
   public List<Employee> all() {
       return empRepo.findAll();
   }
 
   @GetMapping("/{employeeCode}")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+  @Transactional(readOnly = true)
   public ResponseEntity<Employee> fetchByEmployeeCode(@PathVariable String employeeCode){
     return empRepo.findByEmployeeCode(employeeCode)
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
   }
 
+  @GetMapping("/email/{email}")
+  @Transactional(readOnly = true)
+  public ResponseEntity<String> fetchByEmail(@PathVariable String email){
+    // Find the user by email, then find the corresponding employee,
+    // map to the employee code, and return it in the response body.
+    return userRepo.findByEmail(email)
+            .flatMap(user -> empRepo.findByUserId(user.getId()))
+            .map(Employee::getEmployeeCode)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+  }
+
   @GetMapping("/by-gender/{gender}")
   @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+  @Transactional(readOnly = true)
   public ResponseEntity<?> fetchByGender(@PathVariable String gender){
     try {
         Gender genderEnum = Gender.valueOf(gender.toUpperCase());
@@ -154,6 +171,7 @@ public class EmployeeController {
 
   @GetMapping("/by-martial-status/{martialStatus}")
   @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+  @Transactional(readOnly = true)
   public ResponseEntity<?> fetchByMartialStatus(@PathVariable String martialStatus){
     try {
         MartialStatus statusEnum = MartialStatus.valueOf(martialStatus.toUpperCase());
@@ -166,6 +184,7 @@ public class EmployeeController {
 
   @GetMapping("/by-status/{status}")
   @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+  @Transactional(readOnly = true)
   public ResponseEntity<?> fetchByStatus(@PathVariable String status){
     try {
         EmployeeStatus statusEnum = EmployeeStatus.valueOf(status.toUpperCase());
@@ -214,5 +233,7 @@ public class EmployeeController {
     employee.setUpdatedBy(username);
     employee.setUpdatedAt(LocalDateTime.now());
   }
+
+  
 
 }

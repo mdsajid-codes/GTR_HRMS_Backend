@@ -9,6 +9,8 @@ import jakarta.persistence.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 
 @Entity
@@ -24,6 +26,8 @@ public class SalaryDetails {
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "employee_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Employee employee;
 
     @Enumerated(EnumType.STRING)
@@ -35,8 +39,12 @@ public class SalaryDetails {
     private String currency;
 
     @OneToMany(mappedBy = "salaryDetails", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<CompensationComponents> compensationComponents;
 
     @OneToMany(mappedBy = "salaryDetails", cascade = CascadeType.ALL)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<BankDetails> bankDetails;
 }

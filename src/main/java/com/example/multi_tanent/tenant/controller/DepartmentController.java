@@ -2,6 +2,7 @@ package com.example.multi_tanent.tenant.controller;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.net.URI;
 
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -52,6 +54,25 @@ public class DepartmentController {
     @GetMapping
     public ResponseEntity<List<Department>> getDepartment(){
         return ResponseEntity.ok(departmentRepository.findAll());
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    public ResponseEntity<String> updateDepartment(@PathVariable Long id, @RequestBody DepartmentRequest departmentRequest){
+        Optional<Department> existDeparment = departmentRepository.findById(id);
+
+        if(existDeparment.isPresent()){
+            Department department = existDeparment.get();
+            department.setName(departmentRequest.getName());
+            department.setCode(departmentRequest.getCode());
+            department.setDescription(departmentRequest.getDescription());
+            department.setUpdatedAt(LocalDateTime.now());
+            departmentRepository.save(department);
+            return ResponseEntity.ok("Department Updated Successfully");
+        }else{
+            return ResponseEntity.badRequest().body("Failde to update!");
+        }
+
     }
 
     @DeleteMapping("/{departmentName}")

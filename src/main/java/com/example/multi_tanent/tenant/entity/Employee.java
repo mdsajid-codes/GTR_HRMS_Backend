@@ -23,6 +23,9 @@ import lombok.Setter;
     @NamedAttributeNode("user"),
     @NamedAttributeNode("jobDetails"),
     @NamedAttributeNode("jobFillings"),
+    @NamedAttributeNode("leaves"),
+    @NamedAttributeNode("attendences"),
+    @NamedAttributeNode("payrolls"),
     @NamedAttributeNode(value = "salaryDetails", subgraph = "subgraph.salaryDetails")
   },
   subgraphs = {
@@ -78,5 +81,14 @@ public class Employee {
 
   @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
   private Set<SalaryDetails> salaryDetails;
+
+  @OneToMany (mappedBy = "employee", cascade = CascadeType.ALL)
+  private Set<Leave> leaves;
+
+  @OneToMany (mappedBy = "employee", cascade = CascadeType.ALL)
+  private Set<Attendence> attendences;
+
+  @OneToMany (mappedBy = "employee", cascade = CascadeType.ALL)
+  private Set<Payroll> payrolls;
 
 }

@@ -7,9 +7,14 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"package_id", "componentType"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -21,6 +26,8 @@ public class CompensationComponents {
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "package_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private SalaryDetails salaryDetails;
 
     @Enumerated(EnumType.STRING)

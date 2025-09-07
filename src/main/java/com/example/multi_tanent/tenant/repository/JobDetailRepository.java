@@ -10,5 +10,7 @@ import com.example.multi_tanent.tenant.entity.enums.EmploymentType;
 
 public interface JobDetailRepository extends JpaRepository<JobDetails, Long> {
     Optional<JobDetails> findByEmployeeId(Long employeeId);
+
+    
     List<JobDetails> findByEmploymentType (EmploymentType employmentType);
 }

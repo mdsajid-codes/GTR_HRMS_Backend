@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/master/tenants")
+@CrossOrigin(origins = "*")
 public class TenantAdminController {
   private final MasterTenantRepository repo;
   private final TenantRegistry registry;
@@ -28,6 +29,13 @@ public class TenantAdminController {
     // ensure schema for this tenant
     schema.ensureSchema(registry.asTargetMap().get(t.getTenantId()));
     return "created";
+  }
+
+  @GetMapping
+  @PreAuthorize("hasRole('MASTER_ADMIN')")
+  @Transactional
+  public Iterable<MasterTenant> all() {
+    return repo.findAll();
   }
 
   @DeleteMapping("/{tenantId}")

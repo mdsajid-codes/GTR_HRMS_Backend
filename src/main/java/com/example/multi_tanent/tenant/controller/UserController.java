@@ -5,6 +5,7 @@ import com.example.multi_tanent.tenant.entity.User;
 import com.example.multi_tanent.tenant.entity.enums.Role;
 import com.example.multi_tanent.tenant.repository.UserRepository;
 import com.example.multi_tanent.tenant.tenantDto.UserRegisterRequest;
+import com.example.multi_tanent.tenant.tenantDto.UserResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "*")
 @org.springframework.transaction.annotation.Transactional(transactionManager = "tenantTx")
 public class UserController {
   private final UserRepository repo;
@@ -32,7 +34,7 @@ public class UserController {
 
   @PostMapping
   @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')") // only these roles can create users
-  public User create(@RequestBody UserRegisterRequest uRequest) {
+  public UserResponse create(@RequestBody UserRegisterRequest uRequest) {
     User user = new User();
     user.setName(uRequest.getName());
     user.setEmail(uRequest.getEmail());
@@ -45,7 +47,8 @@ public class UserController {
     user.setLastLoginIp(uRequest.getLastLoginIp());
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(LocalDateTime.now());
-    return repo.save(user);
+    User savedUser = repo.save(user);
+    return UserResponse.fromEntity(savedUser);
   }
 
   @PostMapping("/bulkUsers")
@@ -126,10 +129,33 @@ public class UserController {
     }
   }
 
+  @PutMapping("/{id}")
+  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+  public UserResponse update(@PathVariable Long id, @RequestBody UserRegisterRequest uRequest) {
+    User user = repo.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+    user.setName(uRequest.getName());
+    user.setEmail(uRequest.getEmail());
+    // Only update password if a new one is provided
+    if (uRequest.getPasswordHash() != null && !uRequest.getPasswordHash().isEmpty()) {
+      user.setPasswordHash(encoder.encode(uRequest.getPasswordHash()));
+    }
+    user.setRoles(uRequest.getRoles());
+    user.setIsActive(uRequest.getIsActive());
+    user.setIsLocked(uRequest.getIsLocked());
+    user.setLoginAttempts(uRequest.getLoginAttempts());
+    user.setLastLoginIp(uRequest.getLastLoginIp());
+    user.setUpdatedAt(LocalDateTime.now());
+    User updatedUser = repo.save(user);
+    return UserResponse.fromEntity(updatedUser);
+  }
+
+
   @GetMapping
   @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
-  public List<User> all() { 
-    return repo.findAll(); 
+  public List<UserResponse> all() {
+    return repo.findAll().stream()
+            .map(UserResponse::fromEntity)
+            .collect(Collectors.toList());
   }
 
   private boolean isRowEmpty(Row row) {

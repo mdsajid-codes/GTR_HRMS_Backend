@@ -1,5 +1,7 @@
 package com.example.multi_tanent.tenant.entity;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -24,5 +26,8 @@ public class Designation {
     private String title;       // Software Engineer, Manager, HR Executive
     private String level;       // Junior, Mid, Senior, Lead, Director
     private String description;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
 }
