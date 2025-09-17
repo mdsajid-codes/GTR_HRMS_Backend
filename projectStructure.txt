@@ -1,0 +1,90 @@
+hrms-backend/
+├─ src/
+│  ├─ main/
+│  │  ├─ java/
+│  │  │  └─ com/example/hrms/
+│  │  │     ├─ config/
+│  │  │     │  ├─ WebConfig.java
+│  │  │     │  ├─ SecurityConfig.java
+│  │  │     │  └─ TenantFilter.java
+│  │  │     ├─ common/                       # shared utilities, enums, base classes
+│  │  │     │  ├─ BaseEntity.java
+│  │  │     │  ├─ AuditEntity.java
+│  │  │     │  └─ enums/
+│  │  │     ├─ master/                       # master/global domain (companies etc.)
+│  │  │     │  └─ company/
+│  │  │     │     └─ Company.java
+│  │  │     ├─ employee/                     # MODULE 1: Basic Employee Section
+│  │  │     │  ├─ controller/
+│  │  │     │  │  └─ EmployeeController.java
+│  │  │     │  ├─ dto/
+│  │  │     │  │  └─ EmployeeDto.java
+│  │  │     │  ├─ entity/
+│  │  │     │  │  ├─ Employee.java
+│  │  │     │  │  ├─ EmployeeProfile.java
+│  │  │     │  │  └─ EmployeeDocument.java
+│  │  │     │  ├─ repository/
+│  │  │     │  │  └─ EmployeeRepository.java
+│  │  │     │  └─ service/
+│  │  │     │     └─ EmployeeService.java
+│  │  │     ├─ attendance/                    # MODULE 2: Employee + Attendance
+│  │  │     │  ├─ controller/
+│  │  │     │  │  └─ AttendanceController.java
+│  │  │     │  ├─ dto/
+│  │  │     │  │  └─ AttendanceDto.java
+│  │  │     │  ├─ entity/
+│  │  │     │  │  ├─ AttendanceRecord.java
+│  │  │     │  │  ├─ Shift.java
+│  │  │     │  │  └─ AttendanceCapturePolicy.java
+│  │  │     │  ├─ repository/
+│  │  │     │  │  └─ AttendanceRepository.java
+│  │  │     │  └─ service/
+│  │  │     │     └─ AttendanceService.java
+│  │  │     ├─ leave/                          # MODULE 3: Employee + Leave
+│  │  │     │  ├─ controller/
+│  │  │     │  │  └─ LeaveController.java
+│  │  │     │  ├─ dto/
+│  │  │     │  │  └─ LeaveDto.java
+│  │  │     │  ├─ entity/
+│  │  │     │  │  ├─ LeaveType.java
+│  │  │     │  │  ├─ LeavePolicy.java
+│  │  │     │  │  ├─ LeaveEntitlement.java
+│  │  │     │  │  ├─ LeaveBalance.java
+│  │  │     │  │  ├─ LeaveApplication.java
+│  │  │     │  │  ├─ LeaveApproval.java
+│  │  │     │  │  ├─ LeaveTransaction.java
+│  │  │     │  │  └─ LeaveHolidayCalendar.java
+│  │  │     │  ├─ repository/
+│  │  │     │  │  └─ LeaveRepository.java
+│  │  │     │  └─ service/
+│  │  │     │     └─ LeaveService.java
+│  │  │     ├─ payroll/                        # MODULE 4: Employee + Payroll
+│  │  │     │  ├─ controller/
+│  │  │     │  │  └─ PayrollController.java
+│  │  │     │  ├─ dto/
+│  │  │     │  │  └─ PayrollDto.java
+│  │  │     │  ├─ entity/
+│  │  │     │  │  ├─ SalaryStructure.java
+│  │  │     │  │  ├─ Payroll.java
+│  │  │     │  │  ├─ Loan.java
+│  │  │     │  │  └─ Expense.java
+│  │  │     │  ├─ repository/
+│  │  │     │  │  └─ PayrollRepository.java
+│  │  │     │  └─ service/
+│  │  │     │     └─ PayrollService.java
+│  │  │     ├─ documents/
+│  │  │     │  └─ DocumentType.java
+│  │  │     ├─ policy/
+│  │  │     │  ├─ LeavePolicyTemplate.java
+│  │  │     │  ├─ HolidayPolicy.java
+│  │  │     │  ├─ WeeklyBreakPolicy.java
+│  │  │     │  └─ ShiftPolicy.java
+│  │  │     └─ util/                          # helpers, mappers, validators
+│  │  │        ├─ MapperConfig.java
+│  │  │        └─ DateUtils.java
+│  │  └─ resources/
+│  │     ├─ application.yml
+│  │     └─ db/
+│  │        └─ migration/
+│  └─ test/
+└─ pom.xml or build.gradle

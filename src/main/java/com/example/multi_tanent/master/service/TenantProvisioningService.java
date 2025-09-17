@@ -5,13 +5,15 @@ import com.example.multi_tanent.config.TenantRegistry;
 import com.example.multi_tanent.config.TenantSchemaCreator;
 import com.example.multi_tanent.master.dto.ProvisionTenantRequest;
 import com.example.multi_tanent.master.entity.MasterTenant;
+import com.example.multi_tanent.master.entity.TenantPlan;
+import com.example.multi_tanent.master.enums.Role;
 import com.example.multi_tanent.master.repository.MasterTenantRepository;
-import com.example.multi_tanent.tenant.entity.User;
-import com.example.multi_tanent.tenant.entity.enums.Role;
+import com.example.multi_tanent.tenant.base.entity.User;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -36,9 +38,12 @@ public class TenantProvisioningService {
 
     // use ONE MySQL user that has CREATE DATABASE privilege for provisioning
     // e.g., same credentials that your tenants will use
-    private final String mysqlHost = "localhost";
-    private final String mysqlUser = "root";
-    private final String mysqlPass = "Sajid7254@";
+    @Value("${provisioning.datasource.host}")
+    private String mysqlHost;
+    @Value("${provisioning.datasource.username}")
+    private String mysqlUser;
+    @Value("${provisioning.datasource.password}")
+    private String mysqlPass;
 
     public TenantProvisioningService(
             DataSource masterDataSource,
@@ -72,18 +77,17 @@ public class TenantProvisioningService {
         mt.setJdbcUrl(jdbcUrl);
         mt.setUsername(mysqlUser);
         mt.setPassword(mysqlPass);
+        mt.setPlan(req.plan());
         masterRepo.save(mt);
 
         // 4) Add/refresh DataSource in routing map
         registry.addOrUpdateTenant(mt);
+        // 5) Ensure schema (tables) for this tenant - This is now handled by registry.addOrUpdateTenant()
         DataSource tenantDs = registry.asTargetMap().get(tenantId) instanceof DataSource d ? d : null;
         if (tenantDs == null) throw new IllegalStateException("Tenant DS not attached");
 
-        // 5) Ensure schema (tables) for this tenant
-        schemaCreator.ensureSchema(tenantDs);
-
         // 6) Seed TENANT_ADMIN user inside the tenant DB
-        seedTenantAdmin(tenantDs, req.adminEmail(), req.adminPassword());
+        seedTenantAdmin(tenantDs, req.adminEmail(), req.adminPassword(), req.plan() );
     }
 
     private String normalizeTenantId(String raw) {
@@ -98,14 +102,15 @@ public class TenantProvisioningService {
         return id;
     }
 
-    private void seedTenantAdmin(DataSource tenantDs, String email, String password) {
+    private void seedTenantAdmin(DataSource tenantDs, String email, String password, TenantPlan plan ) {
         // Build a temporary EMF bound to THIS tenant DS to write seed data
         LocalContainerEntityManagerFactoryBean emfBean = new LocalContainerEntityManagerFactoryBean();
         emfBean.setDataSource(tenantDs);
-        emfBean.setPackagesToScan("com.example.multi_tanent.tenant.entity");
+        // We need all packages relevant to the plan to correctly build entity mappings
+        emfBean.setPackagesToScan(plan.getEntityPackages());
         emfBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         Properties p = new Properties();
-        p.put("hibernate.hbm2ddl.auto", "none"); // schema already ensured above
+        p.put("hibernate.hbm2ddl.auto", "update "); // schema already ensured above
         p.put("hibernate.boot.allow_jdbc_metadata_access", "false");
         p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         p.put("hibernate.show_sql", "true");
@@ -121,6 +126,7 @@ public class TenantProvisioningService {
         admin.setName("Tenant Admin");
         admin.setEmail(email);
         admin.setPasswordHash(passwordEncoder.encode(password));
+        admin.setPlan(plan);
         admin.setRoles(Set.of(Role.TENANT_ADMIN));
         admin.setIsActive(true);
         admin.setIsLocked(false);

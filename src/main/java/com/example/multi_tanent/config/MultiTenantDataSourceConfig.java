@@ -13,7 +13,7 @@ import java.util.Properties;
 
 @Configuration
 @EnableJpaRepositories(
-  basePackages = "com.example.multi_tanent.tenant.repository",
+  basePackages = "com.example.multi_tanent.tenant",
   entityManagerFactoryRef = "tenantEmf",
   transactionManagerRef   = "tenantTx"
 )
@@ -42,7 +42,16 @@ public class MultiTenantDataSourceConfig {
   ) {
       var emf = new LocalContainerEntityManagerFactoryBean();
       emf.setDataSource(ds);
-      emf.setPackagesToScan("com.example.multi_tanent.tenant.entity");
+      // Scan all possible tenant entity packages so the EntityManager is aware of them.
+      // The TenantSchemaCreator will still only create tables for the tenant's specific plan.
+      emf.setPackagesToScan(
+        "com.example.multi_tanent.tenant.base.entity",
+        "com.example.multi_tanent.tenant.employee.entity",
+        "com.example.multi_tanent.tenant.attendance.entity",
+        "com.example.multi_tanent.tenant.leave.entity",
+        "com.example.multi_tanent.tenant.payroll.entity",
+        "com.example.multi_tanent.tenant.recruitment.entity"
+      );
       emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
 
       Properties p = new Properties();

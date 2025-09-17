@@ -1,10 +1,11 @@
 package com.example.multi_tanent.master.controller;
 
-import com.example.multi_tanent.tenant.tenantDto.LoginResponse;
 import com.example.multi_tanent.master.dto.MasterAuthRequest;
 import com.example.multi_tanent.master.entity.MasterUser;
 import com.example.multi_tanent.master.repository.MasterUserRepository;
 import com.example.multi_tanent.security.JwtUtil;
+import com.example.multi_tanent.tenant.base.dto.LoginResponse;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +42,6 @@ public class MasterAuthController {
     // tenantId = "master" for master admin tokens
     List<String> roles = List.of("MASTER_ADMIN");
     String token = jwt.generateToken(masterAuthRequest.getUsername(), "master", roles);
-    return new LoginResponse(token, roles);
+    return new LoginResponse(token, roles, null);
   }
 }

@@ -61,6 +61,7 @@ public class TenantRequestController {
                     existingRequest.setCompanyName(requestDetails.getCompanyName());
                     existingRequest.setAdminEmail(requestDetails.getAdminEmail());
                     existingRequest.setAdminPassword(requestDetails.getAdminPassword()); // Note security risk
+                    existingRequest.setPlan(requestDetails.getPlan());
                     TenantRequest updatedRequest = tenantRequestRepository.save(existingRequest);
                     return ResponseEntity.ok(updatedRequest);
                 })

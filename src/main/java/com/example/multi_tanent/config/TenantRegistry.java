@@ -13,11 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class TenantRegistry {
   private final MasterTenantRepository masterRepo;
+  private final TenantSchemaCreator schemaCreator;
   private final ConcurrentHashMap<String, DataSource> map = new ConcurrentHashMap<>();
   private TenantRoutingDataSource routing;
 
-  public TenantRegistry(MasterTenantRepository masterRepo) {
+  public TenantRegistry(MasterTenantRepository masterRepo, TenantSchemaCreator schemaCreator) {
     this.masterRepo = masterRepo;
+    this.schemaCreator = schemaCreator;
   }
 
   public void attachRouting(TenantRoutingDataSource routing) { this.routing = routing; }
@@ -32,6 +34,9 @@ public class TenantRegistry {
     ds.setUsername(t.getUsername());
     ds.setPassword(t.getPassword());
     map.put(t.getTenantId(), ds);
+
+    // Ensure the schema for this tenant is up-to-date on load/reload.
+    schemaCreator.ensureSchema(ds, t.getPlan());
     refreshRouting();
   }
 

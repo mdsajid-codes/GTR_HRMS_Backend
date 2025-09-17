@@ -3,9 +3,10 @@ package com.example.multi_tanent.security;
 import com.example.multi_tanent.config.TenantContext;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +16,7 @@ import java.util.List;
 
 public class JwtAuthFilter extends OncePerRequestFilter {
   private final JwtUtil jwt;
+  private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
 
   public JwtAuthFilter(JwtUtil jwt) { this.jwt = jwt; }
 
@@ -26,29 +28,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     try {
       if (authHeader != null && authHeader.startsWith("Bearer ")) {
         final String token = authHeader.substring(7);
-        try {
-          Jws<Claims> claimsJws = jwt.parse(token);
-          Claims claims = claimsJws.getBody();
-          String username = claims.getSubject();
-          String tenantId = claims.get("tenantId", String.class);
-          @SuppressWarnings("unchecked")
-          List<String> roles = (List<String>) claims.get("roles");
+        Jws<Claims> claimsJws = jwt.parse(token); // Can throw JwtException
+        Claims claims = claimsJws.getBody();
+        String username = claims.getSubject();
+        String tenantId = claims.get("tenantId", String.class);
+        @SuppressWarnings("unchecked")
+        List<String> roles = (List<String>) claims.get("roles");
 
-          // Set tenant for this request thread
-          TenantContext.setTenantId(tenantId);
+        // Add detailed logging to help debug authorization issues
+        log.info("JWT Auth: User='{}', Tenant='{}', Roles='{}' for request URI='{}'",
+                username, tenantId, roles, req.getRequestURI());
 
-          // Set security context for Spring Security
-          var authorities = roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r)).toList();
-          var authToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
-          SecurityContextHolder.getContext().setAuthentication(authToken);
-        } catch (JwtException e) {
-          logger.warn("JWT Authentication error: " + e.getMessage());
-          SecurityContextHolder.clearContext();
-          res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Error: Invalid or expired token.");
-          return; // Stop the filter chain
-        }
+        // Set tenant for this request thread
+        TenantContext.setTenantId(tenantId);
+
+        // Set security context for Spring Security
+        var authorities = roles.stream().map(r -> new SimpleGrantedAuthority("ROLE_" + r)).toList();
+        var authToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
+        SecurityContextHolder.getContext().setAuthentication(authToken);
       }
       chain.doFilter(req, res);
+    } catch (Exception e) {
+      // Catching a broader exception to handle parsing errors and others gracefully.
+      log.warn("JWT Authentication error for request URI='{}': {}", req.getRequestURI(), e.getMessage());
+      SecurityContextHolder.clearContext();
+      res.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Authentication Error: " + e.getMessage());
+      return; // Stop the filter chain
     } finally {
       // Crucially, clear the tenant context to prevent leaks in the thread pool.
       TenantContext.clear();

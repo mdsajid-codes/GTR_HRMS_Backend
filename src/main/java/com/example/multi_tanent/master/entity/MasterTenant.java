@@ -28,5 +28,9 @@ public class MasterTenant {
   @Column(nullable=false)
   private String password;
 
+  @Enumerated(EnumType.STRING)
+  @Column(name = "plan", length = 20)
+  private TenantPlan plan;
+
   // getters/setters
 }
