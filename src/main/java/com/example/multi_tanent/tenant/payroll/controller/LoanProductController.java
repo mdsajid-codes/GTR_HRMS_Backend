@@ -1,0 +1,62 @@
+package com.example.multi_tanent.tenant.payroll.controller;
+
+import com.example.multi_tanent.tenant.payroll.dto.LoanProductRequest;
+import com.example.multi_tanent.tenant.payroll.dto.LoanProductResponse;
+import com.example.multi_tanent.tenant.payroll.entity.LoanProduct;
+import com.example.multi_tanent.tenant.payroll.service.LoanProductService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/loan-products")
+@CrossOrigin(origins = "*")
+@PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+public class LoanProductController {
+
+    private final LoanProductService loanProductService;
+
+    public LoanProductController(LoanProductService loanProductService) {
+        this.loanProductService = loanProductService;
+    }
+
+    @GetMapping
+    public ResponseEntity<List<LoanProductResponse>> getAllLoanProducts() {
+        List<LoanProductResponse> loanProducts = loanProductService.getAllLoanProducts().stream()
+                .map(LoanProductResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(loanProducts);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LoanProductResponse> getLoanProductById(@PathVariable Long id) {
+        return loanProductService.getLoanProductById(id)
+                .map(loanProduct -> ResponseEntity.ok(LoanProductResponse.fromEntity(loanProduct)))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<LoanProductResponse> createLoanProduct(@RequestBody LoanProductRequest request) {
+        LoanProduct createdLoanProduct = loanProductService.createLoanProduct(request);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(createdLoanProduct.getId()).toUri();
+        return ResponseEntity.created(location).body(LoanProductResponse.fromEntity(createdLoanProduct));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<LoanProductResponse> updateLoanProduct(@PathVariable Long id, @RequestBody LoanProductRequest request) {
+        LoanProduct updatedLoanProduct = loanProductService.updateLoanProduct(id, request);
+        return ResponseEntity.ok(LoanProductResponse.fromEntity(updatedLoanProduct));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLoanProduct(@PathVariable Long id) {
+        loanProductService.deleteLoanProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+}

@@ -22,7 +22,14 @@ public class CompanyInfoService {
      * As this is a singleton per tenant, it fetches the first available record.
      */
     public CompanyInfo getCompanyInfo() {
-        return companyInfoRepository.findAll().stream().findFirst().orElse(null);
+        // Find the first CompanyInfo record.
+        CompanyInfo companyInfo = companyInfoRepository.findAll().stream().findFirst().orElse(null);
+        if (companyInfo != null) {
+            // Explicitly initialize lazy-loaded collections within the transaction to prevent LazyInitializationException.
+            companyInfo.getLocations().size();
+            companyInfo.getBankAccounts().size();
+        }
+        return companyInfo;
     }
 
     /**

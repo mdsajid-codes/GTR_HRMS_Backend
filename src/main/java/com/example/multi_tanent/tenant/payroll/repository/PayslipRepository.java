@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface PayslipRepository extends JpaRepository<Payslip, Long> {
     List<Payslip> findByEmployeeEmployeeCodeOrderByYearDescMonthDesc(String employeeCode);
     Optional<Payslip> findByEmployeeIdAndYearAndMonth(Long employeeId, int year, int month);
+    List<Payslip> findByPayrollRunId(Long payrollRunId);
 }
