@@ -34,6 +34,9 @@ public enum TenantPlan {
             "com.example.multi_tanent.tenant.leave.entity",
             "com.example.multi_tanent.tenant.payroll.entity",
             "com.example.multi_tanent.tenant.recruitment.entity"
+    ),
+    POS(
+        "com.example.multi_tanent.pos.entity"
     );
 
     private final List<String> entityPackages;

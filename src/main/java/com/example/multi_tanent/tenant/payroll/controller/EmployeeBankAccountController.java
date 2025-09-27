@@ -14,7 +14,6 @@ import java.net.URI;
 @RestController
 @RequestMapping("/api/employee-bank-accounts")
 @CrossOrigin(origins = "*")
-@PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
 public class EmployeeBankAccountController {
 
     private final EmployeeBankAccountService bankAccountService;
@@ -24,6 +23,7 @@ public class EmployeeBankAccountController {
     }
 
     @GetMapping("/{employeeCode}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<EmployeeBankAccountResponse> getBankAccount(@PathVariable String employeeCode) {
         return bankAccountService.getBankAccountByEmployeeCode(employeeCode)
                 .map(account -> ResponseEntity.ok(EmployeeBankAccountResponse.fromEntity(account)))
@@ -31,6 +31,7 @@ public class EmployeeBankAccountController {
     }
 
     @PutMapping("/{employeeCode}")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<EmployeeBankAccountResponse> createOrUpdateBankAccount(@PathVariable String employeeCode, @RequestBody EmployeeBankAccountRequest request) {
         boolean isNew = bankAccountService.getBankAccountByEmployeeCode(employeeCode).isEmpty();
         EmployeeBankAccount savedAccount = bankAccountService.createOrUpdateBankAccount(employeeCode, request);
@@ -45,6 +46,7 @@ public class EmployeeBankAccountController {
     }
 
     @DeleteMapping("/{employeeCode}")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<Void> deleteBankAccount(@PathVariable String employeeCode) {
         bankAccountService.deleteBankAccount(employeeCode);
         return ResponseEntity.noContent().build();

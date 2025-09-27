@@ -47,7 +47,11 @@
 			<artifactId>kernel</artifactId>
 			<version>7.2.5</version>
 		</dependency>
-
+		<dependency>
+		<groupId>jakarta.validation</groupId>
+		<artifactId>jakarta.validation-api</artifactId>
+		<version>3.0.2</version>
+		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>layout</artifactId>
@@ -94,6 +98,11 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>io.hypersistence</groupId>
+			<artifactId>hypersistence-utils-hibernate-62</artifactId>
+			<version>3.8.1</version> <!-- Or the latest version compatible with your Hibernate -->
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

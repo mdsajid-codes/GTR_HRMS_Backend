@@ -29,6 +29,14 @@ public class SecurityConfig {
     http.csrf(csrf -> csrf.disable())
       .cors(Customizer.withDefaults())
       .authorizeHttpRequests(auth -> auth
+      .requestMatchers(
+        "/", "/index.html",
+        "/dist/**",          // your current build is under static/dist
+        "/favicon.ico",
+        "/css/**", "/js/**", "/assets/**", "/images/**",
+        "/static/**",        // in case files end up here
+        "/uploads/**"        // Allow public access to uploaded files
+          ).permitAll()
         .requestMatchers("/api/master/auth/login").permitAll()
         .requestMatchers("/api/master/tenant-requests/register").permitAll()
         .requestMatchers("/api/master/tenant-requests/**").authenticated()
@@ -78,6 +86,10 @@ public class SecurityConfig {
         .requestMatchers("/api/statutory-rules/**").authenticated()
         .requestMatchers("/api/salary-structures/**").authenticated()
         .requestMatchers("/api/salary-structure-components/**").authenticated()
+        .requestMatchers("/api/pos/auth/login").permitAll()
+        // Allow public viewing of uploaded files for the POS module
+        .requestMatchers("/api/pos/uploads/view/**").permitAll()
+        .requestMatchers("/api/pos/**").authenticated()
         
         .anyRequest().denyAll()
       )
@@ -90,7 +102,7 @@ public class SecurityConfig {
   @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(java.util.List.of("http://localhost:5173", "https://gtrhrms.netlify.app","https://eclectic-arithmetic-e6d03e.netlify.app/")); // React app URL
+        config.setAllowedOrigins(java.util.List.of("http://localhost:5173", "https://gtrhrms.netlify.app","http://localhost:8080//")); // React app URL
         config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(java.util.List.of("*"));
         config.setAllowCredentials(true); // If using cookies or auth headers

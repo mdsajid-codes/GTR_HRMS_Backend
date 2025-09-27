@@ -9,11 +9,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/salary-structures")
 @CrossOrigin(origins = "*")
-@PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
 public class SalaryStructureController {
 
     private final SalaryStructureService salaryStructureService;
@@ -23,6 +24,7 @@ public class SalaryStructureController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<SalaryStructureResponse> createSalaryStructure(@RequestBody SalaryStructureRequest request) {
         var createdStructure = salaryStructureService.createSalaryStructure(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -31,19 +33,32 @@ public class SalaryStructureController {
     }
 
     @GetMapping("/employee/{employeeCode}")
+    @PreAuthorize("isAuthenticated()") // TODO: Add finer-grained security to check if user is the employee or HR/Admin
     public ResponseEntity<SalaryStructureResponse> getSalaryStructureByEmployeeCode(@PathVariable String employeeCode) {
         return salaryStructureService.getSalaryStructureByEmployeeCode(employeeCode)
                 .map(structure -> ResponseEntity.ok(SalaryStructureResponse.fromEntity(structure)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    public ResponseEntity<List<SalaryStructureResponse>> getAllSalaryStructures() {
+        List<SalaryStructureResponse> structures = salaryStructureService.getAllSalaryStructures()
+                .stream()
+                .map(SalaryStructureResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(structures);
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<SalaryStructureResponse> updateSalaryStructure(@PathVariable Long id, @RequestBody SalaryStructureRequest request) {
         var updatedStructure = salaryStructureService.updateSalaryStructure(id, request);
         return ResponseEntity.ok(SalaryStructureResponse.fromEntity(updatedStructure));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<Void> deleteSalaryStructure(@PathVariable Long id) {
         salaryStructureService.deleteSalaryStructure(id);
         return ResponseEntity.noContent().build();

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  db:
+    image: mysql:8.0
+    container_name: multi_tenant_db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: Sajid7254@ # <-- MUST MATCH the password below
+      MYSQL_DATABASE: master_db # The initial database to be created
+    ports:
+      # Map host port 3306 to container port 3306 for external access (e.g., with MySQL Workbench)
+      - "3306:3306"
+    volumes:
+      # Persist database data
+      - db-data:/var/lib/mysql
+
+  # Spring Boot Application Service
+  app:
+    build: . # Build from the Dockerfile in the current directory
+    container_name: multi_tenant_app
+    restart: on-failure
+    depends_on:
+      - db # Wait for the db service to start first
+    ports:
+      # Map host port 8080 to container port 8080
+      - "8080:8080"
+    environment:
+      # Master DB connection properties (for MasterDataSourceConfig)
+      - MASTER_DATASOURCE_URL=jdbc:mysql://db:3306/master_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      - MASTER_DATASOURCE_USERNAME=root
+      - MASTER_DATASOURCE_PASSWORD=Sajid7254@ # <-- This now matches the DB password
+      # Provisioning properties (for TenantProvisioningService)
+      - PROVISIONING_DATASOURCE_HOST=db
+      - PROVISIONING_DATASOURCE_USERNAME=root
+      - PROVISIONING_DATASOURCE_PASSWORD=Sajid7254@ # <-- This now matches the DB password
+      # Security properties
+      - JWT_SECRET=your_super_long_and_incredibly_secure_jwt_secret_key_here # <-- CHANGE THIS
+    volumes:
+      # Persist uploaded files. Maps the 'uploads' folder on your host to '/app/uploads' in the container.
+      - ./uploads:/app/uploads
+
+volumes:
+  db-data:

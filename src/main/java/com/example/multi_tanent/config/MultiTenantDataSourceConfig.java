@@ -13,7 +13,7 @@ import java.util.Properties;
 
 @Configuration
 @EnableJpaRepositories(
-  basePackages = "com.example.multi_tanent.tenant",
+  basePackages = {"com.example.multi_tanent.tenant", "com.example.multi_tanent.pos.repository"},
   entityManagerFactoryRef = "tenantEmf",
   transactionManagerRef   = "tenantTx"
 )
@@ -50,7 +50,8 @@ public class MultiTenantDataSourceConfig {
         "com.example.multi_tanent.tenant.attendance.entity",
         "com.example.multi_tanent.tenant.leave.entity",
         "com.example.multi_tanent.tenant.payroll.entity",
-        "com.example.multi_tanent.tenant.recruitment.entity"
+        "com.example.multi_tanent.tenant.recruitment.entity",
+        "com.example.multi_tanent.pos.entity"
       );
       emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
 

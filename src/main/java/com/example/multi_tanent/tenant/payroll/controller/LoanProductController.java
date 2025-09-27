@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/loan-products")
 @CrossOrigin(origins = "*")
-@PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+
 public class LoanProductController {
 
     private final LoanProductService loanProductService;
@@ -26,6 +26,8 @@ public class LoanProductController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
+
     public ResponseEntity<List<LoanProductResponse>> getAllLoanProducts() {
         List<LoanProductResponse> loanProducts = loanProductService.getAllLoanProducts().stream()
                 .map(LoanProductResponse::fromEntity)
@@ -34,6 +36,8 @@ public class LoanProductController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
+
     public ResponseEntity<LoanProductResponse> getLoanProductById(@PathVariable Long id) {
         return loanProductService.getLoanProductById(id)
                 .map(loanProduct -> ResponseEntity.ok(LoanProductResponse.fromEntity(loanProduct)))
@@ -41,6 +45,7 @@ public class LoanProductController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<LoanProductResponse> createLoanProduct(@RequestBody LoanProductRequest request) {
         LoanProduct createdLoanProduct = loanProductService.createLoanProduct(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -49,12 +54,14 @@ public class LoanProductController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<LoanProductResponse> updateLoanProduct(@PathVariable Long id, @RequestBody LoanProductRequest request) {
         LoanProduct updatedLoanProduct = loanProductService.updateLoanProduct(id, request);
         return ResponseEntity.ok(LoanProductResponse.fromEntity(updatedLoanProduct));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
     public ResponseEntity<Void> deleteLoanProduct(@PathVariable Long id) {
         loanProductService.deleteLoanProduct(id);
         return ResponseEntity.noContent().build();

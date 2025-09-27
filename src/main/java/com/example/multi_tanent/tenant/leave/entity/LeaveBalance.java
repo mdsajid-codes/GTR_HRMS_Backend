@@ -47,7 +47,10 @@ public class LeaveBalance {
     // convenience getter (not persisted) could be calculated in service
     @Transient
     public BigDecimal getAvailable() {
-        return totalAllocated.subtract(used).subtract(pending);
+        BigDecimal allocated = this.totalAllocated == null ? BigDecimal.ZERO : this.totalAllocated;
+        BigDecimal usedAmount = this.used == null ? BigDecimal.ZERO : this.used;
+        BigDecimal pendingAmount = this.pending == null ? BigDecimal.ZERO : this.pending;
+        return allocated.subtract(usedAmount).subtract(pendingAmount);
     }
 
     // date this balance is valid for (useful for snapshots)

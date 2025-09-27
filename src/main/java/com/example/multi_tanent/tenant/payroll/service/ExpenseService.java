@@ -43,20 +43,27 @@ public class ExpenseService {
     }
 
     public List<Expense> getAllExpenses() {
-        return expenseRepository.findAll();
+        List<Expense> expenses = expenseRepository.findAll();
+        expenses.forEach(this::initializeExpenseDetails);
+        return expenses;
     }
 
     public Optional<Expense> getExpenseById(Long id) {
-        return expenseRepository.findById(id);
+        Optional<Expense> expenseOpt = expenseRepository.findById(id);
+        expenseOpt.ifPresent(this::initializeExpenseDetails);
+        return expenseOpt;
     }
 
     public List<Expense> getExpensesByEmployeeCode(String employeeCode) {
-        return expenseRepository.findByEmployeeEmployeeCode(employeeCode);
+        List<Expense> expenses = expenseRepository.findByEmployeeEmployeeCode(employeeCode);
+        expenses.forEach(this::initializeExpenseDetails);
+        return expenses;
     }
 
     public Expense approveExpense(Long expenseId) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense not found with id: " + expenseId));
+        initializeExpenseDetails(expense);
         expense.setStatus(ExpenseStatus.APPROVED);
         expense.setProcessedAt(LocalDateTime.now());
         return expenseRepository.save(expense);
@@ -65,6 +72,7 @@ public class ExpenseService {
     public Expense rejectExpense(Long expenseId) {
         Expense expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense not found with id: " + expenseId));
+        initializeExpenseDetails(expense);
         expense.setStatus(ExpenseStatus.REJECTED);
         expense.setProcessedAt(LocalDateTime.now());
         return expenseRepository.save(expense);
@@ -72,5 +80,12 @@ public class ExpenseService {
 
     public void deleteExpense(Long id) {
         expenseRepository.deleteById(id);
+    }
+
+    private void initializeExpenseDetails(Expense expense) {
+        if (expense.getEmployee() != null) {
+            // Accessing a getter will trigger the lazy loading while the session is active.
+            expense.getEmployee().getEmployeeCode();
+        }
     }
 }

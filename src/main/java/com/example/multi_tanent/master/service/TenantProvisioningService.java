@@ -5,9 +5,10 @@ import com.example.multi_tanent.config.TenantRegistry;
 import com.example.multi_tanent.config.TenantSchemaCreator;
 import com.example.multi_tanent.master.dto.ProvisionTenantRequest;
 import com.example.multi_tanent.master.entity.MasterTenant;
-import com.example.multi_tanent.master.entity.TenantPlan;
 import com.example.multi_tanent.master.enums.Role;
-import com.example.multi_tanent.master.repository.MasterTenantRepository;
+import com.example.multi_tanent.master.repository.MasterTenantRepository; // Keep this line
+import com.example.multi_tanent.pos.entity.PosUser;
+import com.example.multi_tanent.pos.enums.PosRole;
 import com.example.multi_tanent.tenant.base.entity.User;
 
 import jakarta.persistence.EntityManager;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import javax.sql.DataSource;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -86,8 +88,8 @@ public class TenantProvisioningService {
         DataSource tenantDs = registry.asTargetMap().get(tenantId) instanceof DataSource d ? d : null;
         if (tenantDs == null) throw new IllegalStateException("Tenant DS not attached");
 
-        // 6) Seed TENANT_ADMIN user inside the tenant DB
-        seedTenantAdmin(tenantDs, req.adminEmail(), req.adminPassword(), req.plan() );
+        // 6) Create schema and seed initial admin users based on the plan
+        createSchemaAndSeedData(tenantDs, mt, req);
     }
 
     private String normalizeTenantId(String raw) {
@@ -102,15 +104,15 @@ public class TenantProvisioningService {
         return id;
     }
 
-    private void seedTenantAdmin(DataSource tenantDs, String email, String password, TenantPlan plan ) {
+    private void createSchemaAndSeedData(DataSource tenantDs, MasterTenant masterTenant, ProvisionTenantRequest req) {
         // Build a temporary EMF bound to THIS tenant DS to write seed data
         LocalContainerEntityManagerFactoryBean emfBean = new LocalContainerEntityManagerFactoryBean();
         emfBean.setDataSource(tenantDs);
         // We need all packages relevant to the plan to correctly build entity mappings
-        emfBean.setPackagesToScan(plan.getEntityPackages());
+        emfBean.setPackagesToScan(req.plan().getEntityPackages());
         emfBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         Properties p = new Properties();
-        p.put("hibernate.hbm2ddl.auto", "update "); // schema already ensured above
+        p.put("hibernate.hbm2ddl.auto", "create"); // Use "create" for a new tenant DB to ensure correct schema generation
         p.put("hibernate.boot.allow_jdbc_metadata_access", "false");
         p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         p.put("hibernate.show_sql", "true");
@@ -119,25 +121,52 @@ public class TenantProvisioningService {
         emfBean.afterPropertiesSet();
 
         EntityManagerFactory emf = emfBean.getObject();
-        EntityManager em = emf.createEntityManager();
-        em.getTransaction().begin();
+        try (EntityManager em = emf.createEntityManager()) {
+            em.getTransaction().begin();
 
-        User admin = new User();
-        admin.setName("Tenant Admin");
-        admin.setEmail(email);
-        admin.setPasswordHash(passwordEncoder.encode(password));
-        admin.setPlan(plan);
-        admin.setRoles(Set.of(Role.TENANT_ADMIN));
-        admin.setIsActive(true);
-        admin.setIsLocked(false);
-        admin.setLastLoginAt(LocalDateTime.now());
-        admin.setCreatedAt(LocalDateTime.now());
-        admin.setUpdatedAt(LocalDateTime.now());
-        admin.setLoginAttempts(0);
+            java.util.List<String> entityPackages = Arrays.asList(req.plan().getEntityPackages());
 
-        em.persist(admin);
-        em.getTransaction().commit();
-        em.close();
-        emfBean.destroy();
+            // Seed HRMS Admin User if plan includes HRMS service
+            if (entityPackages.contains("com.example.multi_tanent.tenant.base.entity")) {
+                User admin = new User();
+                admin.setName("Tenant Admin");
+                admin.setEmail(req.adminEmail());
+                admin.setPasswordHash(passwordEncoder.encode(req.adminPassword()));
+                admin.setPlan(req.plan());
+                admin.setRoles(Set.of(Role.TENANT_ADMIN));
+                admin.setIsActive(true);
+                admin.setIsLocked(false);
+                admin.setLastLoginAt(LocalDateTime.now());
+                admin.setCreatedAt(LocalDateTime.now());
+                admin.setUpdatedAt(LocalDateTime.now());
+                admin.setLoginAttempts(0);
+                em.persist(admin);
+            }
+
+            // Seed POS Admin User if plan includes POS service
+            if (entityPackages.contains("com.example.multi_tanent.pos.entity")) {
+                // First, create the Tenant record for the POS module
+                com.example.multi_tanent.pos.entity.Tenant posTenant = new com.example.multi_tanent.pos.entity.Tenant();
+                posTenant.setName(masterTenant.getCompanyName());
+                em.persist(posTenant);
+
+                // Now, create the POS admin user
+                PosUser posAdmin = PosUser.builder()
+                        .tenant(posTenant)
+                        .email(req.adminEmail()) // Using email as username
+                        .displayName("POS Administrator")
+                        .passwordHash(passwordEncoder.encode(req.adminPassword()))
+                        .role(PosRole.POS_ADMIN)
+                        .build();
+                em.persist(posAdmin);
+            }
+
+            em.getTransaction().commit();
+        } catch (Exception e) {
+            // Re-throw to be handled by the main transactional method, which will cause a rollback
+            throw new RuntimeException("Failed to seed initial tenant data", e);
+        } finally {
+            emfBean.destroy(); // This also closes the EntityManagerFactory
+        }
     }
 }

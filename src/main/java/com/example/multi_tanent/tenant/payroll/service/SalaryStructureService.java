@@ -31,11 +31,15 @@ public class SalaryStructureService {
     }
 
     public List<SalaryStructure> getAllSalaryStructures() {
-        return salaryStructureRepository.findAll();
+        List<SalaryStructure> structures = salaryStructureRepository.findAll();
+        structures.forEach(this::initializeStructureDetails);
+        return structures;
     }
 
     public Optional<SalaryStructure> getSalaryStructureByEmployeeCode(String employeeCode) {
-        return salaryStructureRepository.findByEmployeeEmployeeCode(employeeCode);
+        Optional<SalaryStructure> structureOpt = salaryStructureRepository.findByEmployeeEmployeeCode(employeeCode);
+        structureOpt.ifPresent(this::initializeStructureDetails);
+        return structureOpt;
     }
 
     public SalaryStructure createSalaryStructure(SalaryStructureRequest request) {
@@ -50,7 +54,9 @@ public class SalaryStructureService {
         structure.setEmployee(employee);
         mapRequestToEntity(request, structure);
 
-        return salaryStructureRepository.save(structure);
+        SalaryStructure savedStructure = salaryStructureRepository.save(structure);
+        initializeStructureDetails(savedStructure);
+        return savedStructure;
     }
 
     public SalaryStructure updateSalaryStructure(Long id, SalaryStructureRequest request) {
@@ -62,7 +68,9 @@ public class SalaryStructureService {
         }
 
         mapRequestToEntity(request, structure);
-        return salaryStructureRepository.save(structure);
+        SalaryStructure savedStructure = salaryStructureRepository.save(structure);
+        initializeStructureDetails(savedStructure);
+        return savedStructure;
     }
 
     public void deleteSalaryStructure(Long id) {
@@ -92,5 +100,21 @@ public class SalaryStructureService {
                 }).collect(Collectors.toList());
 
         structure.getComponents().addAll(newComponents);
+    }
+
+    private void initializeStructureDetails(SalaryStructure structure) {
+        // Accessing these getters will trigger the lazy loading while the session is active.
+        if (structure.getEmployee() != null) {
+            structure.getEmployee().getEmployeeCode(); // Initialize Employee proxy
+        }
+        if (structure.getComponents() != null) {
+            structure.getComponents().size(); // Initialize components collection
+            // Also initialize the SalaryComponent inside each SalaryStructureComponent
+            for (SalaryStructureComponent ssc : structure.getComponents()) {
+                if (ssc.getSalaryComponent() != null) {
+                    ssc.getSalaryComponent().getCode();
+                }
+            }
+        }
     }
 }

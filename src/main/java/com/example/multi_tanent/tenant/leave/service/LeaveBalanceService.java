@@ -76,7 +76,12 @@ public class LeaveBalanceService {
             balance.setUsed(BigDecimal.ZERO); // Default used days to zero
         }
         
-        balance.setTotalAllocated(request.getAllocatedDays());
+        if (request.getAllocatedDays() != null) {
+            balance.setTotalAllocated(request.getAllocatedDays());
+        } else if (balance.getId() == null && leaveType.getMaxDaysPerYear() != null) {
+            // For new balances, if not specified in request, set from leave type default
+            balance.setTotalAllocated(new BigDecimal(leaveType.getMaxDaysPerYear()));
+        }
         
         balance.setAsOfDate(request.getAsOfDate());
         balance.setUpdatedAt(LocalDateTime.now());
