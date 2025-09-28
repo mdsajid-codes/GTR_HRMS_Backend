@@ -40,6 +40,7 @@ public class SecurityConfig {
         .requestMatchers("/api/master/auth/login").permitAll()
         .requestMatchers("/api/master/tenant-requests/register").permitAll()
         .requestMatchers("/api/master/tenant-requests/**").authenticated()
+        .requestMatchers("/api/provision").hasRole("MASTER_ADMIN") // Allow provisioning for master admins
         .requestMatchers("/api/master/tenants/**").hasRole("MASTER_ADMIN")
         .requestMatchers("/api/auth/login").permitAll()
         .requestMatchers("/api/users/**").authenticated()

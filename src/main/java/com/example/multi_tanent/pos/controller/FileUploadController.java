@@ -31,7 +31,7 @@ public class FileUploadController {
     }
 
     @PostMapping("/product-image")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<?> uploadProductImage(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body("Please select a file to upload.");
@@ -43,7 +43,7 @@ public class FileUploadController {
     }
 
     @PostMapping("/product-image/bulk")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<byte[]> uploadBulkProductImages(@RequestParam("files") MultipartFile[] files) {
         if (files == null || files.length == 0) {
             String errorContent = "Error: No files were selected for upload.";

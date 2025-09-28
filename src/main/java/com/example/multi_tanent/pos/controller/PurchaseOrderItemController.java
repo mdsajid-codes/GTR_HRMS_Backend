@@ -24,7 +24,7 @@ public class PurchaseOrderItemController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<PurchaseOrderItemDto> addItemToPurchaseOrder(@PathVariable Long purchaseOrderId, @Valid @RequestBody PurchaseOrderItemRequest itemRequest) {
         PurchaseOrderItemDto createdItem = purchaseOrderItemService.addItem(purchaseOrderId, itemRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/pos/purchase-orders/{purchaseOrderId}/items/{itemId}").buildAndExpand(purchaseOrderId, createdItem.getId()).toUri();
@@ -32,19 +32,19 @@ public class PurchaseOrderItemController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<List<PurchaseOrderItemDto>> getItemsForPurchaseOrder(@PathVariable Long purchaseOrderId) {
         return ResponseEntity.ok(purchaseOrderItemService.getItemsForPurchaseOrder(purchaseOrderId));
     }
 
     @PutMapping("/{itemId}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<PurchaseOrderItemDto> updateItem(@PathVariable Long purchaseOrderId, @PathVariable Long itemId, @Valid @RequestBody PurchaseOrderItemRequest itemRequest) {
         return ResponseEntity.ok(purchaseOrderItemService.updateItem(purchaseOrderId, itemId, itemRequest));
     }
 
     @DeleteMapping("/{itemId}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<Void> deleteItem(@PathVariable Long purchaseOrderId, @PathVariable Long itemId) {
         purchaseOrderItemService.deleteItem(purchaseOrderId, itemId);
         return ResponseEntity.noContent().build();

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
 
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+
 @Getter
 @Setter
 @NoArgsConstructor

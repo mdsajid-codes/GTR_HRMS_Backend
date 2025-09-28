@@ -1,7 +1,6 @@
 package com.example.multi_tanent.pos.controller;
 
 import com.example.multi_tanent.pos.dto.*;
-import com.example.multi_tanent.pos.entity.StockMovement;
 import com.example.multi_tanent.pos.service.StockMovementService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,7 @@ public class StockMovementController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<StockMovementDto> createStockMovement(@Valid @RequestBody StockMovementRequest request) {
         StockMovementDto createdMovement = stockMovementService.createStockMovement(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdMovement.getId()).toUri();
@@ -32,13 +31,13 @@ public class StockMovementController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<StockMovementDto>> getAllStockMovements() {
         return ResponseEntity.ok(stockMovementService.getAllStockMovementsForCurrentTenant());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER','POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<StockMovementDto> getStockMovementById(@PathVariable Long id) {
         return stockMovementService.getStockMovementDtoById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }

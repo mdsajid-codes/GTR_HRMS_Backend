@@ -1,11 +1,11 @@
 package com.example.multi_tanent.tenant.attendance.service;
 
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.attendance.dto.EmployeeBiometricMappingRequest;
 import com.example.multi_tanent.tenant.attendance.entity.BiometricDevice;
 import com.example.multi_tanent.tenant.attendance.entity.EmployeeBiometricMapping;
 import com.example.multi_tanent.tenant.attendance.repository.BiometricDeviceRepository;
 import com.example.multi_tanent.tenant.attendance.repository.EmployeeBiometricMappingRepository;
-import com.example.multi_tanent.tenant.employee.entity.Employee;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

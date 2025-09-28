@@ -23,7 +23,7 @@ public class TaxRateController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<TaxRate> createTaxRate(@Valid @RequestBody TaxRateRequest taxRateRequest) {
         TaxRate createdTaxRate = taxRateService.createTaxRate(taxRateRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -34,7 +34,7 @@ public class TaxRateController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TaxRate>> getAllTaxRates() {
         return ResponseEntity.ok(taxRateService.getAllTaxRatesForCurrentTenant());
     }
@@ -48,13 +48,13 @@ public class TaxRateController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<TaxRate> updateTaxRate(@PathVariable Long id, @Valid @RequestBody TaxRateRequest taxRateRequest) {
         return ResponseEntity.ok(taxRateService.updateTaxRate(id, taxRateRequest));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<Void> deleteTaxRate(@PathVariable Long id) {
         taxRateService.deleteTaxRate(id);
         return ResponseEntity.noContent().build();

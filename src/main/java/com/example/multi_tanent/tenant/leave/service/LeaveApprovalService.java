@@ -1,7 +1,7 @@
 package com.example.multi_tanent.tenant.leave.service;
 
-import com.example.multi_tanent.tenant.base.entity.User;
-import com.example.multi_tanent.tenant.base.repository.UserRepository;
+import com.example.multi_tanent.spersusers.enitity.User;
+import com.example.multi_tanent.spersusers.repository.UserRepository;
 import com.example.multi_tanent.tenant.leave.dto.LeaveRequestResponseDto;
 import com.example.multi_tanent.tenant.leave.dto.LeaveApprovalRequest;
 import com.example.multi_tanent.tenant.leave.entity.LeaveApproval;

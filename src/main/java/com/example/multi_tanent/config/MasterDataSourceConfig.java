@@ -37,7 +37,9 @@ public class MasterDataSourceConfig {
   public LocalContainerEntityManagerFactoryBean masterEmf() {
     LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
     emf.setDataSource(masterDataSource());
-    emf.setPackagesToScan("com.example.multi_tanent.master.entity");
+    emf.setPackagesToScan(
+            "com.example.multi_tanent.master.entity" // This is the correct package for MasterUser
+    );
     emf.setJpaVendorAdapter(new org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter());
     Properties p = new Properties();
     p.put("hibernate.hbm2ddl.auto", "update");

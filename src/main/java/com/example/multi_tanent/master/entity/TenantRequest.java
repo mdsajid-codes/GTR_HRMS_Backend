@@ -1,15 +1,13 @@
 package com.example.multi_tanent.master.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+
+import java.util.List;
 
 @Entity
 @Data
@@ -23,9 +21,9 @@ public class TenantRequest {
     private String tenantId;
     private String companyName;
     String adminEmail;
-    String adminPassword;
+    String adminPassword; // Note: Storing plain-text password is a security risk.
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "plan", length = 20)
-    private TenantPlan plan;
+    @Type(JsonType.class)
+    @Column(columnDefinition = "json")
+    private List<ServiceModule> serviceModules;
 }

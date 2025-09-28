@@ -27,7 +27,7 @@ public class ShiftTypeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createShiftType(@RequestBody ShiftTypeRequest request) {
         if (shiftTypeRepository.findByCode(request.getCode()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -67,7 +67,7 @@ public class ShiftTypeController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateShiftType(@PathVariable Long id, @RequestBody ShiftTypeRequest request) {
         Optional<ShiftType> existingByCode = shiftTypeRepository.findByCode(request.getCode());
         if (existingByCode.isPresent() && !existingByCode.get().getId().equals(id)) {
@@ -93,7 +93,7 @@ public class ShiftTypeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteShiftType(@PathVariable Long id) {
         return shiftTypeRepository.findById(id)
                 .map(shiftType -> {

@@ -23,7 +23,7 @@ public class ShiftPolicyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<ShiftPolicy> createShiftPolicy(@RequestBody ShiftPolicyRequest request) {
         ShiftPolicy createdPolicy = shiftPolicyService.createShiftPolicy(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -45,14 +45,14 @@ public class ShiftPolicyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<ShiftPolicy> updateShiftPolicy(@PathVariable Long id, @RequestBody ShiftPolicyRequest request) {
         ShiftPolicy updatedPolicy = shiftPolicyService.updateShiftPolicy(id, request);
         return ResponseEntity.ok(updatedPolicy);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteShiftPolicy(@PathVariable Long id) {
         shiftPolicyService.deleteShiftPolicy(id);
         return ResponseEntity.noContent().build();

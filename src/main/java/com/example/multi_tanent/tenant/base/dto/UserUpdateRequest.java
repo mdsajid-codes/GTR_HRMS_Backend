@@ -1,23 +1,18 @@
 package com.example.multi_tanent.tenant.base.dto;
 
-import java.util.Set;
-
 import com.example.multi_tanent.master.enums.Role;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Set;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRegisterRequest {
+public class UserUpdateRequest {
     private String name;
-    private String email;
-    private String passwordHash;
     private Set<Role> roles;
     private Boolean isActive;
-    private Boolean isLocked;
-    private Integer loginAttempts;
-    private String lastLoginIp;
+    private Long storeId; // Optional: to change the user's associated store
 }

@@ -38,7 +38,7 @@ public class LeaveEncashmentRequestController {
     }
 
     @PutMapping("/process")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeaveEncashmentRequest> processRequest(@RequestBody LeaveEncashmentProcessRequest request) {
         return ResponseEntity.ok(encashmentService.processRequest(request));
     }

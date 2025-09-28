@@ -26,7 +26,7 @@ public class TimeAttendenceController {
     }
 
     @PutMapping("/{employeeCode}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<TimeAttendence> createOrUpdateTimeAttendence(@PathVariable String employeeCode, @RequestBody TimeAttendenceRequest request) {
         return employeeRepository.findByEmployeeCode(employeeCode)
                 .map(employee -> {
@@ -62,7 +62,7 @@ public class TimeAttendenceController {
     }
 
     @DeleteMapping("/{employeeCode}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteTimeAttendence(@PathVariable String employeeCode) {
         return timeAttendenceRepository.findByEmployeeEmployeeCode(employeeCode)
                 .map(timeAttendence -> {

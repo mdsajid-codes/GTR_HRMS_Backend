@@ -1,4 +1,4 @@
-package com.example.multi_tanent.pos.entity;
+package com.example.multi_tanent.spersusers.enitity;
 
 import jakarta.persistence.*;
 import lombok.*;

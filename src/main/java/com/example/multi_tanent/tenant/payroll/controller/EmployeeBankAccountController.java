@@ -31,7 +31,7 @@ public class EmployeeBankAccountController {
     }
 
     @PutMapping("/{employeeCode}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeBankAccountResponse> createOrUpdateBankAccount(@PathVariable String employeeCode, @RequestBody EmployeeBankAccountRequest request) {
         boolean isNew = bankAccountService.getBankAccountByEmployeeCode(employeeCode).isEmpty();
         EmployeeBankAccount savedAccount = bankAccountService.createOrUpdateBankAccount(employeeCode, request);
@@ -46,7 +46,7 @@ public class EmployeeBankAccountController {
     }
 
     @DeleteMapping("/{employeeCode}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteBankAccount(@PathVariable String employeeCode) {
         bankAccountService.deleteBankAccount(employeeCode);
         return ResponseEntity.noContent().build();

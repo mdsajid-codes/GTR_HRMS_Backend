@@ -27,7 +27,7 @@ public class EmployeeProfileController {
     }
 
     @PutMapping("/{employeeCode}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeProfile> createOrUpdateEmployeeProfile(@PathVariable String employeeCode, @RequestBody EmployeeProfileRequest request) {
         return employeeRepository.findByEmployeeCode(employeeCode)
                 .map(employee -> {

@@ -1,10 +1,11 @@
 package com.example.multi_tanent.tenant.payroll.entity;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.util.List;
+
+import com.example.multi_tanent.spersusers.enitity.Employee;
 
 @Entity
 @Table(name = "salary_structures")

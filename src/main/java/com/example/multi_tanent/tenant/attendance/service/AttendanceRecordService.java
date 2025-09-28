@@ -1,5 +1,6 @@
 package com.example.multi_tanent.tenant.attendance.service;
 
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.attendance.dto.AttendanceRecordRequest;
 import com.example.multi_tanent.tenant.attendance.dto.BiometricPunchRequest;
 import com.example.multi_tanent.tenant.attendance.entity.AttendanceRecord;
@@ -13,7 +14,6 @@ import com.example.multi_tanent.tenant.attendance.repository.AttendanceSettingRe
 import com.example.multi_tanent.tenant.attendance.repository.BiometricDeviceRepository;
 import com.example.multi_tanent.tenant.attendance.repository.EmployeeBiometricMappingRepository;
 import com.example.multi_tanent.tenant.attendance.repository.ShiftPolicyRepository;
-import com.example.multi_tanent.tenant.employee.entity.Employee;
 import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;

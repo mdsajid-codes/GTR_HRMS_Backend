@@ -1,6 +1,6 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee; // Import Employee
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.employee.entity.EmployeeProfile;
 import com.example.multi_tanent.tenant.employee.entity.JobDetails;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeProfileRepository;

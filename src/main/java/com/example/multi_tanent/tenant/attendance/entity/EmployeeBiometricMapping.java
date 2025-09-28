@@ -1,7 +1,7 @@
 package com.example.multi_tanent.tenant.attendance.entity;
 
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.attendance.enums.IdentifierType;
-import com.example.multi_tanent.tenant.employee.entity.Employee;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

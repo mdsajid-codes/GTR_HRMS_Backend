@@ -20,13 +20,13 @@ public class AuditEventController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<List<AuditEvent>> getAllAuditEvents() {
         return ResponseEntity.ok(auditEventService.getAllAuditEventsForCurrentTenant());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<AuditEvent> getAuditEventById(@PathVariable Long id) {
         return auditEventService.getAuditEventById(id)
                 .map(ResponseEntity::ok)

@@ -27,7 +27,7 @@ public class WeekOffPolicyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createWeeklyOffPolicy(@RequestBody WeeklyOffPolicyRequest request) {
         if (weeklyOffPolicyRepository.findByCode(request.getCode()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -67,7 +67,7 @@ public class WeekOffPolicyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateWeeklyOffPolicy(@PathVariable Long id, @RequestBody WeeklyOffPolicyRequest request) {
         Optional<WeeklyOffPolicy> existingByCode = weeklyOffPolicyRepository.findByCode(request.getCode());
         if (existingByCode.isPresent() && !existingByCode.get().getId().equals(id)) {
@@ -93,7 +93,7 @@ public class WeekOffPolicyController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteWeeklyOffPolicy(@PathVariable Long id) {
         return weeklyOffPolicyRepository.findById(id)
                 .map(policy -> {

@@ -22,7 +22,7 @@ public class LeaveTypeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeaveType> createLeaveType(@RequestBody LeaveTypeRequest request) {
         LeaveType createdLeaveType = leaveTypeService.createLeaveType(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -44,14 +44,14 @@ public class LeaveTypeController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeaveType> updateLeaveType(@PathVariable Long id, @RequestBody LeaveTypeRequest request) {
         LeaveType updatedLeaveType = leaveTypeService.updateLeaveType(id, request);
         return ResponseEntity.ok(updatedLeaveType);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteLeaveType(@PathVariable Long id) {
         leaveTypeService.deleteLeaveType(id);
         return ResponseEntity.noContent().build();

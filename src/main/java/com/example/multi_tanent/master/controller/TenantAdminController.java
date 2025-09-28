@@ -26,8 +26,6 @@ public class TenantAdminController {
   public String createTenant(@RequestBody MasterTenant t) {
     repo.save(t);
     registry.addOrUpdateTenant(t);
-    // ensure schema for this tenant
-    schema.ensureSchema(registry.asTargetMap().get(t.getTenantId()));
     return "created";
   }
 

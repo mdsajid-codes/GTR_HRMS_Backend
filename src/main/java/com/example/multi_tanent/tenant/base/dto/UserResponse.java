@@ -1,7 +1,8 @@
 package com.example.multi_tanent.tenant.base.dto;
 
 import com.example.multi_tanent.master.enums.Role;
-import com.example.multi_tanent.tenant.base.entity.User;
+import com.example.multi_tanent.spersusers.enitity.User;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

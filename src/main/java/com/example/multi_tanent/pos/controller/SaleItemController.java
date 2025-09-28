@@ -7,9 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -38,13 +36,13 @@ public class SaleItemController {
     }
 
     @PutMapping("/{itemId}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SaleItem> updateSaleItem(@PathVariable Long saleId, @PathVariable Long itemId, @Valid @RequestBody SaleItemRequest itemRequest) {
         return ResponseEntity.ok(saleItemService.updateSaleItem(saleId, itemId, itemRequest));
     }
 
     @DeleteMapping("/{itemId}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> removeSaleItem(@PathVariable Long saleId, @PathVariable Long itemId) {
         saleItemService.removeSaleItem(saleId, itemId);
         return ResponseEntity.noContent().build();

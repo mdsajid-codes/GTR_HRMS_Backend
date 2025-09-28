@@ -25,7 +25,7 @@ public class AttendanceRecordController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<AttendanceRecord> markAttendance(@RequestBody AttendanceRecordRequest request) {
         AttendanceRecord newRecord = attendanceService.markAttendance(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -51,14 +51,14 @@ public class AttendanceRecordController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<AttendanceRecord> updateAttendance(@PathVariable Long id, @RequestBody AttendanceRecordRequest request) {
         AttendanceRecord updatedRecord = attendanceService.updateAttendance(id, request);
         return ResponseEntity.ok(updatedRecord);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteAttendance(@PathVariable Long id) {
         attendanceService.deleteAttendanceRecord(id);
         return ResponseEntity.noContent().build();

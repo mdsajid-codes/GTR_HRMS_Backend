@@ -36,7 +36,7 @@ public class DepartmentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createDepartment(@RequestBody DepartmentRequest request){
         if (departmentRepository.findByName(request.getName()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -74,7 +74,7 @@ public class DepartmentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateDepartment(@PathVariable Long id, @RequestBody DepartmentRequest departmentRequest){
         if (departmentRepository.findByName(departmentRequest.getName())
                 .filter(d -> !d.getId().equals(id))
@@ -102,7 +102,7 @@ public class DepartmentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteDepartment(@PathVariable Long id){
         return departmentRepository.findById(id)
             .map(department -> {

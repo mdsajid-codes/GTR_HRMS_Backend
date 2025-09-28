@@ -39,7 +39,7 @@ public class LeaveRequestController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<List<LeaveRequestResponseDto>> getAllLeaveRequests() {
         return ResponseEntity.ok(leaveRequestService.getAllLeaveRequests());
     }

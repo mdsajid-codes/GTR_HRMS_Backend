@@ -22,7 +22,7 @@ public class LeavePolicyController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeavePolicy> createPolicy(@RequestBody LeavePolicyRequest request) {
         LeavePolicy createdPolicy = policyService.createPolicy(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -44,14 +44,14 @@ public class LeavePolicyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeavePolicy> updatePolicy(@PathVariable Long id, @RequestBody LeavePolicyRequest request) {
         LeavePolicy updatedPolicy = policyService.updatePolicy(id, request);
         return ResponseEntity.ok(updatedPolicy);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deletePolicy(@PathVariable Long id) {
         policyService.deletePolicy(id);
         return ResponseEntity.noContent().build();

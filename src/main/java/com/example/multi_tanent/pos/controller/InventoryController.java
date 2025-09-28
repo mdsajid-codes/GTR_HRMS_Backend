@@ -20,7 +20,7 @@ public class InventoryController {
     }
 
     @GetMapping("/store/{storeId}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER','POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<InventoryDto>> getInventoryForStore(@PathVariable Long storeId) {
         List<InventoryDto> inventory = inventoryService.getInventoryByStore(storeId);
         return ResponseEntity.ok(inventory);

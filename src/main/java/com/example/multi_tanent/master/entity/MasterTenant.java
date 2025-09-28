@@ -1,6 +1,9 @@
 package com.example.multi_tanent.master.entity;
 
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Type;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -28,9 +31,14 @@ public class MasterTenant {
   @Column(nullable=false)
   private String password;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "plan", length = 20)
-  private TenantPlan plan;
+  // Store selected modules as a JSON array of strings in the database
+  @Type(JsonType.class)
+  @Column(columnDefinition = "json")
+  private java.util.List<ServiceModule> serviceModules;
+
+  public String[] getEntityPackages() {
+    return ServiceModule.getPackagesForModules(this.serviceModules);
+  }
 
   // getters/setters
 }

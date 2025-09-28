@@ -24,7 +24,7 @@ public class PaymentController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Payment> addPaymentToSale(@PathVariable Long saleId, @Valid @RequestBody PaymentRequest paymentRequest) {
         Payment createdPayment = paymentService.addPayment(saleId, paymentRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/pos/sales/{saleId}/payments/{paymentId}").buildAndExpand(saleId, createdPayment.getId()).toUri();
@@ -38,7 +38,7 @@ public class PaymentController {
     }
 
     @DeleteMapping("/{paymentId}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<Void> deletePayment(@PathVariable Long saleId, @PathVariable Long paymentId) {
         paymentService.deletePayment(saleId, paymentId);
         return ResponseEntity.noContent().build();

@@ -1,9 +1,9 @@
 package com.example.multi_tanent.tenant.employee.controller;
 
-import com.example.multi_tanent.tenant.base.entity.User;
-import com.example.multi_tanent.tenant.base.repository.UserRepository;
+import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.spersusers.enitity.User;
+import com.example.multi_tanent.spersusers.repository.UserRepository;
 import com.example.multi_tanent.tenant.employee.dto.EmployeeRequest;
-import com.example.multi_tanent.tenant.employee.entity.Employee;
 import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.employee.enums.Gender;
 import com.example.multi_tanent.tenant.employee.enums.MartialStatus;
@@ -58,7 +58,7 @@ public class EmployeeController {
   }
 
   @PostMapping("/register")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   public ResponseEntity<?> registerEmployee(@RequestBody EmployeeRequest request){
     Optional<User> userOpt = userRepo.findByEmail(request.getEmail());
     if(userOpt.isEmpty()){
@@ -91,7 +91,7 @@ public class EmployeeController {
   }
 
   @PostMapping("/bulkEmployees")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   public ResponseEntity<String> addBulkEmployees(@RequestParam("file") MultipartFile file){
     if (file.isEmpty()) {
         return ResponseEntity.badRequest().body("Cannot process an empty file.");
@@ -181,7 +181,7 @@ public class EmployeeController {
   }
 
   @GetMapping("/all")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   @Transactional(readOnly = true)
   public List<Employee> all() {
       return empRepo.findAll();
@@ -205,7 +205,7 @@ public class EmployeeController {
   }
 
   @GetMapping("/by-gender/{gender}")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   @Transactional(readOnly = true)
   public ResponseEntity<?> fetchByGender(@PathVariable String gender){
     try {
@@ -218,7 +218,7 @@ public class EmployeeController {
   }
 
   @GetMapping("/by-martial-status/{martialStatus}")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   @Transactional(readOnly = true)
   public ResponseEntity<?> fetchByMartialStatus(@PathVariable String martialStatus){
     try {
@@ -231,7 +231,7 @@ public class EmployeeController {
   }
 
   @GetMapping("/by-status/{status}")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   @Transactional(readOnly = true)
   public ResponseEntity<?> fetchByStatus(@PathVariable String status){
     try {
@@ -244,7 +244,7 @@ public class EmployeeController {
   }
   
   @PostMapping("/{employeeCode}/photo")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   public ResponseEntity<?> uploadPhoto(@PathVariable String employeeCode, @RequestParam("file") MultipartFile file) {
       String contentType = file.getContentType();
       if (contentType == null || !contentType.startsWith("image/")) {
@@ -296,7 +296,7 @@ public class EmployeeController {
   }
 
   @PutMapping("/{employeeCode}")
-  @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   public ResponseEntity<Employee> updateEmployee(@PathVariable String employeeCode, @RequestBody EmployeeRequest empRequest){
     return empRepo.findByEmployeeCode(employeeCode)
         .map(employee -> {

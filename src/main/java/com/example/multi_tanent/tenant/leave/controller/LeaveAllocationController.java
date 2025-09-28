@@ -23,7 +23,7 @@ public class LeaveAllocationController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeaveAllocation> createAllocation(@RequestBody LeaveAllocationRequest request) {
         LeaveAllocation createdAllocation = allocationService.createAllocation(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -38,14 +38,14 @@ public class LeaveAllocationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeaveAllocation> updateAllocation(@PathVariable Long id, @RequestBody LeaveAllocationRequest request) {
         LeaveAllocation updatedAllocation = allocationService.updateAllocation(id, request);
         return ResponseEntity.ok(updatedAllocation);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteAllocation(@PathVariable Long id) {
         allocationService.deleteAllocation(id);
         return ResponseEntity.noContent().build();

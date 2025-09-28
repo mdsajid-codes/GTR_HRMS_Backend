@@ -1,6 +1,6 @@
 package com.example.multi_tanent.tenant.payroll.entity;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.payroll.enums.ExpenseStatus;
 import jakarta.persistence.*;
 import lombok.Data;

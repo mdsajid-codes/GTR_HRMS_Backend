@@ -1,6 +1,6 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.payroll.entity.*;
 import com.example.multi_tanent.tenant.payroll.enums.CalculationType;
 import com.example.multi_tanent.tenant.payroll.enums.LoanStatus;

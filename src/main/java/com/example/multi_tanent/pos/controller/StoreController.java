@@ -22,7 +22,7 @@ public class StoreController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<Store> createStore( @RequestBody StoreRequest storeRequest) {
         Store createdStore = storeService.createStore(storeRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -33,7 +33,7 @@ public class StoreController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER','POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Store>> getAllStores() {
         return ResponseEntity.ok(storeService.getAllStoresForCurrentTenant());
     }
@@ -47,13 +47,13 @@ public class StoreController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<Store> updateStore(@PathVariable Long id, @RequestBody StoreRequest storeRequest) {
         return ResponseEntity.ok(storeService.updateStore(id, storeRequest));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<Void> deleteStore(@PathVariable Long id) {
         storeService.deleteStore(id);
         return ResponseEntity.noContent().build();

@@ -4,7 +4,6 @@ import com.example.multi_tanent.pos.dto.InvoiceDto;
 import com.example.multi_tanent.pos.dto.SaleDto;
 import com.example.multi_tanent.pos.dto.SaleRequest;
 
-import com.example.multi_tanent.pos.entity.Sale;
 import com.example.multi_tanent.pos.service.SaleService;
 import com.example.multi_tanent.pos.service.InvoiceService;
 import org.springframework.http.HttpHeaders;
@@ -32,7 +31,7 @@ public class SaleController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<SaleDto> createSale(@Valid @RequestBody SaleRequest saleRequest) {
         SaleDto createdSale = saleService.createSale(saleRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdSale.getId()).toUri();
@@ -40,7 +39,7 @@ public class SaleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<SaleDto>> getAllSales() {
         return ResponseEntity.ok(saleService.getAllSalesForCurrentTenant());
     }

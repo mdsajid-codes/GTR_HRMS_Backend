@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/payroll-settings")
 @CrossOrigin(origins = "*")
-@PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
 public class PayrollSettingController {
 
     private final PayrollSettingService payrollSettingService;

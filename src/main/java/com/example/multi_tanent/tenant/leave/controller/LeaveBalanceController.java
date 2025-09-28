@@ -23,7 +23,7 @@ public class LeaveBalanceController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeaveBalance> createOrUpdateBalance(@RequestBody LeaveBalanceRequest request) {
         LeaveBalance createdBalance = balanceService.createOrUpdateBalance(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -38,7 +38,7 @@ public class LeaveBalanceController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteBalance(@PathVariable Long id) {
         balanceService.deleteBalance(id);
         return ResponseEntity.noContent().build();

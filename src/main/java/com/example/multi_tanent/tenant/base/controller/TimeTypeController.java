@@ -27,7 +27,7 @@ public class TimeTypeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createTimeType(@RequestBody TimeTypeRequest request) {
         if (timeTypeRepository.findByCode(request.getCode()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -65,7 +65,7 @@ public class TimeTypeController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateTimeType(@PathVariable Long id, @RequestBody TimeTypeRequest request) {
         Optional<TimeType> existingByCode = timeTypeRepository.findByCode(request.getCode());
         if (existingByCode.isPresent() && !existingByCode.get().getId().equals(id)) {
@@ -89,7 +89,7 @@ public class TimeTypeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteTimeType(@PathVariable Long id) {
         return timeTypeRepository.findById(id)
                 .map(timeType -> {

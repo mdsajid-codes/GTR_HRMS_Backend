@@ -41,7 +41,7 @@ public class DesignationController {
     }
 
     @PostMapping("/for-department/{departmentCode}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createDesignation(@PathVariable String departmentCode, @RequestBody DesignationRequest designationRequest){
         return departmentRepository.findByCode(departmentCode)
             .map(department -> {
@@ -96,7 +96,7 @@ public class DesignationController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateDesignation(@PathVariable Long id, @RequestBody DesignationRequest designationRequest){
         return designationRepository.findById(id)
             .map(designation -> {
@@ -117,7 +117,7 @@ public class DesignationController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteDesignation(@PathVariable Long id){
         return designationRepository.findById(id)
             .map(designation -> {

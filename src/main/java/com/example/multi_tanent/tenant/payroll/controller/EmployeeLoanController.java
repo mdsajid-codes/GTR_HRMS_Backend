@@ -25,7 +25,7 @@ public class EmployeeLoanController {
     }
 
     @PostMapping("/request")
-    @PreAuthorize("hasAnyRole('EMPLOYEE', 'TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeLoanResponse> requestLoan(@RequestBody EmployeeLoanRequest request) {
         EmployeeLoan newLoan = employeeLoanService.requestLoan(request);
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/employee-loans/{id}")
@@ -34,7 +34,7 @@ public class EmployeeLoanController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<List<EmployeeLoanResponse>> getAllLoans() {
         List<EmployeeLoanResponse> loans = employeeLoanService.getAllLoans().stream()
                 .map(EmployeeLoanResponse::fromEntity)
@@ -60,21 +60,21 @@ public class EmployeeLoanController {
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeLoanResponse> approveLoan(@PathVariable Long id) {
         EmployeeLoan approvedLoan = employeeLoanService.approveLoan(id);
         return ResponseEntity.ok(EmployeeLoanResponse.fromEntity(approvedLoan));
     }
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeLoanResponse> rejectLoan(@PathVariable Long id) {
         EmployeeLoan rejectedLoan = employeeLoanService.rejectLoan(id);
         return ResponseEntity.ok(EmployeeLoanResponse.fromEntity(rejectedLoan));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteLoan(@PathVariable Long id) {
         employeeLoanService.deleteLoan(id);
         return ResponseEntity.noContent().build();

@@ -6,7 +6,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.leave.enums.EncashmentStatus;
 
 @Entity

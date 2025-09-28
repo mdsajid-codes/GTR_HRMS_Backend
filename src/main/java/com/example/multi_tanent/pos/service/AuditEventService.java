@@ -1,9 +1,10 @@
 package com.example.multi_tanent.pos.service;
 
 import com.example.multi_tanent.pos.entity.AuditEvent;
-import com.example.multi_tanent.pos.entity.Tenant;
 import com.example.multi_tanent.pos.repository.AuditEventRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

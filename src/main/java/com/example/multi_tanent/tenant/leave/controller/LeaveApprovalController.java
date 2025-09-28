@@ -26,7 +26,7 @@ public class LeaveApprovalController {
     }
 
     @PostMapping("/process")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LeaveRequestResponseDto> processLeaveApproval(@RequestBody LeaveApprovalRequest request) {
         return ResponseEntity.ok(approvalService.processApproval(request));
     }

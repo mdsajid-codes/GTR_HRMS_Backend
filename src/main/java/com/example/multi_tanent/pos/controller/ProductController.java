@@ -30,7 +30,7 @@ public class ProductController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest productRequest) { // Keeping Product for create response consistency
         Product createdProduct = productService.createProduct(productRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -41,7 +41,7 @@ public class ProductController {
     }
 
     @PostMapping("/bulk")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<?> bulkAddProducts(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Please select a file to upload."));
@@ -56,7 +56,7 @@ public class ProductController {
     }
 
     @GetMapping("/bulk-template")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<byte[]> downloadBulkAddTemplate() {
         try {
             byte[] excelContent = productService.generateBulkAddTemplate();
@@ -92,13 +92,13 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<ProductDto> updateProduct(@PathVariable Long id, @Valid @RequestBody ProductRequest productRequest) {
         return ResponseEntity.ok(productService.updateProduct(id, productRequest));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();

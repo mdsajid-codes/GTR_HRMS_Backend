@@ -2,11 +2,12 @@ package com.example.multi_tanent.pos.service;
 
 import com.example.multi_tanent.pos.dto.TenantSubscriptionRequest;
 import com.example.multi_tanent.pos.entity.Plan;
-import com.example.multi_tanent.pos.entity.Tenant;
 import com.example.multi_tanent.pos.entity.TenantSubscription;
 import com.example.multi_tanent.pos.repository.PlanRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.pos.repository.TenantSubscriptionRepository;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -2,15 +2,16 @@
 package com.example.multi_tanent.master.service;
 
 import com.example.multi_tanent.config.TenantRegistry;
-import com.example.multi_tanent.config.TenantSchemaCreator;
 import com.example.multi_tanent.master.dto.ProvisionTenantRequest;
+import com.example.multi_tanent.master.entity.ServiceModule;
 import com.example.multi_tanent.master.entity.MasterTenant;
-import com.example.multi_tanent.master.enums.Role;
+import com.example.multi_tanent.pos.entity.Category;
+import com.example.multi_tanent.pos.entity.Store;
+import com.example.multi_tanent.pos.entity.TaxRate;
 import com.example.multi_tanent.master.repository.MasterTenantRepository; // Keep this line
-import com.example.multi_tanent.pos.entity.PosUser;
-import com.example.multi_tanent.pos.enums.PosRole;
-import com.example.multi_tanent.tenant.base.entity.User;
-
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.enitity.User;
+import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.transaction.Transactional;
@@ -23,10 +24,9 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Properties;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
@@ -35,7 +35,6 @@ public class TenantProvisioningService {
     private final JdbcTemplate masterJdbc;                 // uses masterDataSource
     private final MasterTenantRepository masterRepo;
     private final TenantRegistry registry;
-    private final TenantSchemaCreator schemaCreator;
     private final PasswordEncoder passwordEncoder;
 
     // use ONE MySQL user that has CREATE DATABASE privilege for provisioning
@@ -51,13 +50,11 @@ public class TenantProvisioningService {
             DataSource masterDataSource,
             MasterTenantRepository masterRepo,
             TenantRegistry registry,
-            TenantSchemaCreator schemaCreator,
             PasswordEncoder passwordEncoder
     ) {
         this.masterJdbc = new JdbcTemplate(masterDataSource);
         this.masterRepo = masterRepo;
         this.registry = registry;
-        this.schemaCreator = schemaCreator;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -79,17 +76,21 @@ public class TenantProvisioningService {
         mt.setJdbcUrl(jdbcUrl);
         mt.setUsername(mysqlUser);
         mt.setPassword(mysqlPass);
-        mt.setPlan(req.plan());
+        mt.setServiceModules(req.serviceModules());
         masterRepo.save(mt);
 
-        // 4) Add/refresh DataSource in routing map
-        registry.addOrUpdateTenant(mt);
-        // 5) Ensure schema (tables) for this tenant - This is now handled by registry.addOrUpdateTenant()
-        DataSource tenantDs = registry.asTargetMap().get(tenantId) instanceof DataSource d ? d : null;
-        if (tenantDs == null) throw new IllegalStateException("Tenant DS not attached");
+        // 4) Create schema and seed initial admin users using a temporary data source
+        try (HikariDataSource tenantDs = createTempDataSource(mt)) {
+            createSchemaAndSeedData(tenantDs, mt, req);
+        } catch (Exception e) {
+            // If seeding fails, we should ideally roll back the DB creation,
+            // but JDBC template doesn't participate in the transaction.
+            // For now, we'll re-throw to ensure the master_tenant record is rolled back.
+            throw new RuntimeException("Failed during tenant schema creation and seeding.", e);
+        }
 
-        // 6) Create schema and seed initial admin users based on the plan
-        createSchemaAndSeedData(tenantDs, mt, req);
+        // 5) Add/refresh DataSource in routing map for live application use.
+        registry.addOrUpdateTenant(mt);
     }
 
     private String normalizeTenantId(String raw) {
@@ -104,61 +105,92 @@ public class TenantProvisioningService {
         return id;
     }
 
-    private void createSchemaAndSeedData(DataSource tenantDs, MasterTenant masterTenant, ProvisionTenantRequest req) {
-        // Build a temporary EMF bound to THIS tenant DS to write seed data
+    private HikariDataSource createTempDataSource(MasterTenant tenant) {
+        HikariDataSource ds = new HikariDataSource();
+        ds.setJdbcUrl(tenant.getJdbcUrl());
+        ds.setUsername(tenant.getUsername());
+        ds.setPassword(tenant.getPassword());
+        return ds;
+    }
+
+    private void createOrUpdateSchema(DataSource tenantDs, String ddlAction, String... packagesToScan) {
         LocalContainerEntityManagerFactoryBean emfBean = new LocalContainerEntityManagerFactoryBean();
         emfBean.setDataSource(tenantDs);
-        // We need all packages relevant to the plan to correctly build entity mappings
-        emfBean.setPackagesToScan(req.plan().getEntityPackages());
+        emfBean.setPackagesToScan(packagesToScan);
         emfBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         Properties p = new Properties();
-        p.put("hibernate.hbm2ddl.auto", "create"); // Use "create" for a new tenant DB to ensure correct schema generation
-        p.put("hibernate.boot.allow_jdbc_metadata_access", "false");
+        p.put("hibernate.hbm2ddl.auto", ddlAction);
         p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
-        p.put("hibernate.show_sql", "true");
-        p.put("hibernate.format_sql", "true");
         emfBean.setJpaProperties(p);
         emfBean.afterPropertiesSet();
+        emfBean.destroy(); // This triggers schema creation/update and then closes the factory.
+    }
 
+    private void createSchemaAndSeedData(DataSource tenantDs, MasterTenant masterTenant, ProvisionTenantRequest req) {
+        // Step 1 & 2 Combined: Create the entire schema for all modules at once.
+        createOrUpdateSchema(tenantDs, "create", ServiceModule.getPackagesForModules(req.serviceModules()));
+
+        // Step 3: Now that schema is created, create a proper EMF to seed data.
+        LocalContainerEntityManagerFactoryBean emfBean = new LocalContainerEntityManagerFactoryBean();
+        emfBean.setDataSource(tenantDs);
+        emfBean.setPackagesToScan(ServiceModule.getPackagesForModules(req.serviceModules()));
+        emfBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+        Properties p = new Properties();
+        p.put("hibernate.hbm2ddl.auto", "none"); // Schema is already created, no need to modify it.
+        p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        emfBean.setJpaProperties(p);
+        emfBean.afterPropertiesSet();
+        
         EntityManagerFactory emf = emfBean.getObject();
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
 
-            java.util.List<String> entityPackages = Arrays.asList(req.plan().getEntityPackages());
+            // Create the tenant record within its own database first.
+            Tenant tenantRecord = new Tenant();
+            tenantRecord.setName(masterTenant.getCompanyName());
+            em.persist(tenantRecord);
 
-            // Seed HRMS Admin User if plan includes HRMS service
-            if (entityPackages.contains("com.example.multi_tanent.tenant.base.entity")) {
+            // Seed a default Store for the tenant
+            Store defaultStore = new Store();
+            defaultStore.setTenant(tenantRecord);
+            defaultStore.setName("Main Store");
+            defaultStore.setAddress("Default Address");
+            em.persist(defaultStore);
+
+            // Seed a default Tax Rate (e.g., VAT 5%)
+            TaxRate defaultTax = new TaxRate();
+            defaultTax.setTenant(tenantRecord);
+            defaultTax.setName("VAT 5%");
+            defaultTax.setPercent(new BigDecimal("5.00"));
+            em.persist(defaultTax);
+
+            // Seed a default Category
+            Category defaultCategory = new Category();
+            defaultCategory.setTenant(tenantRecord);
+            defaultCategory.setName("Default");
+            em.persist(defaultCategory);
+
+            // Check if a user with this email already exists in the new tenant's DB.
+            // This is a safeguard, though it should always be empty for a new tenant.
+            long userCount = (long) em.createQuery("SELECT count(u) FROM User u WHERE u.email = :email")
+                    .setParameter("email", req.adminEmail())
+                    .getSingleResult();
+
+            // Seed the initial admin user
+            if (userCount == 0) {
                 User admin = new User();
+                admin.setTenant(tenantRecord);
+                admin.setStore(defaultStore); // Associate admin with the default store
                 admin.setName("Tenant Admin");
                 admin.setEmail(req.adminEmail());
                 admin.setPasswordHash(passwordEncoder.encode(req.adminPassword()));
-                admin.setPlan(req.plan());
-                admin.setRoles(Set.of(Role.TENANT_ADMIN));
+                admin.setRoles(req.adminRoles()); // Use roles from the request
                 admin.setIsActive(true);
                 admin.setIsLocked(false);
-                admin.setLastLoginAt(LocalDateTime.now());
                 admin.setCreatedAt(LocalDateTime.now());
                 admin.setUpdatedAt(LocalDateTime.now());
                 admin.setLoginAttempts(0);
                 em.persist(admin);
-            }
-
-            // Seed POS Admin User if plan includes POS service
-            if (entityPackages.contains("com.example.multi_tanent.pos.entity")) {
-                // First, create the Tenant record for the POS module
-                com.example.multi_tanent.pos.entity.Tenant posTenant = new com.example.multi_tanent.pos.entity.Tenant();
-                posTenant.setName(masterTenant.getCompanyName());
-                em.persist(posTenant);
-
-                // Now, create the POS admin user
-                PosUser posAdmin = PosUser.builder()
-                        .tenant(posTenant)
-                        .email(req.adminEmail()) // Using email as username
-                        .displayName("POS Administrator")
-                        .passwordHash(passwordEncoder.encode(req.adminPassword()))
-                        .role(PosRole.POS_ADMIN)
-                        .build();
-                em.persist(posAdmin);
             }
 
             em.getTransaction().commit();

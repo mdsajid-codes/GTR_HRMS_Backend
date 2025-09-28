@@ -24,7 +24,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Customer> createCustomer(@Valid @RequestBody CustomerRequest customerRequest) {
         Customer createdCustomer = customerService.createCustomer(customerRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdCustomer.getId()).toUri();
@@ -44,13 +44,13 @@ public class CustomerController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Customer> updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequest customerRequest) {
         return ResponseEntity.ok(customerService.updateCustomer(id, customerRequest));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<Void> deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
         return ResponseEntity.noContent().build();

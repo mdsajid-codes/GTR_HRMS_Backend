@@ -4,6 +4,9 @@ import com.example.multi_tanent.pos.dto.SaleDto;
 import com.example.multi_tanent.pos.dto.SaleRequest;
 import com.example.multi_tanent.pos.dto.SaleItemDto;
 import com.example.multi_tanent.pos.entity.*;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.enitity.User; // Corrected import
+import com.example.multi_tanent.spersusers.repository.UserRepository; // Corrected import
 import com.example.multi_tanent.pos.repository.*;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -24,21 +27,21 @@ public class SaleService {
 
     private final SaleRepository saleRepository;
     private final TenantRepository tenantRepository;
-    private final PosUserRepository posUserRepository;
+    private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
     private final ProductVariantRepository productVariantRepository;
 
     private final InventoryRepository inventoryRepository;
     private final StoreRepository storeRepository;
     private final StockMovementService stockMovementService;
-
+    
     public SaleService(SaleRepository saleRepository, TenantRepository tenantRepository,
-                       PosUserRepository posUserRepository, CustomerRepository customerRepository,
+                       UserRepository userRepository, CustomerRepository customerRepository,
                        ProductVariantRepository productVariantRepository, StoreRepository storeRepository,
                        InventoryRepository inventoryRepository, StockMovementService stockMovementService) {
         this.saleRepository = saleRepository;
         this.tenantRepository = tenantRepository;
-        this.posUserRepository = posUserRepository;
+        this.userRepository = userRepository;
         this.customerRepository = customerRepository;
         this.productVariantRepository = productVariantRepository;
         this.stockMovementService = stockMovementService;
@@ -52,16 +55,15 @@ public class SaleService {
                 .orElseThrow(() -> new IllegalStateException("Tenant context not found."));
     }
 
-    private PosUser getCurrentUser() {
+    private User getCurrentUser() {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        Tenant currentTenant = getCurrentTenant();
-        return posUserRepository.findByEmailAndTenantId(username, currentTenant.getId())
+        return userRepository.findByEmail(username)
                 .orElseThrow(() -> new IllegalStateException("Authenticated user not found in current tenant."));
     }
 
     public SaleDto createSale(SaleRequest request) {
         Tenant currentTenant = getCurrentTenant();
-        PosUser currentUser = getCurrentUser();
+        User currentUser = getCurrentUser();
 
         Sale sale = new Sale();
         sale.setTenant(currentTenant);

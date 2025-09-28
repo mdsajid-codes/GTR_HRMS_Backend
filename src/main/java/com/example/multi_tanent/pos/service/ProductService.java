@@ -7,6 +7,8 @@ import com.example.multi_tanent.pos.dto.ProductRequest;
 import com.example.multi_tanent.pos.dto.ProductVariantRequest;
 import com.example.multi_tanent.pos.entity.*;
 import com.example.multi_tanent.pos.repository.*;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
@@ -82,7 +84,7 @@ public class ProductService {
         product.setDescription(request.getDescription());
         product.setActive(request.isActive());
 
-        if (request.getCategoryId() != null) { // Fix: Changed from request.getCategoryId() to request.getCategoryId()
+        if (request.getCategoryId() != null) {
             Category category = categoryRepository.findByIdAndTenantId(request.getCategoryId(), currentTenant.getId())
                     .orElseThrow(() -> new RuntimeException("Category not found with id: " + request.getCategoryId()));
             product.setCategory(category);

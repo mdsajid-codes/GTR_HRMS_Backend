@@ -22,7 +22,7 @@ public class EmployeeBiometricMappingController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeBiometricMapping> createMapping(@RequestBody EmployeeBiometricMappingRequest request) {
         EmployeeBiometricMapping createdMapping = mappingService.createMapping(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -44,14 +44,14 @@ public class EmployeeBiometricMappingController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeBiometricMapping> updateMapping(@PathVariable Long id, @RequestBody EmployeeBiometricMappingRequest request) {
         EmployeeBiometricMapping updatedMapping = mappingService.updateMapping(id, request);
         return ResponseEntity.ok(updatedMapping);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteMapping(@PathVariable Long id) {
         mappingService.deleteMapping(id);
         return ResponseEntity.noContent().build();

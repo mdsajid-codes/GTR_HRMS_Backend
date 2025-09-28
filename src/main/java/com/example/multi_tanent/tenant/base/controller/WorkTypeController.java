@@ -27,7 +27,7 @@ public class WorkTypeController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createWorkType(@RequestBody WorkTypeRequest request) {
         if (workTypeRepository.findByCode(request.getCode()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -65,7 +65,7 @@ public class WorkTypeController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateWorkType(@PathVariable Long id, @RequestBody WorkTypeRequest request) {
         Optional<WorkType> existingByCode = workTypeRepository.findByCode(request.getCode());
         if (existingByCode.isPresent() && !existingByCode.get().getId().equals(id)) {
@@ -89,7 +89,7 @@ public class WorkTypeController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteWorkType(@PathVariable Long id) {
         return workTypeRepository.findById(id)
                 .map(workType -> {

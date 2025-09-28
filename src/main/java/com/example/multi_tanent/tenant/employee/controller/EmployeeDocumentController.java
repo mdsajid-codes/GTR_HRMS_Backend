@@ -35,7 +35,7 @@ public class EmployeeDocumentController {
     }
 
     @PostMapping("/{employeeCode}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeDocument> uploadDocument(@PathVariable String employeeCode,
                                                            @RequestParam("file") MultipartFile file,
                                                            @RequestParam("docType") String docType,
@@ -60,7 +60,7 @@ public class EmployeeDocumentController {
     }
 
     @GetMapping("/download/{documentId}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR', 'MANAGER') or @documentSecurityService.isOwner(#documentId, authentication)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER') or @documentSecurityService.isOwner(#documentId, authentication)")
     public ResponseEntity<Resource> downloadFile(@PathVariable Long documentId) {
         return documentService.getDocument(documentId)
                 .map(doc -> {
@@ -85,7 +85,7 @@ public class EmployeeDocumentController {
     }
 
     @GetMapping("/view/{documentId}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR', 'MANAGER') or @documentSecurityService.isOwner(#documentId, authentication)")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER') or @documentSecurityService.isOwner(#documentId, authentication)")
     public ResponseEntity<Resource> viewFile(@PathVariable Long documentId) {
         return documentService.getDocument(documentId)
                 .map(doc -> {
@@ -110,14 +110,14 @@ public class EmployeeDocumentController {
     }
 
     @PutMapping("/{documentId}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeDocument> updateDocumentDetails(@PathVariable Long documentId, @RequestBody EmployeeDocumentRequest request) {
         EmployeeDocument updatedDoc = documentService.updateDocumentDetails(documentId, request.getDocType(), request.getRemarks(), request.getVerified());
         return ResponseEntity.ok(updatedDoc);
     }
 
     @DeleteMapping("/{documentId}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteDocument(@PathVariable Long documentId) {
         documentService.deleteDocument(documentId);
         return ResponseEntity.noContent().build();

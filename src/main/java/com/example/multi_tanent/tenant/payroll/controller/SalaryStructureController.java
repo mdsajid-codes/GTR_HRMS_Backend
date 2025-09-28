@@ -24,7 +24,7 @@ public class SalaryStructureController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<SalaryStructureResponse> createSalaryStructure(@RequestBody SalaryStructureRequest request) {
         var createdStructure = salaryStructureService.createSalaryStructure(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -41,7 +41,7 @@ public class SalaryStructureController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<List<SalaryStructureResponse>> getAllSalaryStructures() {
         List<SalaryStructureResponse> structures = salaryStructureService.getAllSalaryStructures()
                 .stream()
@@ -51,14 +51,14 @@ public class SalaryStructureController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<SalaryStructureResponse> updateSalaryStructure(@PathVariable Long id, @RequestBody SalaryStructureRequest request) {
         var updatedStructure = salaryStructureService.updateSalaryStructure(id, request);
         return ResponseEntity.ok(SalaryStructureResponse.fromEntity(updatedStructure));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteSalaryStructure(@PathVariable Long id) {
         salaryStructureService.deleteSalaryStructure(id);
         return ResponseEntity.noContent().build();

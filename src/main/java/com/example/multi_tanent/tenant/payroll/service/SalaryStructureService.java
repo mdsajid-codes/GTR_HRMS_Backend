@@ -1,6 +1,6 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.payroll.dto.SalaryStructureRequest;
 import com.example.multi_tanent.tenant.payroll.entity.SalaryComponent;

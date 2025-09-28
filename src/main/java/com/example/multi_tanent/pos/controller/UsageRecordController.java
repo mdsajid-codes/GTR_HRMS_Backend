@@ -20,13 +20,13 @@ public class UsageRecordController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<List<UsageRecord>> getAllUsageRecords() {
         return ResponseEntity.ok(usageRecordService.getAllUsageRecordsForCurrentTenant());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<UsageRecord> getUsageRecordById(@PathVariable Long id) {
         return usageRecordService.getUsageRecordById(id)
                 .map(ResponseEntity::ok)

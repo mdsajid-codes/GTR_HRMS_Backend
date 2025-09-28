@@ -33,7 +33,7 @@ public class ExpenseController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<List<ExpenseResponse>> getAllExpenses() {
         List<ExpenseResponse> expenses = expenseService.getAllExpenses().stream()
                 .map(ExpenseResponse::fromEntity)
@@ -59,21 +59,21 @@ public class ExpenseController {
     }
 
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<ExpenseResponse> approveExpense(@PathVariable Long id) {
         var approvedExpense = expenseService.approveExpense(id);
         return ResponseEntity.ok(ExpenseResponse.fromEntity(approvedExpense));
     }
 
     @PutMapping("/{id}/reject")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<ExpenseResponse> rejectExpense(@PathVariable Long id) {
         var rejectedExpense = expenseService.rejectExpense(id);
         return ResponseEntity.ok(ExpenseResponse.fromEntity(rejectedExpense));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteExpense(@PathVariable Long id) {
         expenseService.deleteExpense(id);
         return ResponseEntity.noContent().build();

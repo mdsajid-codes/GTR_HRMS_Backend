@@ -24,7 +24,7 @@ public class ProductVariantController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<ProductVariantDto> addVariantToProduct(@PathVariable Long productId, @Valid @RequestBody ProductVariantRequest variantRequest) {
         ProductVariantDto createdVariant = productVariantService.addVariant(productId, variantRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/pos/products/{productId}/variants/{variantId}").buildAndExpand(productId, createdVariant.getId()).toUri();
@@ -44,13 +44,13 @@ public class ProductVariantController {
     }
 
     @PutMapping("/{variantId}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<ProductVariantDto> updateVariant(@PathVariable Long productId, @PathVariable Long variantId, @Valid @RequestBody ProductVariantRequest variantRequest) {
         return ResponseEntity.ok(productVariantService.updateVariant(productId, variantId, variantRequest));
     }
 
     @DeleteMapping("/{variantId}")
-    @PreAuthorize("hasRole('POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
     public ResponseEntity<Void> deleteVariant(@PathVariable Long productId, @PathVariable Long variantId) {
         productVariantService.deleteVariant(productId, variantId);
         return ResponseEntity.noContent().build();

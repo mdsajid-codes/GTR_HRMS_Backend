@@ -6,6 +6,8 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+
 @Getter
 @Setter
 @NoArgsConstructor

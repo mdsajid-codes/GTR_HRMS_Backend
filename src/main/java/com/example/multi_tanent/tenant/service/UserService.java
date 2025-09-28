@@ -2,8 +2,8 @@ package com.example.multi_tanent.tenant.service;
 
 import org.springframework.stereotype.Service;
 
-import com.example.multi_tanent.tenant.base.entity.User;
-import com.example.multi_tanent.tenant.base.repository.UserRepository;
+import com.example.multi_tanent.spersusers.enitity.User;
+import com.example.multi_tanent.spersusers.repository.UserRepository;
 
 import java.util.List;
 

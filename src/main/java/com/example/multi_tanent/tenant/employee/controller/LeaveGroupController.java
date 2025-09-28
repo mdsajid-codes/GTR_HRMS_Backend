@@ -27,7 +27,7 @@ public class LeaveGroupController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createLeaveGroup(@RequestBody LeaveGroupRequest request) {
         if (leaveGroupRepository.findByCode(request.getCode()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -65,7 +65,7 @@ public class LeaveGroupController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateLeaveGroup(@PathVariable Long id, @RequestBody LeaveGroupRequest request) {
         Optional<LeaveGroup> existingByCode = leaveGroupRepository.findByCode(request.getCode());
         if (existingByCode.isPresent() && !existingByCode.get().getId().equals(id)) {
@@ -89,7 +89,7 @@ public class LeaveGroupController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteLeaveGroup(@PathVariable Long id) {
         return leaveGroupRepository.findById(id)
                 .map(leaveGroup -> {

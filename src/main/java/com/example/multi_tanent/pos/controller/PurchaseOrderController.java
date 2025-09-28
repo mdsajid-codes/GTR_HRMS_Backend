@@ -24,7 +24,7 @@ public class PurchaseOrderController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<PurchaseOrderDto> createPurchaseOrder(@Valid @RequestBody PurchaseOrderRequest request) {
         PurchaseOrderDto createdPO = purchaseOrderService.createPurchaseOrder(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdPO.getId()).toUri();
@@ -32,13 +32,13 @@ public class PurchaseOrderController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER','POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<PurchaseOrderDto>> getAllPurchaseOrders() {
         return ResponseEntity.ok(purchaseOrderService.getAllPurchaseOrdersForCurrentTenant());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER', 'POS_CASHIER')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PurchaseOrderDto> getPurchaseOrderById(@PathVariable Long id) {
         return purchaseOrderService.getPurchaseOrderDtoById(id)
                 .map(ResponseEntity::ok)
@@ -46,7 +46,7 @@ public class PurchaseOrderController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('POS_ADMIN', 'POS_MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN', 'POS_MANAGER')")
     public ResponseEntity<PurchaseOrderDto> updatePurchaseOrder(@PathVariable Long id, @Valid @RequestBody PurchaseOrderRequest request) {
         // Note: This is a simple update. A more complex implementation might handle item updates differently.
         return ResponseEntity.ok(purchaseOrderService.updatePurchaseOrder(id, request));

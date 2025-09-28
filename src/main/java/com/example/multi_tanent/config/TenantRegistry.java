@@ -36,7 +36,7 @@ public class TenantRegistry {
     map.put(t.getTenantId(), ds);
 
     // Ensure the schema for this tenant is up-to-date on load/reload.
-    schemaCreator.ensureSchema(ds, t.getPlan());
+    schemaCreator.ensureSchema(ds, t);
     refreshRouting();
   }
 

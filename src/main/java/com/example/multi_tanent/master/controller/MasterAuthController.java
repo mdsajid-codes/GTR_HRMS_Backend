@@ -1,14 +1,18 @@
 package com.example.multi_tanent.master.controller;
 
 import com.example.multi_tanent.master.dto.MasterAuthRequest;
+import com.example.multi_tanent.master.enums.Role;
+import com.example.multi_tanent.master.entity.MasterUser;
 import com.example.multi_tanent.master.repository.MasterUserRepository;
 import com.example.multi_tanent.security.JwtUtil;
-import com.example.multi_tanent.tenant.base.dto.LoginResponse;
+import com.example.multi_tanent.spersusers.dto.LoginResponse;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/master/auth")
@@ -23,12 +27,20 @@ public class MasterAuthController {
   }
 
   @PostMapping("/login")
-  public LoginResponse login(@RequestBody MasterAuthRequest masterAuthRequest) {
-    var u = repo.findByUsername(masterAuthRequest.getUsername()).orElseThrow();
-    if (!encoder.matches(masterAuthRequest.getPassword(), u.getPasswordHash())) throw new RuntimeException("bad creds");
-    // tenantId = "master" for master admin tokens
-    List<String> roles = List.of("MASTER_ADMIN");
-    String token = jwt.generateToken(masterAuthRequest.getUsername(), "master", roles);
-    return new LoginResponse(token, roles, null);
+  public ResponseEntity<LoginResponse> login(@RequestBody MasterAuthRequest masterAuthRequest) {
+    MasterUser user = repo.findByUsername(masterAuthRequest.getUsername())
+            .orElseThrow(() -> new RuntimeException("Invalid username or password."));
+
+    if (!encoder.matches(masterAuthRequest.getPassword(), user.getPasswordHash())) {
+        throw new RuntimeException("Invalid username or password.");
+    }
+
+    // Correctly get roles from the user object and convert them to a list of strings.
+    List<String> roles = user.getRoles().stream()
+            .map(Role::name)
+            .collect(Collectors.toList());
+
+    String token = jwt.generateToken(user.getUsername(), "master", roles);
+    return ResponseEntity.ok(new LoginResponse(token, roles));
   }
 }

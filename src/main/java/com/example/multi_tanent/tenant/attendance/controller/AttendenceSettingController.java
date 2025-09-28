@@ -22,7 +22,7 @@ public class AttendenceSettingController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<AttendanceSetting> createSetting(@RequestBody AttendanceSettingRequest request) {
         AttendanceSetting createdSetting = settingService.createSetting(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -44,14 +44,14 @@ public class AttendenceSettingController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<AttendanceSetting> updateSetting(@PathVariable Long id, @RequestBody AttendanceSettingRequest request) {
         AttendanceSetting updatedSetting = settingService.updateSetting(id, request);
         return ResponseEntity.ok(updatedSetting);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteSetting(@PathVariable Long id) {
         settingService.deleteSetting(id);
         return ResponseEntity.noContent().build();

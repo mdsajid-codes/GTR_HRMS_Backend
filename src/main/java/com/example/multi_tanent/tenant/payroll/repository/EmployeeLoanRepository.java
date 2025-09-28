@@ -1,6 +1,6 @@
 package com.example.multi_tanent.tenant.payroll.repository;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.payroll.entity.EmployeeLoan;
 import com.example.multi_tanent.tenant.payroll.enums.LoanStatus;
 import org.springframework.data.jpa.repository.JpaRepository;

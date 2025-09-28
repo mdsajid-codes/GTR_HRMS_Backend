@@ -45,7 +45,7 @@ public class LoanProductController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LoanProductResponse> createLoanProduct(@RequestBody LoanProductRequest request) {
         LoanProduct createdLoanProduct = loanProductService.createLoanProduct(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
@@ -54,14 +54,14 @@ public class LoanProductController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<LoanProductResponse> updateLoanProduct(@PathVariable Long id, @RequestBody LoanProductRequest request) {
         LoanProduct updatedLoanProduct = loanProductService.updateLoanProduct(id, request);
         return ResponseEntity.ok(LoanProductResponse.fromEntity(updatedLoanProduct));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteLoanProduct(@PathVariable Long id) {
         loanProductService.deleteLoanProduct(id);
         return ResponseEntity.noContent().build();

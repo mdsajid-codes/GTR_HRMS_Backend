@@ -1,8 +1,8 @@
 package com.example.multi_tanent.tenant.leave.service;
 
-import com.example.multi_tanent.tenant.base.entity.User;
-import com.example.multi_tanent.tenant.base.repository.UserRepository;
-import com.example.multi_tanent.tenant.employee.entity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.spersusers.enitity.User;
+import com.example.multi_tanent.spersusers.repository.UserRepository;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.leave.dto.LeaveEncashmentProcessRequest;
 import com.example.multi_tanent.tenant.leave.dto.LeaveEncashmentRequestDto;

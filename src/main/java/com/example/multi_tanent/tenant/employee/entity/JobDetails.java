@@ -2,6 +2,7 @@ package com.example.multi_tanent.tenant.employee.entity;
 
 import java.time.LocalDate;
 
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Entity;

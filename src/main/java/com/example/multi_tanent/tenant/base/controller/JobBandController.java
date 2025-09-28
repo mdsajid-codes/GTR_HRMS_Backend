@@ -32,7 +32,7 @@ public class JobBandController {
     }
 
     @PostMapping("/for-designation/{designationId}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> createJobBand(@PathVariable Long designationId, @RequestBody JobBandRequest jobBandRequest) {
         if (jobBandRepository.findByName(jobBandRequest.getName()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
@@ -80,7 +80,7 @@ public class JobBandController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<?> updateJobBand(@PathVariable Long id, @RequestBody JobBandRequest jobBandRequest) {
         Optional<JobBand> existingJobBandWithSameName = jobBandRepository.findByName(jobBandRequest.getName());
         if (existingJobBandWithSameName.isPresent() && !existingJobBandWithSameName.get().getId().equals(id)) {
@@ -102,7 +102,7 @@ public class JobBandController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteJobBand(@PathVariable Long id) {
         return jobBandRepository.findById(id)
                 .map(jobBand -> {

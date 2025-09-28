@@ -22,7 +22,7 @@ public class BiometricDeviceController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<BiometricDevice> createDevice(@RequestBody BiometricDeviceRequest request) {
         BiometricDevice createdDevice = deviceService.createDevice(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
@@ -44,14 +44,14 @@ public class BiometricDeviceController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<BiometricDevice> updateDevice(@PathVariable Long id, @RequestBody BiometricDeviceRequest request) {
         BiometricDevice updatedDevice = deviceService.updateDevice(id, request);
         return ResponseEntity.ok(updatedDevice);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN','HR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<Void> deleteDevice(@PathVariable Long id) {
         deviceService.deleteDevice(id);
         return ResponseEntity.noContent().build();

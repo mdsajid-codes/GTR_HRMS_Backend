@@ -1,24 +1,30 @@
 package com.example.multi_tanent.master.entity;
 
+import com.example.multi_tanent.master.enums.Role;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import org.hibernate.annotations.Type;
+
+import java.util.Set;
 
 @Entity
-@Table(name = "master_user", uniqueConstraints = @UniqueConstraint(columnNames = "username"))
-@Getter
-@Setter
+@Table(name = "master_users")
+@Data
 public class MasterUser {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
 
-  @Column(nullable=false, unique=true)
-  private String username;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-  @Column(nullable=false)
-  private String passwordHash; // BCrypt
+    @Column(unique = true, nullable = false)
+    private String username;
 
-  @Column(nullable=false)
-  private boolean superAdmin = true;
-  // getters/setters
+    @Column(nullable = false)
+    private String passwordHash;
+
+    @Type(JsonType.class)
+    @Column(columnDefinition = "json")
+    @Enumerated(EnumType.STRING)
+    private Set<Role> roles;
 }

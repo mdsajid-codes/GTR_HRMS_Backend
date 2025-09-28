@@ -1,6 +1,6 @@
 package com.example.multi_tanent.tenant.employee.service;
 
-import com.example.multi_tanent.tenant.employee.entity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.employee.entity.EmployeeDocument;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeDocumentRepository;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;

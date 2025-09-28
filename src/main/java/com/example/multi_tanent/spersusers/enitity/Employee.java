@@ -1,9 +1,8 @@
-package com.example.multi_tanent.tenant.employee.entity;
+package com.example.multi_tanent.spersusers.enitity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.example.multi_tanent.tenant.base.entity.User;
 import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.employee.enums.Gender;
 import com.example.multi_tanent.tenant.employee.enums.MartialStatus;

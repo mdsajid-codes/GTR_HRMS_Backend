@@ -5,6 +5,8 @@ import com.example.multi_tanent.pos.dto.PurchaseOrderItemDto;
 import com.example.multi_tanent.pos.dto.PurchaseOrderRequest;
 import com.example.multi_tanent.pos.entity.*;
 import com.example.multi_tanent.pos.repository.*;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
