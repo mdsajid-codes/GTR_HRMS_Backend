@@ -3,6 +3,8 @@ package com.example.multi_tanent.pos.service;
 import com.example.multi_tanent.pos.dto.InvoiceDto;
 import com.example.multi_tanent.pos.dto.InvoiceItemDto;
 import com.example.multi_tanent.pos.entity.*;
+import com.example.multi_tanent.spersusers.enitity.Store;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

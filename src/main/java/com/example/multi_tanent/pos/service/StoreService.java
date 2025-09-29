@@ -1,9 +1,9 @@
 package com.example.multi_tanent.pos.service;
 
 import com.example.multi_tanent.pos.dto.StoreRequest;
-import com.example.multi_tanent.pos.entity.Store;
 import com.example.multi_tanent.pos.repository.StoreRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
+import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 
 import org.springframework.stereotype.Service;

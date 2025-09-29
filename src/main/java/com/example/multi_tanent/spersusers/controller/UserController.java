@@ -1,7 +1,7 @@
 package com.example.multi_tanent.spersusers.controller;
 
-import com.example.multi_tanent.pos.entity.Store;
 import com.example.multi_tanent.spersusers.dto.UserRegisterRequest;
+import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.enitity.User;
 import com.example.multi_tanent.spersusers.repository.UserRepository;
@@ -43,7 +43,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    @PreAuthorize("hasAnyRole('TENANT_ADMIN', 'HRMS_ADMIN', 'POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'HRMS_ADMIN', 'POS_ADMIN')")
     public ResponseEntity<?> createUser(@Valid @RequestBody UserRegisterRequest request) { // Changed from UserRequest to UserRegisterRequest
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)

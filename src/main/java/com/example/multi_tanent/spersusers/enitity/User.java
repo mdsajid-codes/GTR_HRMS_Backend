@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import com.example.multi_tanent.master.enums.Role;
-import com.example.multi_tanent.pos.entity.Store;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 

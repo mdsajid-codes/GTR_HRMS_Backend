@@ -6,11 +6,11 @@ import com.example.multi_tanent.master.dto.ProvisionTenantRequest;
 import com.example.multi_tanent.master.entity.ServiceModule;
 import com.example.multi_tanent.master.entity.MasterTenant;
 import com.example.multi_tanent.pos.entity.Category;
-import com.example.multi_tanent.pos.entity.Store;
+import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.pos.entity.TaxRate;
-import com.example.multi_tanent.master.repository.MasterTenantRepository; // Keep this line
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.enitity.User;
+import com.example.multi_tanent.master.repository.MasterTenantRepository; // Keep this line
 import com.zaxxer.hikari.HikariDataSource;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -157,18 +157,18 @@ public class TenantProvisioningService {
             defaultStore.setAddress("Default Address");
             em.persist(defaultStore);
 
-            // Seed a default Tax Rate (e.g., VAT 5%)
-            TaxRate defaultTax = new TaxRate();
-            defaultTax.setTenant(tenantRecord);
-            defaultTax.setName("VAT 5%");
-            defaultTax.setPercent(new BigDecimal("5.00"));
-            em.persist(defaultTax);
+            // // Seed a default Tax Rate (e.g., VAT 5%)
+            // TaxRate defaultTax = new TaxRate();
+            // defaultTax.setTenant(tenantRecord);
+            // defaultTax.setName("VAT 5%");
+            // defaultTax.setPercent(new BigDecimal("5.00"));
+            // em.persist(defaultTax);
 
-            // Seed a default Category
-            Category defaultCategory = new Category();
-            defaultCategory.setTenant(tenantRecord);
-            defaultCategory.setName("Default");
-            em.persist(defaultCategory);
+            // // Seed a default Category
+            // Category defaultCategory = new Category();
+            // defaultCategory.setTenant(tenantRecord);
+            // defaultCategory.setName("Default");
+            // em.persist(defaultCategory);
 
             // Check if a user with this email already exists in the new tenant's DB.
             // This is a safeguard, though it should always be empty for a new tenant.

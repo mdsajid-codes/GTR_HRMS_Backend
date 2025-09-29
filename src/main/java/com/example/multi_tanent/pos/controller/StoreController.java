@@ -1,8 +1,9 @@
 package com.example.multi_tanent.pos.controller;
 
 import com.example.multi_tanent.pos.dto.StoreRequest;
-import com.example.multi_tanent.pos.entity.Store;
 import com.example.multi_tanent.pos.service.StoreService;
+import com.example.multi_tanent.spersusers.enitity.Store;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

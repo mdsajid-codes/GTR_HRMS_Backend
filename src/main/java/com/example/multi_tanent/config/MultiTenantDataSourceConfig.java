@@ -55,7 +55,7 @@ public class MultiTenantDataSourceConfig {
         "com.example.multi_tanent.tenant.leave.entity",
         "com.example.multi_tanent.tenant.payroll.entity",
         "com.example.multi_tanent.tenant.recruitment.entity",
-        "com.example.multi_tanent.pos.entity",
+        "com.example.multi_tanent.pos.entity", 
         "com.example.multi_tanent.spersusers.enitity" // Add the shared user entity package
       );
       emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());

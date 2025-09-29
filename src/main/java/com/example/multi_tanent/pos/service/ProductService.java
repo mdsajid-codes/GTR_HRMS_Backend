@@ -7,6 +7,7 @@ import com.example.multi_tanent.pos.dto.ProductRequest;
 import com.example.multi_tanent.pos.dto.ProductVariantRequest;
 import com.example.multi_tanent.pos.entity.*;
 import com.example.multi_tanent.pos.repository.*;
+import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 
 import org.apache.poi.ss.usermodel.*;

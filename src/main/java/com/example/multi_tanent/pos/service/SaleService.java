@@ -4,6 +4,7 @@ import com.example.multi_tanent.pos.dto.SaleDto;
 import com.example.multi_tanent.pos.dto.SaleRequest;
 import com.example.multi_tanent.pos.dto.SaleItemDto;
 import com.example.multi_tanent.pos.entity.*;
+import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.enitity.User; // Corrected import
 import com.example.multi_tanent.spersusers.repository.UserRepository; // Corrected import
