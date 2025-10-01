@@ -43,7 +43,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'TENANT_ADMIN', 'HRMS_ADMIN', 'POS_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HRMS_ADMIN', 'POS_ADMIN')")
     public ResponseEntity<?> createUser(@Valid @RequestBody UserRegisterRequest request) { // Changed from UserRequest to UserRegisterRequest
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT)

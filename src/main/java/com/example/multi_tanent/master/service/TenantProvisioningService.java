@@ -5,6 +5,7 @@ import com.example.multi_tanent.config.TenantRegistry;
 import com.example.multi_tanent.master.dto.ProvisionTenantRequest;
 import com.example.multi_tanent.master.entity.ServiceModule;
 import com.example.multi_tanent.master.entity.MasterTenant;
+import com.example.multi_tanent.master.enums.Role;
 import com.example.multi_tanent.pos.entity.Category;
 import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.pos.entity.TaxRate;
@@ -27,6 +28,7 @@ import javax.sql.DataSource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Properties;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
@@ -113,6 +115,41 @@ public class TenantProvisioningService {
         return ds;
     }
 
+    public void updateAdminRoles(MasterTenant tenant, Set<Role> newRoles) {
+        if (newRoles == null || newRoles.isEmpty()) {
+            // If no roles are provided, do nothing.
+            return;
+        }
+
+        try (HikariDataSource tenantDs = createTempDataSource(tenant)) {
+            LocalContainerEntityManagerFactoryBean emfBean = new LocalContainerEntityManagerFactoryBean();
+            emfBean.setDataSource(tenantDs);
+            // Scan all packages to ensure User entity is found
+            emfBean.setPackagesToScan(ServiceModule.getPackagesForModules(tenant.getServiceModules()));
+            emfBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
+            Properties p = new Properties();
+            p.put("hibernate.hbm2ddl.auto", "none");
+            p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+            emfBean.setJpaProperties(p);
+            emfBean.afterPropertiesSet();
+
+            EntityManagerFactory emf = emfBean.getObject();
+            try (EntityManager em = emf.createEntityManager()) {
+                em.getTransaction().begin();
+
+                // Find the user with the TENANT_ADMIN role. This assumes there is one primary admin.
+                User adminUser = em.createQuery("SELECT u FROM User u JOIN u.roles r WHERE r IN (:roles)", User.class)
+                        .setParameter("roles", Set.of(Role.HRMS_ADMIN, Role.POS_ADMIN))
+                        .getResultStream().findFirst().orElse(null);
+
+                if (adminUser != null) {
+                    adminUser.setRoles(newRoles);
+                    em.merge(adminUser);
+                }
+                em.getTransaction().commit();
+            }
+        }
+    }
     private void createOrUpdateSchema(DataSource tenantDs, String ddlAction, String... packagesToScan) {
         LocalContainerEntityManagerFactoryBean emfBean = new LocalContainerEntityManagerFactoryBean();
         emfBean.setDataSource(tenantDs);

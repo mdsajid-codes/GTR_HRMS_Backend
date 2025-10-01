@@ -16,10 +16,10 @@ public enum ServiceModule {
 
     // HRMS Modules
     HRMS_CORE(false, "com.example.multi_tanent.tenant.base.entity", "com.example.multi_tanent.tenant.employee.entity", USER),
-    HRMS_ATTENDANCE(false, "com.example.multi_tanent.tenant.attendance.entity", HRMS_CORE),
-    HRMS_LEAVE(false, "com.example.multi_tanent.tenant.leave.entity", HRMS_CORE),
-    HRMS_PAYROLL(false, "com.example.multi_tanent.tenant.payroll.entity", HRMS_CORE),
-    HRMS_RECRUITMENT(false, "com.example.multi_tanent.tenant.recruitment.entity", HRMS_CORE),
+    HRMS_ATTENDANCE(false, "com.example.multi_tanent.tenant.attendance.entity"),
+    HRMS_LEAVE(false, "com.example.multi_tanent.tenant.leave.entity"),
+    HRMS_PAYROLL(false, "com.example.multi_tanent.tenant.payroll.entity"),
+    HRMS_RECRUITMENT(false, "com.example.multi_tanent.tenant.recruitment.entity"),
 
     // Point of Sale (POS) Module
     POS(false, "com.example.multi_tanent.pos.entity", USER);

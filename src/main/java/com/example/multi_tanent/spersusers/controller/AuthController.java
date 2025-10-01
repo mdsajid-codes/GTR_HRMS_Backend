@@ -1,6 +1,9 @@
 package com.example.multi_tanent.spersusers.controller;
 
 import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.master.entity.MasterTenant;
+import com.example.multi_tanent.master.entity.ServiceModule;
+import com.example.multi_tanent.master.repository.MasterTenantRepository;
 import com.example.multi_tanent.security.JwtUtil;
 import com.example.multi_tanent.spersusers.dto.LoginRequest;
 import com.example.multi_tanent.spersusers.dto.LoginResponse;
@@ -11,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
@@ -21,11 +25,13 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final MasterTenantRepository masterTenantRepository;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil, MasterTenantRepository masterTenantRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.masterTenantRepository = masterTenantRepository;
     }
 
     @PostMapping("/login")
@@ -36,8 +42,13 @@ public class AuthController {
                 .filter(u -> passwordEncoder.matches(loginRequest.getPassword(), u.getPasswordHash()))
                 .orElseThrow(() -> new RuntimeException("Invalid credentials or tenant ID."));
 
-        var roles = user.getRoles().stream().map(Enum::name).collect(Collectors.toList());
+        MasterTenant masterTenant = masterTenantRepository.findByTenantId(loginRequest.getTenantId())
+                .orElseThrow(() -> new RuntimeException("Tenant configuration not found."));
+
+        List<String> roles = user.getRoles().stream().map(Enum::name).collect(Collectors.toList());
+        List<ServiceModule> modules = masterTenant.getServiceModules();
+
         String token = jwtUtil.generateToken(user.getEmail(), loginRequest.getTenantId(), roles);
-        return ResponseEntity.ok(new LoginResponse(token, roles));
+        return ResponseEntity.ok(new LoginResponse(token, roles, modules));
     }
 }

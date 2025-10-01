@@ -41,6 +41,6 @@ public class MasterAuthController {
             .collect(Collectors.toList());
 
     String token = jwt.generateToken(user.getUsername(), "master", roles);
-    return ResponseEntity.ok(new LoginResponse(token, roles));
+    return ResponseEntity.ok(new LoginResponse(token, roles, null));
   }
 }
