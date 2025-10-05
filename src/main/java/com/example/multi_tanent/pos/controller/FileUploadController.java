@@ -93,20 +93,30 @@ public class FileUploadController {
         return ResponseEntity.ok().headers(headers).body(textBytes);
     }
 
-    @GetMapping("/view/{tenantId}/{subfolder}/{filename:.+}")
-    // Authorization is now handled by SecurityConfig to allow public access
-    public ResponseEntity<Resource> viewFile(@PathVariable String tenantId, @PathVariable String subfolder, @PathVariable String filename, HttpServletRequest request) {
-        // Construct the relative path from the URL parts
-        String relativePath = Paths.get(tenantId, subfolder, filename).toString();
+    /**
+     * A flexible endpoint to view any file stored by the FileStorageService.
+     * It uses a wildcard to capture the full relative path of the file.
+     *
+     * Examples:
+     * - /api/pos/uploads/view/tenant_1/product-images/some-file.jpg
+     * - /api/pos/uploads/view/tenant-assets/logos/some-logo.png
+     *
+     * @param request The HttpServletRequest, used to extract the file path.
+     * @return A ResponseEntity containing the file resource.
+     */
+    @GetMapping("/view/**")
+    public ResponseEntity<Resource> viewFile(HttpServletRequest request) {
+        // Extract the file path from the request URI
+        String requestUri = request.getRequestURI();
+        String filePath = requestUri.substring(requestUri.indexOf("/view/") + "/view/".length());
+        
+        Resource resource = fileStorageService.loadFileAsResource(filePath);
 
-        Resource resource = fileStorageService.loadFileAsResource(relativePath);
-
-        // Try to determine file's content type
         String contentType = null;
         try {
             contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
         } catch (IOException ex) {
-            // fallback to the default content type if type could not be determined
+            // fallback
         }
 
         if (contentType == null) {

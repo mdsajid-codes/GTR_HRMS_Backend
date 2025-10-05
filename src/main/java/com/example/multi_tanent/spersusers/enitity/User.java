@@ -22,7 +22,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"employee", "tenant", "store"})
-@EqualsAndHashCode(exclude = {"employee", "tenant", "store"})
+@EqualsAndHashCode(exclude = {"employee", "tenant", "store", "location"})
 public class User {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -30,6 +30,10 @@ public class User {
     @ManyToOne(optional = false)
     @JoinColumn(name = "tenant_id") // Temporarily nullable for migration
     private Tenant tenant;
+
+    @ManyToOne
+    @JoinColumn(name = "location_id")
+    private Location location;
 
     @ManyToOne
     @JoinColumn(name = "store_id")

@@ -1,9 +1,11 @@
 package com.example.multi_tanent.tenant.employee.controller;
 
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 import com.example.multi_tanent.tenant.employee.dto.JobDetailsRequest;
 import com.example.multi_tanent.tenant.employee.entity.JobDetails;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.employee.repository.JobDetailsRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,12 @@ public class JobDetailsController {
 
     private final EmployeeRepository employeeRepository;
     private final JobDetailsRepository jobDetailsRepository;
+    private final LocationRepository locationRepository;
 
-    public JobDetailsController(EmployeeRepository employeeRepository, JobDetailsRepository jobDetailsRepository) {
+    public JobDetailsController(EmployeeRepository employeeRepository, JobDetailsRepository jobDetailsRepository, LocationRepository locationRepository) {
         this.employeeRepository = employeeRepository;
         this.jobDetailsRepository = jobDetailsRepository;
+        this.locationRepository = locationRepository;
     }
 
     @PutMapping("/{employeeCode}")
@@ -64,7 +68,11 @@ public class JobDetailsController {
     }
 
     private void updateJobDetailsFromRequest(JobDetails jobDetails, JobDetailsRequest request) {
-        jobDetails.setLocation(request.getLocation());
+        if (request.getLocationId() != null) {
+            locationRepository.findById(request.getLocationId())
+                    .ifPresentOrElse(jobDetails::setLocation,
+                            () -> { throw new EntityNotFoundException("Location not found with id: " + request.getLocationId()); });
+        }
         jobDetails.setActualLocation(request.getActualLocation());
         jobDetails.setDepartment(request.getDepartment());
         jobDetails.setDesignation(request.getDesignation());

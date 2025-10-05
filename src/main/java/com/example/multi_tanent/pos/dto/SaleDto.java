@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class SaleDto {
     private Long id;
+    private String orderId;
     private String invoiceNo;
     private OffsetDateTime invoiceDate;
     private String status;
@@ -22,6 +23,7 @@ public class SaleDto {
     private Long subtotalCents;
     private Long taxCents;
     private Long discountCents;
+    private Long deliveryCharge;
     private Long totalCents;
 
     private List<SaleItemDto> items;

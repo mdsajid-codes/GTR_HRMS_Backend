@@ -5,5 +5,8 @@ import lombok.Data;
 @Data
 public class UpdateTenantRequest {
     private String name;
-    // other updatable fields can be added here
+    private String logoImgUrl;
+    private String contactEmail;
+    private String contactPhone;
+    private String address;
 }

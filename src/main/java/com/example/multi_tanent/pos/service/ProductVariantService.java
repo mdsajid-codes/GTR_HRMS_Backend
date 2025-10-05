@@ -1,5 +1,7 @@
 package com.example.multi_tanent.pos.service;
 
+import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.master.repository.MasterTenantRepository;
 import com.example.multi_tanent.pos.dto.ProductVariantDto;
 import com.example.multi_tanent.pos.dto.ProductVariantRequest;
 import com.example.multi_tanent.pos.entity.*;
@@ -9,8 +11,11 @@ import com.example.multi_tanent.pos.repository.SaleItemRepository;
 import com.example.multi_tanent.pos.repository.TaxRateRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.google.zxing.WriterException;
+import java.io.IOException;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -27,17 +32,23 @@ public class ProductVariantService {
     private final TenantRepository tenantRepository;
     private final TaxRateRepository taxRateRepository;
     private final SaleItemRepository saleItemRepository;
+    private final BarCodeService barCodeService;
+    private final MasterTenantRepository masterTenantRepository;
 
     public ProductVariantService(ProductRepository productRepository,
                                  ProductVariantRepository productVariantRepository,
                                  TenantRepository tenantRepository,
                                  TaxRateRepository taxRateRepository,
-                                 SaleItemRepository saleItemRepository) {
+                                 SaleItemRepository saleItemRepository,
+                                 BarCodeService barCodeService,
+                                 MasterTenantRepository masterTenantRepository) {
         this.productRepository = productRepository;
         this.productVariantRepository = productVariantRepository;
         this.tenantRepository = tenantRepository;
         this.taxRateRepository = taxRateRepository;
         this.saleItemRepository = saleItemRepository;
+        this.barCodeService = barCodeService;
+        this.masterTenantRepository = masterTenantRepository;
     }
 
     private Tenant getCurrentTenant() {
@@ -54,7 +65,10 @@ public class ProductVariantService {
     public ProductVariantDto addVariant(Long productId, ProductVariantRequest request) {
         Product product = getProductForCurrentTenant(productId);
         ProductVariant variant = mapRequestToEntity(request, new ProductVariant(), product);
-        ProductVariant savedVariant = productVariantRepository.save(variant);
+        // First save to get an ID
+        productVariantRepository.save(variant);
+        // Generate and save barcode, then update the entity
+        ProductVariant savedVariant = generateAndSetBarcodeUrl(variant);
         return toDto(savedVariant);
     }
 
@@ -75,7 +89,14 @@ public class ProductVariantService {
         ProductVariant existingVariant = productVariantRepository.findByIdAndProductId(variantId, productId)
                 .orElseThrow(() -> new RuntimeException("ProductVariant not found with id: " + variantId + " for product " + productId));
 
+        String oldSku = existingVariant.getSku();
         ProductVariant updatedVariant = mapRequestToEntity(request, existingVariant, product);
+
+        // If SKU has changed, regenerate the barcode
+        if (!oldSku.equals(updatedVariant.getSku())) {
+            updatedVariant = generateAndSetBarcodeUrl(updatedVariant);
+        }
+
         return toDto(productVariantRepository.save(updatedVariant));
     }
 
@@ -90,6 +111,40 @@ public class ProductVariantService {
             productVariantRepository.save(variant);
         } else {
             productVariantRepository.delete(variant); // Hard delete if it has never been sold
+        }
+    }
+
+    /**
+     * Finds a product variant by its SKU across all tenants.
+     * This is useful for public-facing pages, like QR code scans.
+     * @param sku The SKU to search for.
+     * @return An Optional containing the ProductVariantDto if found.
+     */
+    @Transactional(transactionManager = "tenantTx", propagation = Propagation.NEVER)
+    public Optional<ProductVariantDto> findVariantBySkuGlobally(String sku) {
+        List<String> tenantIds = masterTenantRepository.findAllTenantIds();
+        for (String tenantId : tenantIds) {
+            try {
+                TenantContext.setTenantId(tenantId);
+                Optional<ProductVariant> variant = productVariantRepository.findBySku(sku);
+                if (variant.isPresent()) {
+                    return variant.map(this::toDto);
+                }
+            } finally {
+                TenantContext.clear();
+            }
+        }
+        return Optional.empty();
+    }
+
+    private ProductVariant generateAndSetBarcodeUrl(ProductVariant variant) {
+        try {
+            String barcodePath = barCodeService.generateAndSaveProductVariantQRCode(variant);
+            variant.setBarcodeImageUrl(barcodePath);
+            return productVariantRepository.save(variant);
+        } catch (WriterException | IOException e) {
+            // Log the error. For now, we'll rethrow as a runtime exception.
+            throw new RuntimeException("Could not generate or save barcode for SKU: " + variant.getSku(), e);
         }
     }
 
@@ -131,6 +186,9 @@ public class ProductVariantService {
         if (variant.getImageUrl() != null && !variant.getImageUrl().isBlank()) {
             dto.setImageUrl(buildImageUrl(variant.getImageUrl()));
         }
+        if (variant.getBarcodeImageUrl() != null && !variant.getBarcodeImageUrl().isBlank()) {
+            dto.setBarcodeImageUrl(buildImageUrl(variant.getBarcodeImageUrl()));
+        }
         if (variant.getTaxRate() != null) {
             dto.setTaxRateId(variant.getTaxRate().getId());
             dto.setTaxRateName(variant.getTaxRate().getName());
@@ -141,7 +199,7 @@ public class ProductVariantService {
 
     private String buildImageUrl(String relativePath) {
         return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/api/pos/uploads/view/")
+                .path("/api/pos/uploads/view/") // This path needs to match the public view endpoint
                 .path(relativePath)
                 .build()
                 .toUriString()

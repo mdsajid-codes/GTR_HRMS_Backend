@@ -20,6 +20,14 @@ public class Tenant {
     @Column(nullable = false)
     private String name;
 
+    private String logoImgUrl;
+
+    private String contactEmail;
+
+    private String contactPhone;
+
+    private String address;
+
     private OffsetDateTime createdAt;
 
     @PrePersist

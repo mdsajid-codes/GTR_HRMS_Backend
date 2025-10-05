@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -69,6 +70,7 @@ public class SaleService {
         Sale sale = new Sale();
         sale.setTenant(currentTenant);
         sale.setUser(currentUser);
+        sale.setOrderId(request.getOrderId());
         sale.setInvoiceNo(generateInvoiceNumber());
         sale.setInvoiceDate(OffsetDateTime.now());
         sale.setStatus("completed"); // Default status
@@ -88,6 +90,22 @@ public class SaleService {
 
         long subtotal = 0L;
         long totalTax = 0L;
+
+        // --- Inventory Check ---
+        // Before creating the sale, verify that there is enough stock for each item.
+        List<String> stockErrors = new ArrayList<>();
+        for (var itemRequest : request.getItems()) {
+            inventoryRepository.findByStoreIdAndProductVariantId(saleStore.getId(), itemRequest.getProductVariantId())
+                    .ifPresent(inventory -> {
+                        if (inventory.getQuantity() < itemRequest.getQuantity()) {
+                            stockErrors.add("Insufficient stock for SKU " + inventory.getProductVariant().getSku() +
+                                    ": Requested " + itemRequest.getQuantity() + ", but only " + inventory.getQuantity() + " available.");
+                        }
+                    });
+        }
+        if (!stockErrors.isEmpty()) {
+            throw new IllegalStateException("Cannot complete sale due to stock issues: " + String.join("; ", stockErrors));
+        }
 
         List<SaleItem> saleItems = request.getItems().stream().map(itemRequest -> {
             ProductVariant variant = productVariantRepository.findById(itemRequest.getProductVariantId())
@@ -178,9 +196,41 @@ public class SaleService {
         return getSaleById(id).map(this::toDto);
     }
 
+    public void deleteSale(Long id) {
+        Sale sale = getSaleById(id)
+                .orElseThrow(() -> new RuntimeException("Sale not found with id: " + id));
+
+        // Before deleting the sale, we must break the link from any stock movements
+        // that reference it to avoid a foreign key constraint violation.
+        if (sale.getStockMovements() != null) {
+            sale.getStockMovements().forEach(movement -> movement.setRelatedSale(null));
+            // The changes to the movements will be persisted by cascade or implicitly when the transaction commits.
+        }
+
+        // Before deleting the sale, reverse the stock movements to correct inventory.
+        sale.getItems().forEach(item -> {
+            // Create a new stock movement to add the quantity back to inventory.
+            StockMovement reversalMovement = StockMovement.builder()
+                    .tenant(sale.getTenant())
+                    .store(sale.getStore())
+                    .productVariant(item.getProductVariant())
+                    .changeQuantity(item.getQuantity()) // Positive quantity to reverse the sale
+                    .reason("Sale Deletion (Reversal for INV-" + sale.getInvoiceNo() + ")")
+                    .build();
+            
+            stockMovementService.createAndApplyStockMovement(reversalMovement);
+        });
+
+        saleRepository.delete(sale);
+    }
+
     private String generateInvoiceNumber() {
         return "INV-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
+
+    // private String generateOrderId() {
+    //     return "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    // }
 
     private SaleDto toDto(Sale sale) {
         SaleDto dto = new SaleDto();
@@ -189,6 +239,7 @@ public class SaleService {
         dto.setInvoiceDate(sale.getInvoiceDate());
         dto.setStatus(sale.getStatus());
         dto.setPaymentStatus(sale.getPaymentStatus());
+        dto.setOrderId(sale.getOrderId());
 
         if (sale.getCustomer() != null) {
             dto.setCustomerId(sale.getCustomer().getId());
@@ -202,6 +253,7 @@ public class SaleService {
         dto.setSubtotalCents(sale.getSubtotalCents());
         dto.setTaxCents(sale.getTaxCents());
         dto.setDiscountCents(sale.getDiscountCents());
+        dto.setDeliveryCharge(sale.getDeliveryCharge());
         dto.setTotalCents(sale.getTotalCents());
 
         dto.setItems(sale.getItems().stream().map(this::toSaleItemDto).collect(Collectors.toList()));

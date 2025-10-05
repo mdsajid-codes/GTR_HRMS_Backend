@@ -14,6 +14,8 @@ public class SaleRequest {
     @NotNull(message = "Store ID is required for a sale.")
     private Long storeId;
     private Long discountCents;
+    private Long deliveryCharge;
+    private String orderId;
 
     @NotEmpty(message = "Sale must have at least one item.")
     @Valid

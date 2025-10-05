@@ -90,6 +90,7 @@ public class SecurityConfig {
         .requestMatchers("/api/pos/auth/login").permitAll()
         // Allow public viewing of uploaded files for the POS module
         .requestMatchers("/api/pos/uploads/view/**").permitAll()
+        .requestMatchers("/public/products/**").permitAll() // Allow public access to product info via QR code
         .requestMatchers("/api/pos/**").authenticated()
         
         .anyRequest().denyAll()

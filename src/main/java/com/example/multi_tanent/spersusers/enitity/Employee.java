@@ -13,13 +13,12 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
 @Entity
 @Table(name = "employees")
 @Getter
 @Setter
-@ToString(exclude = "user")
-@EqualsAndHashCode(exclude = "user")
+@ToString(exclude = {"user", "location"})
+@EqualsAndHashCode(exclude = {"user", "location"})
 public class Employee {
   @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
@@ -28,6 +27,10 @@ public class Employee {
   @JoinColumn(name = "user_id", nullable=false, unique=true)
   @JsonBackReference("user-employee")
   private User user; // relational with users (1:1)
+
+  @ManyToOne
+  @JoinColumn(name = "location_id")
+  private Location location; // Primary work location
 
   //Basic Details
   @Column(unique = true)

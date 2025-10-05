@@ -1,90 +1,51 @@
-hrms-backend/
-├─ src/
-│  ├─ main/
-│  │  ├─ java/
-│  │  │  └─ com/example/hrms/
-│  │  │     ├─ config/
-│  │  │     │  ├─ WebConfig.java
-│  │  │     │  ├─ SecurityConfig.java
-│  │  │     │  └─ TenantFilter.java
-│  │  │     ├─ common/                       # shared utilities, enums, base classes
-│  │  │     │  ├─ BaseEntity.java
-│  │  │     │  ├─ AuditEntity.java
-│  │  │     │  └─ enums/
-│  │  │     ├─ master/                       # master/global domain (companies etc.)
-│  │  │     │  └─ company/
-│  │  │     │     └─ Company.java
-│  │  │     ├─ employee/                     # MODULE 1: Basic Employee Section
-│  │  │     │  ├─ controller/
-│  │  │     │  │  └─ EmployeeController.java
-│  │  │     │  ├─ dto/
-│  │  │     │  │  └─ EmployeeDto.java
-│  │  │     │  ├─ entity/
-│  │  │     │  │  ├─ Employee.java
-│  │  │     │  │  ├─ EmployeeProfile.java
-│  │  │     │  │  └─ EmployeeDocument.java
-│  │  │     │  ├─ repository/
-│  │  │     │  │  └─ EmployeeRepository.java
-│  │  │     │  └─ service/
-│  │  │     │     └─ EmployeeService.java
-│  │  │     ├─ attendance/                    # MODULE 2: Employee + Attendance
-│  │  │     │  ├─ controller/
-│  │  │     │  │  └─ AttendanceController.java
-│  │  │     │  ├─ dto/
-│  │  │     │  │  └─ AttendanceDto.java
-│  │  │     │  ├─ entity/
-│  │  │     │  │  ├─ AttendanceRecord.java
-│  │  │     │  │  ├─ Shift.java
-│  │  │     │  │  └─ AttendanceCapturePolicy.java
-│  │  │     │  ├─ repository/
-│  │  │     │  │  └─ AttendanceRepository.java
-│  │  │     │  └─ service/
-│  │  │     │     └─ AttendanceService.java
-│  │  │     ├─ leave/                          # MODULE 3: Employee + Leave
-│  │  │     │  ├─ controller/
-│  │  │     │  │  └─ LeaveController.java
-│  │  │     │  ├─ dto/
-│  │  │     │  │  └─ LeaveDto.java
-│  │  │     │  ├─ entity/
-│  │  │     │  │  ├─ LeaveType.java
-│  │  │     │  │  ├─ LeavePolicy.java
-│  │  │     │  │  ├─ LeaveEntitlement.java
-│  │  │     │  │  ├─ LeaveBalance.java
-│  │  │     │  │  ├─ LeaveApplication.java
-│  │  │     │  │  ├─ LeaveApproval.java
-│  │  │     │  │  ├─ LeaveTransaction.java
-│  │  │     │  │  └─ LeaveHolidayCalendar.java
-│  │  │     │  ├─ repository/
-│  │  │     │  │  └─ LeaveRepository.java
-│  │  │     │  └─ service/
-│  │  │     │     └─ LeaveService.java
-│  │  │     ├─ payroll/                        # MODULE 4: Employee + Payroll
-│  │  │     │  ├─ controller/
-│  │  │     │  │  └─ PayrollController.java
-│  │  │     │  ├─ dto/
-│  │  │     │  │  └─ PayrollDto.java
-│  │  │     │  ├─ entity/
-│  │  │     │  │  ├─ SalaryStructure.java
-│  │  │     │  │  ├─ Payroll.java
-│  │  │     │  │  ├─ Loan.java
-│  │  │     │  │  └─ Expense.java
-│  │  │     │  ├─ repository/
-│  │  │     │  │  └─ PayrollRepository.java
-│  │  │     │  └─ service/
-│  │  │     │     └─ PayrollService.java
-│  │  │     ├─ documents/
-│  │  │     │  └─ DocumentType.java
-│  │  │     ├─ policy/
-│  │  │     │  ├─ LeavePolicyTemplate.java
-│  │  │     │  ├─ HolidayPolicy.java
-│  │  │     │  ├─ WeeklyBreakPolicy.java
-│  │  │     │  └─ ShiftPolicy.java
-│  │  │     └─ util/                          # helpers, mappers, validators
-│  │  │        ├─ MapperConfig.java
-│  │  │        └─ DateUtils.java
-│  │  └─ resources/
-│  │     ├─ application.yml
-│  │     └─ db/
-│  │        └─ migration/
-│  └─ test/
-└─ pom.xml or build.gradle
+src/main/java/com/example/multi_tanent/
+├── master/                  # SUPER-ADMIN/SYSTEM-LEVEL: Manages tenants
+│   ├── controller/          # REST APIs for tenant provisioning
+│   ├── dto/                 # DTOs for tenant creation requests
+│   ├── entity/              # MasterTenant entity (in master DB)
+│   ├── repository/          # JPA repo for MasterTenant
+│   └── service/             # TenantProvisioningService
+│
+├── core/                    # SHARED KERNEL: Code shared by ALL modules
+│   ├── config/              # Core configs (WebSecurity, Tenant-aware beans)
+│   ├── entity/              # <-- Renamed from 'spersusers.enitity'
+│   │   ├── User.java        # Central user model
+│   │   ├── Employee.java    # Central employee model
+│   │   ├── Tenant.java      # Tenant info *within* its own DB
+│   │   └── Store.java       # Store info *within* its own DB
+│   ├── enums/               # Shared enums (e.g., Role)
+│   ├── exception/           # Global exception handlers
+│   └── repository/          # Repositories for core entities (User, Employee, etc.)
+│
+├── modules/                 # PARENT PACKAGE FOR ALL BUSINESS MODULES
+│   │
+│   ├── pos/                 # --- POINT OF SALE MODULE ---
+│   │   ├── controller/
+│   │   ├── dto/
+│   │   ├── entity/          # (e.g., Product, Sale, Inventory)
+│   │   ├── repository/
+│   │   └── service/         # (e.g., BarcodeService, FileStorageService)
+│   │
+│   ├── hrms/                # --- HRMS MODULE (Container) ---
+│   │   ├── attendance/
+│   │   │   ├── controller/
+│   │   │   ├── entity/
+│   │   │   └── service/
+│   │   ├── leave/
+│   │   │   ├── controller/
+│   │   │   ├── entity/
+│   │   │   └── service/
+│   │   └── payroll/
+│   │       ├── controller/
+│   │       ├── entity/
+│   │       └── service/
+│   │
+│   └── crm/                 # <-- EXAMPLE: NEW CRM MODULE
+│       ├── controller/
+│       ├── dto/
+│       ├── entity/          # (e.g., Lead, Contact, Opportunity)
+│       ├── enums/           # (e.g., LeadStatus)
+│       ├── repository/
+│       └── service/
+│
+└── MultiTanentApplication.java

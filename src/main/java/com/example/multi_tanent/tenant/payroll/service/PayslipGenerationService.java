@@ -6,12 +6,17 @@ import com.example.multi_tanent.tenant.payroll.enums.CalculationType;
 import com.example.multi_tanent.tenant.payroll.enums.LoanStatus;
 import com.example.multi_tanent.tenant.payroll.enums.PayrollStatus;
 import com.example.multi_tanent.tenant.payroll.enums.SalaryComponentType;
+import org.springframework.context.expression.MapAccessor;
 import com.example.multi_tanent.tenant.payroll.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -24,12 +29,14 @@ public class PayslipGenerationService {
     private final EmployeeLoanRepository employeeLoanRepository;
     private final PayslipRepository payslipRepository;
     private final SalaryComponentRepository salaryComponentRepository;
+    private final ExpressionParser expressionParser;
 
     public PayslipGenerationService(SalaryStructureRepository salaryStructureRepository, EmployeeLoanRepository employeeLoanRepository, PayslipRepository payslipRepository, SalaryComponentRepository salaryComponentRepository) {
         this.salaryStructureRepository = salaryStructureRepository;
         this.employeeLoanRepository = employeeLoanRepository;
         this.payslipRepository = payslipRepository;
         this.salaryComponentRepository = salaryComponentRepository;
+        this.expressionParser = new SpelExpressionParser();
     }
 
     public void generatePayslipsForEmployees(PayrollRun payrollRun, List<Employee> employees) {
@@ -51,18 +58,44 @@ public class PayslipGenerationService {
                 payslip.setStatus(PayrollStatus.GENERATED);
 
                 List<PayslipComponent> components = new ArrayList<>();
+                Map<String, BigDecimal> calculatedAmounts = new HashMap<>();
+
                 BigDecimal grossEarnings = BigDecimal.ZERO;
                 BigDecimal totalDeductions = BigDecimal.ZERO;
 
+                // First pass: Calculate all FLAT_AMOUNT components and store them in a map.
                 for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
+                    if (ssc.getSalaryComponent().getCalculationType() == CalculationType.FLAT_AMOUNT) {
+                        BigDecimal amount = ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO;
+                        String componentCode = ssc.getSalaryComponent().getCode();
+                        calculatedAmounts.put(componentCode, amount);
+                    }
+                }
+
+                // Create the evaluation context with the calculated amounts as the root object.
+                StandardEvaluationContext context = new StandardEvaluationContext(calculatedAmounts);
+                context.addPropertyAccessor(new MapAccessor());
+
+                // Second pass: Calculate all formula-based components
+                for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
+                    String componentCode = ssc.getSalaryComponent().getCode();
+                    BigDecimal amount;
+
+                    if (ssc.getSalaryComponent().getCalculationType() == CalculationType.FORMULA_BASED && ssc.getFormula() != null) {
+                        // SpEL can now find 'BASIC' as a key in the root map.
+                        amount = expressionParser.parseExpression(ssc.getFormula()).getValue(context, BigDecimal.class);
+                    } else {
+                        // This handles FLAT_AMOUNT and any others that might not have a formula
+                        amount = calculatedAmounts.getOrDefault(componentCode, ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO);
+                    }
+
                     PayslipComponent pc = new PayslipComponent();
                     pc.setPayslip(payslip);
                     pc.setSalaryComponent(ssc.getSalaryComponent());
-                    BigDecimal amount = ssc.getValue(); // Simplified calculation
                     pc.setAmount(amount);
                     components.add(pc);
 
-                    if (ssc.getSalaryComponent().getType() == SalaryComponentType.EARNING) {
+                    if (ssc.getSalaryComponent().getType() == SalaryComponentType.EARNING && ssc.getSalaryComponent().isPartOfGrossSalary()) {
                         grossEarnings = grossEarnings.add(amount);
                     } else if (ssc.getSalaryComponent().getType() == SalaryComponentType.DEDUCTION) {
                         totalDeductions = totalDeductions.add(amount);

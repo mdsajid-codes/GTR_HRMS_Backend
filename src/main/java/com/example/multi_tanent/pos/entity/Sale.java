@@ -37,7 +37,10 @@ public class Sale {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
+    private String orderId;
+
+    @Column(nullable = false, unique = true)
     private String invoiceNo;
 
     private OffsetDateTime invoiceDate;
@@ -47,6 +50,8 @@ public class Sale {
     private Long taxCents;
 
     private Long discountCents = 0L;
+
+    private Long deliveryCharge;
 
     private Long totalCents;
 
@@ -63,6 +68,9 @@ public class Sale {
 
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Payment> payments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "relatedSale")
+    private List<StockMovement> stockMovements = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

@@ -5,7 +5,7 @@ import lombok.Data;
 
 @Data
 public class JobDetailsRequest {
-    private String location;
+    private Long locationId;
     private String actualLocation;
     private String department;
     private String designation;

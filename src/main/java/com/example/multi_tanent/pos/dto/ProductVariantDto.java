@@ -14,6 +14,7 @@ public class ProductVariantDto {
     private long priceCents;
     private long costCents;
     private String imageUrl;
+    private String barcodeImageUrl;
     private boolean active;
     private Long taxRateId;
     private String taxRateName;

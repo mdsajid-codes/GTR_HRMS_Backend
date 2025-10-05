@@ -10,6 +10,7 @@ import java.util.List;
 @Builder
 public class InvoiceDto {
     private Long saleId;
+    private String orderId;
     private String invoiceNo;
     private OffsetDateTime invoiceDate;
 

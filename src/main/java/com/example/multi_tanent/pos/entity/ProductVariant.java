@@ -38,6 +38,7 @@ public class ProductVariant {
     private long priceCents;
     private long costCents;
     private String imageUrl;
+    private String barcodeImageUrl;
     private boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY)

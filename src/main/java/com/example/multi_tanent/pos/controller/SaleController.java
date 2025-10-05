@@ -72,4 +72,11 @@ public class SaleController {
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
+    public ResponseEntity<Void> deleteSale(@PathVariable Long id) {
+        saleService.deleteSale(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -104,6 +104,19 @@ public class StockMovementService {
         updateInventoryFromMovement(sale.getStore(), variant, changeQuantity);
     }
 
+    /**
+     * A generic method to save a stock movement and apply its changes to the inventory.
+     * This is useful for reversals or adjustments.
+     *
+     * @param movement The StockMovement entity to be saved.
+     * @return The saved StockMovement entity.
+     */
+    public StockMovement createAndApplyStockMovement(StockMovement movement) {
+        StockMovement savedMovement = stockMovementRepository.save(movement);
+        updateInventoryFromMovement(movement.getStore(), movement.getProductVariant(), movement.getChangeQuantity());
+        return savedMovement;
+    }
+
     private void updateInventoryFromMovement(Store store, ProductVariant variant, Long changeQuantity) {
         Inventory inventory = inventoryRepository.findByStoreIdAndProductVariantId(store.getId(), variant.getId())
                 .orElse(new Inventory(null, store, variant, 0L));

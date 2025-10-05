@@ -43,6 +43,7 @@ public class InvoiceService {
 
         return InvoiceDto.builder()
                 .saleId(sale.getId())
+                .orderId(sale.getOrderId())
                 .invoiceNo(sale.getInvoiceNo())
                 .invoiceDate(sale.getInvoiceDate())
                 .store(storeInfo)
