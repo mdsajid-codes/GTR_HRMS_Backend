@@ -1,14 +1,14 @@
 master:
     datasource:
-        url: jdbc:mysql://209.209.40.85:19783/master_db
+        url: jdbc:mysql://mysql-202988-0.cloudclusters.net:19923/master_db
         username: admin
-        password : gqa6vDtX
+        password : IYLx90cJ
 
 provisioning:
     datasource:
-        host: 209.209.40.85
+        host: mysql-202988-0.cloudclusters.net
         username: admin
-        password: gqa6vDtX
+        password: IYLx90cJ
 
 spring:
   jpa:

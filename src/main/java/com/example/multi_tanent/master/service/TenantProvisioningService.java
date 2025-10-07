@@ -69,7 +69,7 @@ public class TenantProvisioningService {
         masterJdbc.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         // 3) Save to master_tenant
-        String jdbcUrl = "jdbc:mysql://" + mysqlHost + ":3306/" + dbName;
+        String jdbcUrl = "jdbc:mysql://" + mysqlHost + ":19923/" + dbName;
         MasterTenant mt = new MasterTenant();
         mt.setTenantId(tenantId);
         mt.setCompanyName(req.companyName());

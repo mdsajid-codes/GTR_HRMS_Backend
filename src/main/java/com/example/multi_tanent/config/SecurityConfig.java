@@ -9,6 +9,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -16,6 +17,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.example.multi_tanent.security.JwtAuthFilter;
 import com.example.multi_tanent.security.JwtUtil;
+
+import jakarta.servlet.Filter;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -71,12 +75,28 @@ public class SecurityConfig {
         
         .anyRequest().denyAll()
       )
+      .addFilterBefore(spaRedirectFilter(), ChannelProcessingFilter.class)
       .addFilterBefore(new JwtAuthFilter(jwt), UsernamePasswordAuthenticationFilter.class)
       .sessionManagement(sm -> sm.sessionCreationPolicy(
         org.springframework.security.config.http.SessionCreationPolicy.STATELESS));
     return http.build();
   }
 
+  @Bean
+  public Filter spaRedirectFilter() {
+      return (servletRequest, servletResponse, filterChain) -> {
+          HttpServletRequest request = (HttpServletRequest) servletRequest;
+          String path = request.getRequestURI();
+
+          // Forward to index.html if it's not an API call and not a static file
+          if (!path.startsWith("/api") && !path.contains(".") && path.matches("/(.*)")) {
+              request.getRequestDispatcher("/index.html").forward(servletRequest, servletResponse);
+              return;
+          }
+
+          filterChain.doFilter(servletRequest, servletResponse);
+      };
+  }
   @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
