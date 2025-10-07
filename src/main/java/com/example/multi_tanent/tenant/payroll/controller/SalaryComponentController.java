@@ -3,6 +3,7 @@ package com.example.multi_tanent.tenant.payroll.controller;
 import com.example.multi_tanent.tenant.payroll.dto.SalaryComponentRequest;
 import com.example.multi_tanent.tenant.payroll.dto.SalaryComponentResponse;
 import com.example.multi_tanent.tenant.payroll.service.SalaryComponentService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -15,13 +16,21 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/salary-components")
 @CrossOrigin(origins = "*")
-@PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+@PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR')")
 public class SalaryComponentController {
 
     private final SalaryComponentService salaryComponentService;
 
     public SalaryComponentController(SalaryComponentService salaryComponentService) {
         this.salaryComponentService = salaryComponentService;
+    }
+
+    @PostMapping
+    public ResponseEntity<SalaryComponentResponse> createSalaryComponent(@Valid @RequestBody SalaryComponentRequest request) {
+        var createdComponent = salaryComponentService.createSalaryComponent(request);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(createdComponent.getId()).toUri();
+        return ResponseEntity.created(location).body(SalaryComponentResponse.fromEntity(createdComponent));
     }
 
     @GetMapping
@@ -39,16 +48,8 @@ public class SalaryComponentController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<SalaryComponentResponse> createSalaryComponent(@RequestBody SalaryComponentRequest request) {
-        var createdComponent = salaryComponentService.createSalaryComponent(request);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
-                .buildAndExpand(createdComponent.getId()).toUri();
-        return ResponseEntity.created(location).body(SalaryComponentResponse.fromEntity(createdComponent));
-    }
-
     @PutMapping("/{id}")
-    public ResponseEntity<SalaryComponentResponse> updateSalaryComponent(@PathVariable Long id, @RequestBody SalaryComponentRequest request) {
+    public ResponseEntity<SalaryComponentResponse> updateSalaryComponent(@PathVariable Long id, @Valid @RequestBody SalaryComponentRequest request) {
         var updatedComponent = salaryComponentService.updateSalaryComponent(id, request);
         return ResponseEntity.ok(SalaryComponentResponse.fromEntity(updatedComponent));
     }

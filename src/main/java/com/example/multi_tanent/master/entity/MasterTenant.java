@@ -2,6 +2,9 @@ package com.example.multi_tanent.master.entity;
 
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
+
+import java.time.LocalDate;
+
 import org.hibernate.annotations.Type;
 
 import lombok.Getter;
@@ -35,6 +38,22 @@ public class MasterTenant {
   @Type(JsonType.class)
   @Column(columnDefinition = "json")
   private java.util.List<ServiceModule> serviceModules;
+
+  // Subscription Details
+    private Integer numberOfLocations;
+
+    private Integer numberOfUsers;
+
+    private Integer hrmsAccessCount;
+
+    private Integer numberOfStore;
+
+    private LocalDate subscriptionStartDate;
+
+    private LocalDate subscriptionEndDate;
+
+    @Enumerated(EnumType.STRING)
+    private SubscriptionStatus status = SubscriptionStatus.PENDING;
 
   public String[] getEntityPackages() {
     return ServiceModule.getPackagesForModules(this.serviceModules);

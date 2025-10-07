@@ -3,6 +3,7 @@ package com.example.multi_tanent.master.controller;
 
 import com.example.multi_tanent.config.TenantRegistry;
 import com.example.multi_tanent.master.dto.ProvisionTenantRequest;
+import com.example.multi_tanent.master.dto.SubscriptionDetailsResponse;
 import com.example.multi_tanent.master.dto.UpdateTenantServicesRequest;
 import com.example.multi_tanent.master.entity.MasterTenant;
 import com.example.multi_tanent.master.repository.MasterTenantRepository;
@@ -53,5 +54,13 @@ public class TenantProvisioningController {
         service.updateAdminRoles(updatedTenant, req.adminRoles());
 
         return ResponseEntity.ok("Tenant services updated successfully. Schema migration initiated.");
+    }
+
+    @GetMapping("/{tenantId}/subscription")
+    @PreAuthorize("hasAnyRole('MASTER_ADMIN','SUPER_ADMIN')")
+    public ResponseEntity<SubscriptionDetailsResponse> getSubscriptionDetails(@PathVariable String tenantId) {
+        return masterTenantRepository.findByTenantId(tenantId)
+                .map(tenant -> ResponseEntity.ok(SubscriptionDetailsResponse.fromEntity(tenant)))
+                .orElse(ResponseEntity.notFound().build());
     }
 }

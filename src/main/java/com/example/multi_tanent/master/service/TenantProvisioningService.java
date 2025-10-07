@@ -3,12 +3,11 @@ package com.example.multi_tanent.master.service;
 
 import com.example.multi_tanent.config.TenantRegistry;
 import com.example.multi_tanent.master.dto.ProvisionTenantRequest;
+import com.example.multi_tanent.master.entity.SubscriptionStatus;
 import com.example.multi_tanent.master.entity.ServiceModule;
 import com.example.multi_tanent.master.entity.MasterTenant;
 import com.example.multi_tanent.master.enums.Role;
-import com.example.multi_tanent.pos.entity.Category;
 import com.example.multi_tanent.spersusers.enitity.Store;
-import com.example.multi_tanent.pos.entity.TaxRate;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.enitity.User;
 import com.example.multi_tanent.master.repository.MasterTenantRepository; // Keep this line
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Properties;
 import java.util.Set;
@@ -79,6 +77,14 @@ public class TenantProvisioningService {
         mt.setUsername(mysqlUser);
         mt.setPassword(mysqlPass);
         mt.setServiceModules(req.serviceModules());
+        // Set new subscription fields
+        mt.setNumberOfLocations(req.numberOfLocations());
+        mt.setNumberOfUsers(req.numberOfUsers());
+        mt.setNumberOfStore(req.numberOfStore());
+        mt.setHrmsAccessCount(req.hrmsAccessCount());
+        mt.setSubscriptionStartDate(req.subscriptionStartDate());
+        mt.setSubscriptionEndDate(req.subscriptionEndDate());
+        mt.setStatus(SubscriptionStatus.ACTIVE); // Or set based on your business logic
         masterRepo.save(mt);
 
         // 4) Create schema and seed initial admin users using a temporary data source

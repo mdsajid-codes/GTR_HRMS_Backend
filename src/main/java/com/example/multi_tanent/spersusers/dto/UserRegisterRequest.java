@@ -33,4 +33,5 @@ public class UserRegisterRequest {
     private Boolean isLocked;
 
     private Long storeId; // Optional: to associate user with a specific store
+    private Long locationId; // Optional: to associate user with a specific location
 }

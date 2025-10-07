@@ -1,11 +1,15 @@
 package com.example.multi_tanent.spersusers.controller;
 
+import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.master.entity.MasterTenant;
+import com.example.multi_tanent.master.repository.MasterTenantRepository;
 import com.example.multi_tanent.spersusers.dto.LocationRequest;
 import com.example.multi_tanent.spersusers.dto.LocationResponse;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,15 +29,30 @@ public class LocationController {
 
     private final LocationRepository locationRepository;
     private final JpaRepository<Tenant, Long> tenantRepository;
+    private final MasterTenantRepository masterTenantRepository;
 
-    public LocationController(LocationRepository locationRepository, JpaRepository<Tenant, Long> tenantRepository) {
+    public LocationController(LocationRepository locationRepository, JpaRepository<Tenant, Long> tenantRepository, MasterTenantRepository masterTenantRepository) {
         this.locationRepository = locationRepository;
         this.tenantRepository = tenantRepository;
+        this.masterTenantRepository = masterTenantRepository;
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HRMS_ADMIN', 'POS_ADMIN')")
-    public ResponseEntity<LocationResponse> createLocation(@RequestBody LocationRequest request) {
+    public ResponseEntity<?> createLocation(@RequestBody LocationRequest request) {
+        String tenantId = TenantContext.getTenantId();
+        MasterTenant masterTenant = masterTenantRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new IllegalStateException("Master tenant record not found. Cannot enforce subscription limits."));
+
+        Integer locationLimit = masterTenant.getNumberOfLocations();
+        if (locationLimit != null) {
+            long currentLocationCount = locationRepository.count();
+            if (currentLocationCount >= locationLimit) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Location limit of " + locationLimit + " has been reached for your subscription.");
+            }
+        }
+
         Tenant tenant = tenantRepository.findAll().stream().findFirst()
                 .orElseThrow(() -> new IllegalStateException("Tenant not found for the current context."));
 

@@ -26,8 +26,6 @@ public class SalaryComponent {
     @Enumerated(EnumType.STRING)
     private CalculationType calculationType;
 
-    private String formula; // To be used if calculationType is FORMULA_BASED
-
     private boolean isTaxable;
 
     private boolean partOfGrossSalary;

@@ -1,6 +1,10 @@
 package com.example.multi_tanent.tenant.employee.controller;
 
+import com.example.multi_tanent.config.TenantContext;
 import com.example.multi_tanent.master.enums.Role;
+import com.example.multi_tanent.master.entity.MasterTenant;
+import com.example.multi_tanent.master.repository.MasterTenantRepository;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.User;
@@ -11,6 +15,7 @@ import com.example.multi_tanent.tenant.employee.entity.JobDetails;
 import com.example.multi_tanent.tenant.employee.entity.TimeAttendence;
 import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.employee.enums.Gender;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 import com.example.multi_tanent.tenant.employee.enums.MartialStatus;
 import com.example.multi_tanent.tenant.employee.repository.*;
 import com.example.multi_tanent.tenant.service.FileStorageService;
@@ -66,6 +71,8 @@ public class EmployeeController {
   private final TimeAttendenceRepository timeAttendenceRepo;
   private final PasswordEncoder passwordEncoder;
   private final FileStorageService fileStorageService;
+  private final LocationRepository locationRepository;
+  private final MasterTenantRepository masterTenantRepository;
   private static final Logger logger = LoggerFactory.getLogger(EmployeeController.class);
 
 
@@ -75,7 +82,9 @@ public class EmployeeController {
                             EmployeeProfileRepository employeeProfileRepo,
                             JobDetailsRepository jobDetailsRepo,
                             TimeAttendenceRepository timeAttendenceRepo,
-                            PasswordEncoder passwordEncoder, FileStorageService fileStorageService) {
+                            PasswordEncoder passwordEncoder, FileStorageService fileStorageService,
+                            LocationRepository locationRepository,
+                            MasterTenantRepository masterTenantRepository) {
     this.empRepo = empRepo;
     this.userRepo = userRepo;
     this.tenantRepo = tenantRepo;
@@ -84,11 +93,26 @@ public class EmployeeController {
     this.timeAttendenceRepo = timeAttendenceRepo;
     this.passwordEncoder = passwordEncoder;
     this.fileStorageService = fileStorageService;
+    this.locationRepository = locationRepository;
+    this.masterTenantRepository = masterTenantRepository;
   }
 
   @PostMapping("/register")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   public ResponseEntity<?> registerEmployee(@RequestBody EmployeeRequest request){
+    String tenantId = TenantContext.getTenantId();
+    MasterTenant masterTenant = masterTenantRepository.findByTenantId(tenantId)
+            .orElseThrow(() -> new IllegalStateException("Master tenant record not found. Cannot enforce subscription limits."));
+
+    Integer employeeLimit = masterTenant.getHrmsAccessCount();
+    if (employeeLimit != null) {
+        long currentEmployeeCount = empRepo.count();
+        if (currentEmployeeCount >= employeeLimit) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("HRMS employee limit of " + employeeLimit + " has been reached for your subscription.");
+        }
+    }
+
     Optional<User> userOpt = userRepo.findByEmail(request.getEmail());
     if(userOpt.isEmpty()){
       return ResponseEntity.badRequest().body("User with email '" + request.getEmail() + "' not found.");
@@ -124,7 +148,7 @@ public class EmployeeController {
   public ResponseEntity<byte[]> downloadBulkAddTemplate() throws IOException {
       String[] headers = {
               "User Email*", "Employee Code*", "Full Name*", "Password*", "Roles (comma-separated)*",
-              "First Name*", "Last Name*", "Work Email", "Primary Phone", "Date of Birth (YYYY-MM-DD)",
+              "First Name*", "Last Name*", "Work Email", "Primary Phone", "Date of Birth (YYYY-MM-DD)", "Location ID",
               "Gender (MALE/FEMALE/OTHER)", "Address", "City", "State", "Country", "Postal Code",
               "Bank Name", "Bank Account Number", "IFSC Code", "Designation", "Department",
               "Date of Joining (YYYY-MM-DD)", "Reports To (Manager's Employee Code)", "Leave Group Name"
@@ -189,6 +213,18 @@ public class EmployeeController {
 
       String loggedInUsername = SecurityContextHolder.getContext().getAuthentication().getName();
 
+      String tenantId = TenantContext.getTenantId();
+      MasterTenant masterTenant = masterTenantRepository.findByTenantId(tenantId)
+              .orElseThrow(() -> new IllegalStateException("Master tenant record not found. Cannot enforce subscription limits."));
+      Integer employeeLimit = masterTenant.getHrmsAccessCount();
+      long currentEmployeeCount = empRepo.count();
+      int newEmployeeCount = sheet.getLastRowNum(); // Assuming row 0 is header
+
+      if (employeeLimit != null && (currentEmployeeCount + newEmployeeCount) > employeeLimit) {
+          return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                  .body("Bulk import failed. This import would exceed your subscription limit of " + employeeLimit + " HRMS employees.");
+      }
+
       for(int i=1; i<= sheet.getLastRowNum(); i++){
         Row row = sheet.getRow(i);
         if(isRowEmpty(row)) continue;
@@ -237,41 +273,51 @@ public class EmployeeController {
             employee.setLastName(formatter.formatCellValue(row.getCell(6)));
             employee.setEmailWork(formatter.formatCellValue(row.getCell(7)));
             employee.setPhonePrimary(formatter.formatCellValue(row.getCell(8)));
-            employee.setDob(getLocalDateFromCell(row.getCell(9)));
-            employee.setGender(Gender.valueOf(formatter.formatCellValue(row.getCell(10)).toUpperCase()));
+            employee.setDob(getLocalDateFromCell(row.getCell(9))); // DOB
+
+            String locationIdStr = formatter.formatCellValue(row.getCell(10)); // Location ID
+            if (!locationIdStr.isEmpty()) {
+                try {
+                    Long locationId = Long.parseLong(locationIdStr);
+                    locationRepository.findById(locationId).ifPresent(employee::setLocation);
+                } catch (NumberFormatException e) {
+                    errors.add("Row " + (i + 1) + ": Invalid Location ID format.");
+                }
+            }
+
+            employee.setGender(Gender.valueOf(formatter.formatCellValue(row.getCell(11)).toUpperCase())); // Gender
             employee.setStatus(EmployeeStatus.ACTIVE);
             employee.setCreatedBy(loggedInUsername);
             employee.setUpdatedBy(loggedInUsername);
             employee.setCreatedAt(LocalDateTime.now());
             employee.setUpdatedAt(LocalDateTime.now());
             Employee savedEmployee = empRepo.save(employee);
-
             // --- Create EmployeeProfile ---
             EmployeeProfile profile = new EmployeeProfile();
             profile.setEmployee(savedEmployee);
-            profile.setAddress(formatter.formatCellValue(row.getCell(11)));
-            profile.setCity(formatter.formatCellValue(row.getCell(12)));
-            profile.setState(formatter.formatCellValue(row.getCell(13)));
-            profile.setCountry(formatter.formatCellValue(row.getCell(14)));
-            profile.setPostalCode(formatter.formatCellValue(row.getCell(15)));
-            profile.setBankName(formatter.formatCellValue(row.getCell(16)));
-            profile.setBankAccountNumber(formatter.formatCellValue(row.getCell(17)));
-            profile.setIfscCode(formatter.formatCellValue(row.getCell(18)));
+            profile.setAddress(formatter.formatCellValue(row.getCell(12)));
+            profile.setCity(formatter.formatCellValue(row.getCell(13)));
+            profile.setState(formatter.formatCellValue(row.getCell(14)));
+            profile.setCountry(formatter.formatCellValue(row.getCell(15)));
+            profile.setPostalCode(formatter.formatCellValue(row.getCell(16)));
+            profile.setBankName(formatter.formatCellValue(row.getCell(17)));
+            profile.setBankAccountNumber(formatter.formatCellValue(row.getCell(18)));
+            profile.setIfscCode(formatter.formatCellValue(row.getCell(19)));
             employeeProfileRepo.save(profile);
 
             // --- Create JobDetails ---
             JobDetails jobDetails = new JobDetails();
             jobDetails.setEmployee(savedEmployee);
-            jobDetails.setDesignation(formatter.formatCellValue(row.getCell(19)));
-            jobDetails.setDepartment(formatter.formatCellValue(row.getCell(20)));
-            jobDetails.setDateOfJoining(getLocalDateFromCell(row.getCell(21)));
-            jobDetails.setReportsTo(formatter.formatCellValue(row.getCell(22)));
+            jobDetails.setDesignation(formatter.formatCellValue(row.getCell(20)));
+            jobDetails.setDepartment(formatter.formatCellValue(row.getCell(21)));
+            jobDetails.setDateOfJoining(getLocalDateFromCell(row.getCell(22)));
+            jobDetails.setReportsTo(formatter.formatCellValue(row.getCell(23)));
             jobDetailsRepo.save(jobDetails);
 
             // --- Create TimeAttendence ---
             TimeAttendence timeAttendence = new TimeAttendence();
             timeAttendence.setEmployee(savedEmployee);
-            timeAttendence.setLeaveGroup(formatter.formatCellValue(row.getCell(23)));
+            timeAttendence.setLeaveGroup(formatter.formatCellValue(row.getCell(24)));
             timeAttendenceRepo.save(timeAttendence);
 
         } catch (IllegalArgumentException e) {
@@ -370,6 +416,17 @@ public class EmployeeController {
     }
   }
   
+  @GetMapping("/by-location/{locationId}")
+  @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+  @Transactional(readOnly = true)
+  public ResponseEntity<List<Employee>> fetchByLocation(@PathVariable Long locationId) {
+      if (!locationRepository.existsById(locationId)) {
+          return ResponseEntity.notFound().build();
+      }
+      List<Employee> employees = empRepo.findByLocationId(locationId);
+      return ResponseEntity.ok(employees);
+  }
+
   @PostMapping("/{employeeCode}/photo")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
   public ResponseEntity<?> uploadPhoto(@PathVariable String employeeCode, @RequestParam("file") MultipartFile file) {
@@ -449,6 +506,11 @@ public class EmployeeController {
     employee.setMartialStatus(request.getMartialStatus());
     employee.setStatus(request.getStatus());
     employee.setPhotoPath(request.getPhotoPath());
+    
+    if (request.getLocationId() != null) {
+        Location location = locationRepository.findById(request.getLocationId()).orElse(null);
+        employee.setLocation(location);
+    }
 
     String username = SecurityContextHolder.getContext().getAuthentication().getName();
     employee.setUpdatedBy(username);

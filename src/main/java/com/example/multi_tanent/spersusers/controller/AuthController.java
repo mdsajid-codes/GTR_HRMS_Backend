@@ -2,6 +2,7 @@ package com.example.multi_tanent.spersusers.controller;
 
 import com.example.multi_tanent.config.TenantContext;
 import com.example.multi_tanent.master.entity.MasterTenant;
+import com.example.multi_tanent.master.entity.SubscriptionStatus;
 import com.example.multi_tanent.master.entity.ServiceModule;
 import com.example.multi_tanent.master.repository.MasterTenantRepository;
 import com.example.multi_tanent.security.JwtUtil;
@@ -37,13 +38,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
         TenantContext.setTenantId(loginRequest.getTenantId());
-
+ 
+        MasterTenant masterTenant = masterTenantRepository.findByTenantId(loginRequest.getTenantId())
+                .orElseThrow(() -> new RuntimeException("Tenant configuration not found."));
+ 
+        if (masterTenant.getStatus() != SubscriptionStatus.ACTIVE) {
+            throw new RuntimeException("Your subscription is not active. Please contact support. Status: " + masterTenant.getStatus());
+        }
+ 
         User user = userRepository.findByEmail(loginRequest.getEmail())
                 .filter(u -> passwordEncoder.matches(loginRequest.getPassword(), u.getPasswordHash()))
                 .orElseThrow(() -> new RuntimeException("Invalid credentials or tenant ID."));
-
-        MasterTenant masterTenant = masterTenantRepository.findByTenantId(loginRequest.getTenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant configuration not found."));
 
         List<String> roles = user.getRoles().stream().map(Enum::name).collect(Collectors.toList());
         List<ServiceModule> modules = masterTenant.getServiceModules();

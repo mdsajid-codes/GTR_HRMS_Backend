@@ -1,6 +1,7 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.payroll.entity.*;
 import com.example.multi_tanent.tenant.payroll.enums.CalculationType;
 import com.example.multi_tanent.tenant.payroll.enums.LoanStatus;
@@ -15,6 +16,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,19 +29,26 @@ public class PayslipGenerationService {
 
     private final SalaryStructureRepository salaryStructureRepository;
     private final EmployeeLoanRepository employeeLoanRepository;
+    private final EmployeeRepository employeeRepository;
     private final PayslipRepository payslipRepository;
     private final SalaryComponentRepository salaryComponentRepository;
     private final ExpressionParser expressionParser;
 
-    public PayslipGenerationService(SalaryStructureRepository salaryStructureRepository, EmployeeLoanRepository employeeLoanRepository, PayslipRepository payslipRepository, SalaryComponentRepository salaryComponentRepository) {
+    public PayslipGenerationService(SalaryStructureRepository salaryStructureRepository,
+                                    EmployeeLoanRepository employeeLoanRepository,
+                                    EmployeeRepository employeeRepository, PayslipRepository payslipRepository,
+                                    SalaryComponentRepository salaryComponentRepository) {
         this.salaryStructureRepository = salaryStructureRepository;
         this.employeeLoanRepository = employeeLoanRepository;
+        this.employeeRepository = employeeRepository;
         this.payslipRepository = payslipRepository;
         this.salaryComponentRepository = salaryComponentRepository;
         this.expressionParser = new SpelExpressionParser();
     }
 
-    public void generatePayslipsForEmployees(PayrollRun payrollRun, List<Employee> employees) {
+    public void generatePayslipsForEmployees(PayrollRun payrollRun) {
+        List<Employee> employees = employeeRepository.findAll();
+
         List<EmployeeLoan> activeLoans = employeeLoanRepository.findByEmployeeInAndStatus(employees, LoanStatus.APPROVED);
         Map<Long, EmployeeLoan> employeeIdToLoanMap = activeLoans.stream()
                 .collect(Collectors.toMap(loan -> loan.getEmployee().getId(), loan -> loan));
@@ -54,7 +63,16 @@ public class PayslipGenerationService {
                 payslip.setEmployee(employee);
                 payslip.setYear(payrollRun.getYear());
                 payslip.setMonth(payrollRun.getMonth());
-                payslip.setPayDate(payrollRun.getPayPeriodEnd());
+                // Ensure payDate is never null. Fallback to pay period end date.
+                LocalDate payDate = payrollRun.getPayDate() != null
+                        ? payrollRun.getPayDate()
+                        : payrollRun.getPayPeriodEnd();
+
+                // If both are null, calculate it from the year and month as a final fallback.
+                if (payDate == null && payrollRun.getYear() > 0 && payrollRun.getMonth() > 0) {
+                    payDate = LocalDate.of(payrollRun.getYear(), payrollRun.getMonth(), 1).withDayOfMonth(LocalDate.of(payrollRun.getYear(), payrollRun.getMonth(), 1).lengthOfMonth());
+                }
+                payslip.setPayDate(payDate);
                 payslip.setStatus(PayrollStatus.GENERATED);
 
                 List<PayslipComponent> components = new ArrayList<>();

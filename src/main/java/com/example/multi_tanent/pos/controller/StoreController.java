@@ -1,9 +1,14 @@
 package com.example.multi_tanent.pos.controller;
 
+import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.master.entity.MasterTenant;
+import com.example.multi_tanent.master.repository.MasterTenantRepository;
 import com.example.multi_tanent.pos.dto.StoreRequest;
 import com.example.multi_tanent.pos.service.StoreService;
 import com.example.multi_tanent.spersusers.enitity.Store;
 
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -17,14 +22,31 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class StoreController {
     private final StoreService storeService;
+    private final JpaRepository<Store, Long> storeRepository;
+    private final MasterTenantRepository masterTenantRepository;
 
-    public StoreController(StoreService storeService) {
+    public StoreController(StoreService storeService, JpaRepository<Store, Long> storeRepository, MasterTenantRepository masterTenantRepository) {
         this.storeService = storeService;
+        this.storeRepository = storeRepository;
+        this.masterTenantRepository = masterTenantRepository;
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','POS_ADMIN')")
-    public ResponseEntity<Store> createStore( @RequestBody StoreRequest storeRequest) {
+    public ResponseEntity<?> createStore( @RequestBody StoreRequest storeRequest) {
+        String tenantId = TenantContext.getTenantId();
+        MasterTenant masterTenant = masterTenantRepository.findByTenantId(tenantId)
+                .orElseThrow(() -> new IllegalStateException("Master tenant record not found. Cannot enforce subscription limits."));
+
+        Integer storeLimit = masterTenant.getNumberOfStore();
+        if (storeLimit != null) {
+            long currentStoreCount = storeRepository.count();
+            if (currentStoreCount >= storeLimit) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body("Store limit of " + storeLimit + " has been reached for your subscription.");
+            }
+        }
+
         Store createdStore = storeService.createStore(storeRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")

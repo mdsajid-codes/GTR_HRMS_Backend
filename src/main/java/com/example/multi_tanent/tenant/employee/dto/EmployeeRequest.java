@@ -27,4 +27,5 @@ public class EmployeeRequest {
     private MartialStatus martialStatus;
     private EmployeeStatus status;
     private String photoPath;
+    private Long locationId;
 }

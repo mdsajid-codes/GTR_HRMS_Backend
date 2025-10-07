@@ -19,6 +19,7 @@ public class PayrollRun {
 
     private LocalDate payPeriodStart;
     private LocalDate payPeriodEnd;
+    private LocalDate payDate;
 
     @Enumerated(EnumType.STRING)
     private PayrollStatus status; // DRAFT, PROCESSING, COMPLETED, PAID

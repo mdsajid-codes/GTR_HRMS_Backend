@@ -1,6 +1,7 @@
 package com.example.multi_tanent.pos.service;
 
 import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.master.entity.MasterTenant;
 import com.example.multi_tanent.master.repository.MasterTenantRepository;
 import com.example.multi_tanent.pos.dto.ProductVariantDto;
 import com.example.multi_tanent.pos.dto.ProductVariantRequest;
@@ -122,7 +123,7 @@ public class ProductVariantService {
      */
     @Transactional(transactionManager = "tenantTx", propagation = Propagation.NEVER)
     public Optional<ProductVariantDto> findVariantBySkuGlobally(String sku) {
-        List<String> tenantIds = masterTenantRepository.findAllTenantIds();
+        List<String> tenantIds = masterTenantRepository.findAll().stream().map(MasterTenant::getTenantId).collect(Collectors.toList());
         for (String tenantId : tenantIds) {
             try {
                 TenantContext.setTenantId(tenantId);

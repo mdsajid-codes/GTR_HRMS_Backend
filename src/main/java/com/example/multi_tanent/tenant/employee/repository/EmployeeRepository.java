@@ -21,6 +21,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     List<Employee> findByGender(Gender gender);
 
+    List<Employee> findByLocationId(Long locationId);
+
     List<Employee> findByMartialStatus(MartialStatus martialStatus);
 
     List<Employee> findByStatus(EmployeeStatus status);
