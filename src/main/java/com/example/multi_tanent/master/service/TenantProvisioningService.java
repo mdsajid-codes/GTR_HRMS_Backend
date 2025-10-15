@@ -69,7 +69,7 @@ public class TenantProvisioningService {
         masterJdbc.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         // 3) Save to master_tenant
-        String jdbcUrl = "jdbc:mysql://" + mysqlHost + ":19923/" + dbName;
+        String jdbcUrl = "jdbc:mysql://" + mysqlHost + ":19783/" + dbName;
         MasterTenant mt = new MasterTenant();
         mt.setTenantId(tenantId);
         mt.setCompanyName(req.companyName());
@@ -162,8 +162,10 @@ public class TenantProvisioningService {
         emfBean.setPackagesToScan(packagesToScan);
         emfBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         Properties p = new Properties();
-        p.put("hibernate.hbm2ddl.auto", ddlAction);
+        // Use "create-drop" to avoid issues with dropping non-existent objects on a fresh DB.
+        p.put("hibernate.hbm2ddl.auto", "create");
         p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+        p.put("hibernate.globally_quoted_identifiers", "true"); // Helps with reserved keywords and case sensitivity
         emfBean.setJpaProperties(p);
         emfBean.afterPropertiesSet();
         emfBean.destroy(); // This triggers schema creation/update and then closes the factory.

@@ -25,7 +25,7 @@ public class LeaveEncashmentRequest {
     private Employee employee;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "leave_type_id")
+    @JoinColumn(name = "leave_type_id", nullable = false)
     private LeaveType leaveType;
 
     private BigDecimal daysRequested;

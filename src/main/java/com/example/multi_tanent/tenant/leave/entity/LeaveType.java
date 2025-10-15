@@ -20,4 +20,9 @@ public class LeaveType {
     private Boolean isPaid;
 
     private Integer maxDaysPerYear;
+
+    @Column(nullable = false)
+    private boolean active = true;
+
+    
 }

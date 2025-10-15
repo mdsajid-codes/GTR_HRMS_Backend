@@ -12,7 +12,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 import java.util.List;
 
-@RestController
+@RestController("posCategoryController")
 @RequestMapping("/api/pos/categories")
 @CrossOrigin(origins = "*")
 public class CategoryController {

@@ -20,6 +20,8 @@ import com.example.multi_tanent.security.JwtUtil;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import jakarta.servlet.ServletException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,8 +30,8 @@ import java.util.List;
 @EnableMethodSecurity // enables @PreAuthorize
 public class SecurityConfig {
 
-  @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
-  private String[] allowedOrigins;
+  // @Value("${app.cors.allowed-origins:http://localhost:3000,http://localhost:5173}")
+  // private String[] allowedOrigins;
 
 
   @Bean PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
@@ -48,29 +50,31 @@ public class SecurityConfig {
         "/uploads/**"        // Allow public access to uploaded files
           ).permitAll()
         .requestMatchers("/api/master/auth/login").permitAll()
+        .requestMatchers("/api/auth/login").permitAll()
         .requestMatchers("/api/master/tenant-requests/register").permitAll()
+        .requestMatchers("/api/biometric-punch/**").permitAll() // Allow device punches
+        .requestMatchers("/public/products/**").permitAll() // Allow public access to product info via QR code
+
+        // Master Admin Endpoints
         .requestMatchers("/api/master/tenant-requests/**").authenticated()
         .requestMatchers("/api/provision").hasRole("MASTER_ADMIN") // Allow provisioning for master admins
         .requestMatchers("/api/master/tenants/**").hasRole("MASTER_ADMIN")
         .requestMatchers("/api/master/users/**").authenticated()
-        .requestMatchers("/api/auth/login").permitAll()
+
+        // Shared/Base Tenant Endpoints
         .requestMatchers("/api/users/**").authenticated()
         .requestMatchers("/api/locations/**").authenticated()
-        .requestMatchers("/api/biometric-punch/**").permitAll() // Allow device punches
+        .requestMatchers("/api/base/categories/**").authenticated()
+
         // HRMS Module Endpoints
         .requestMatchers("/api/employees/**", "/api/departments/**", "/api/designations/**", "/api/job-details/**", "/api/jobBands/**", "/api/nationalities/**").authenticated()
-        // Attendance & Leave Module Endpoints
-        .requestMatchers("/api/attendance-records/**", "/api/time-attendence/**", "/api/time-types/**", "/api/work-types/**", "/api/shift-types/**", "/api/shift-policies/**", "/api/weekly-off-policies/**").authenticated()
-        .requestMatchers("/api/leaves/**", "/api/leave-requests/**", "/api/leave-groups/**", "/api/leave-types/**", "/api/leave-policies/**", "/api/leave-allocations/**", "/api/leave-balances/**", "/api/leave-encashment-requests/**", "/api/leave-approvals/**").authenticated()
-        // Payroll & Finance Module Endpoints
+        .requestMatchers("/api/attendance-records/**", "/api/time-attendence/**", "/api/time-types/**", "/api/work-types/**", "/api/shift-types/**", "/api/shift-policies/**", "/api/weekly-off-policies/**", "/api/attendance-policies/**", "/api/attendance-capturing-policies/**").authenticated()
+        .requestMatchers("/api/leaves/**", "/api/leave-requests/**", "/api/leave-groups/**", "/api/leave-types/**", "/api/leave-policies/**", "/api/leave-allocations/**", "/api/leave-balances/**", "/api/leave-encashment-requests/**", "/api/leave-approvals/**", "/api/holiday-policies/**", "/api/holidays/**").authenticated()
         .requestMatchers("/api/payrolls/**", "/api/payroll-runs/**", "/api/payslips/**", "/api/payroll-settings/**", "/api/salary-components/**", "/api/salary-structures/**", "/api/salary-structure-components/**", "/api/statutory-rules/**").authenticated()
         .requestMatchers("/api/loan-products/**", "/api/employee-loans/**", "/api/expenses/**", "/api/employee-bank-accounts/**").authenticated()
-        // Company & Profile Endpoints
         .requestMatchers("/api/employee-documents/**", "/api/employee-profiles/**", "/api/company-info/**", "/api/company-locations/**", "/api/company-bank-accounts/**").authenticated()
-        .requestMatchers("/api/pos/auth/login").permitAll()
-        // Allow public viewing of uploaded files for the POS module
-        .requestMatchers("/api/pos/uploads/view/**").permitAll()
-        .requestMatchers("/public/products/**").permitAll() // Allow public access to product info via QR code
+
+        // POS Module Endpoints
         .requestMatchers("/api/pos/**").authenticated()
         
         .anyRequest().denyAll()
@@ -97,13 +101,14 @@ public class SecurityConfig {
           filterChain.doFilter(servletRequest, servletResponse);
       };
   }
-  @Bean
+
+ @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(allowedOrigins));
-        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        config.setAllowedHeaders(java.util.List.of("Authorization", "Content-Type", "X-Tenant-ID"));
-        config.setAllowCredentials(true);
+        config.setAllowedOrigins(java.util.List.of("http://localhost:5173", "https://gtrhrms.netlify.app", "http://localhost:8080")); // React app URL
+        config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(java.util.List.of("*"));
+        config.setAllowCredentials(true); // If using cookies or auth headers
 
         config.setExposedHeaders(Arrays.asList("Content-Disposition")); 
         

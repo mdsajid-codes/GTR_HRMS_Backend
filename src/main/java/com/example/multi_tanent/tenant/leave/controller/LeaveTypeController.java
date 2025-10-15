@@ -33,6 +33,12 @@ public class LeaveTypeController {
 
     @GetMapping
     public ResponseEntity<List<LeaveType>> getAllLeaveTypes() {
+        return ResponseEntity.ok(leaveTypeService.getActiveLeaveTypes());
+    }
+
+    @GetMapping("/all-with-inactive")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR')")
+    public ResponseEntity<List<LeaveType>> getAllLeaveTypesWithInactive() {
         return ResponseEntity.ok(leaveTypeService.getAllLeaveTypes());
     }
 

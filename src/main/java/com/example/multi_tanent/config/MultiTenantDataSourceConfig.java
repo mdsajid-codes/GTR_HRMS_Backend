@@ -67,6 +67,7 @@ public class MultiTenantDataSourceConfig {
       p.put("hibernate.boot.allow_jdbc_metadata_access", "false");
       // Lock dialect (so Hibernate doesn't try to detect it)
       p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+      p.put("hibernate.globally_quoted_identifiers", "true");
       p.put("hibernate.show_sql", "true");
       p.put("hibernate.format_sql", "true");
       emf.setJpaProperties(p);

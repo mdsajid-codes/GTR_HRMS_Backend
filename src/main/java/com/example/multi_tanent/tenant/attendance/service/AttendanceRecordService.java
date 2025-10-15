@@ -1,19 +1,16 @@
 package com.example.multi_tanent.tenant.attendance.service;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.tenant.attendance.dto.AttendanceRecordResponse;
 import com.example.multi_tanent.tenant.attendance.dto.AttendanceRecordRequest;
 import com.example.multi_tanent.tenant.attendance.dto.BiometricPunchRequest;
-import com.example.multi_tanent.tenant.attendance.entity.AttendanceRecord;
-import com.example.multi_tanent.tenant.attendance.entity.AttendanceSetting;
-import com.example.multi_tanent.tenant.attendance.entity.BiometricDevice;
-import com.example.multi_tanent.tenant.attendance.entity.EmployeeBiometricMapping;
-import com.example.multi_tanent.tenant.attendance.entity.ShiftPolicy;
+import com.example.multi_tanent.tenant.attendance.entity.*;
 import com.example.multi_tanent.tenant.attendance.enums.AttendanceStatus;
 import com.example.multi_tanent.tenant.attendance.repository.AttendanceRecordRepository;
+import com.example.multi_tanent.tenant.attendance.repository.AttendancePolicyRepository;
 import com.example.multi_tanent.tenant.attendance.repository.AttendanceSettingRepository;
 import com.example.multi_tanent.tenant.attendance.repository.BiometricDeviceRepository;
 import com.example.multi_tanent.tenant.attendance.repository.EmployeeBiometricMappingRepository;
-import com.example.multi_tanent.tenant.attendance.repository.ShiftPolicyRepository;
 import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;
@@ -34,7 +31,7 @@ public class AttendanceRecordService {
 
     private final AttendanceRecordRepository attendanceRepository;
     private final EmployeeRepository employeeRepository;
-    private final ShiftPolicyRepository shiftPolicyRepository;
+    private final AttendancePolicyRepository attendancePolicyRepository;
     private final AttendanceSettingRepository attendanceSettingRepository;
     private final LeaveRequestRepository leaveRequestRepository;
     private final EmployeeBiometricMappingRepository mappingRepository;
@@ -42,21 +39,21 @@ public class AttendanceRecordService {
 
     public AttendanceRecordService(AttendanceRecordRepository attendanceRepository,
                                    EmployeeRepository employeeRepository,
-                                   ShiftPolicyRepository shiftPolicyRepository,
+                                   AttendancePolicyRepository attendancePolicyRepository,
                                    AttendanceSettingRepository attendanceSettingRepository,
                                    LeaveRequestRepository leaveRequestRepository,
                                    EmployeeBiometricMappingRepository mappingRepository,
                                    BiometricDeviceRepository deviceRepository) {
         this.attendanceRepository = attendanceRepository;
         this.employeeRepository = employeeRepository;
-        this.shiftPolicyRepository = shiftPolicyRepository;
+        this.attendancePolicyRepository = attendancePolicyRepository;
         this.attendanceSettingRepository = attendanceSettingRepository;
         this.leaveRequestRepository = leaveRequestRepository;
         this.mappingRepository = mappingRepository;
         this.deviceRepository = deviceRepository;
     }
 
-    public AttendanceRecord markAttendance(AttendanceRecordRequest request) {
+    public AttendanceRecordResponse markAttendance(AttendanceRecordRequest request) {
         attendanceRepository.findByEmployeeEmployeeCodeAndAttendanceDate(request.getEmployeeCode(), request.getAttendanceDate())
                 .ifPresent(rec -> {
                     throw new RuntimeException("Attendance record for employee " + request.getEmployeeCode() + " on " + request.getAttendanceDate() + " already exists.");
@@ -81,13 +78,14 @@ public class AttendanceRecordService {
 
         // Apply shift logic only if the employee is present
         if (record.getStatus() == AttendanceStatus.PRESENT) {
-            applyShiftPolicyLogic(record, request.getShiftPolicyId());
+            applyAttendancePolicyLogic(record, request.getAttendancePolicyId());
         }
 
-        return attendanceRepository.save(record);
+        AttendanceRecord savedRecord = attendanceRepository.save(record);
+        return AttendanceRecordResponse.fromEntity(savedRecord);
     }
 
-    public AttendanceRecord updateAttendance(Long id, AttendanceRecordRequest request) {
+    public AttendanceRecordResponse updateAttendance(Long id, AttendanceRecordRequest request) {
         AttendanceRecord record = attendanceRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Attendance record not found with id: " + id));
 
@@ -106,27 +104,31 @@ public class AttendanceRecordService {
         record.setOvertimeMinutes(0);
 
         if (record.getStatus() == AttendanceStatus.PRESENT) {
-            applyShiftPolicyLogic(record, request.getShiftPolicyId());
+            applyAttendancePolicyLogic(record, request.getAttendancePolicyId());
         } else {
-            record.setShiftPolicy(null);
+            record.setAttendancePolicy(null);
         }
 
-        return attendanceRepository.save(record);
+        AttendanceRecord updatedRecord = attendanceRepository.save(record);
+        return AttendanceRecordResponse.fromEntity(updatedRecord);
     }
 
-    private void applyShiftPolicyLogic(AttendanceRecord record, Long overrideShiftPolicyId) {
-        ShiftPolicy shiftPolicy = findShiftPolicy(overrideShiftPolicyId);
+    private void applyAttendancePolicyLogic(AttendanceRecord record, Long overrideAttendancePolicyId) {
+        AttendancePolicy attendancePolicy = findAttendancePolicy(overrideAttendancePolicyId);
 
-        if (shiftPolicy == null) {
-            // No shift policy found, so we can't calculate late status or overtime.
+        if (attendancePolicy == null || attendancePolicy.getShiftPolicy() == null || attendancePolicy.getCapturingPolicy() == null) {
+            // Not enough policy information to calculate late status or overtime.
             return;
         }
 
-        record.setShiftPolicy(shiftPolicy);
+        record.setAttendancePolicy(attendancePolicy);
+        ShiftPolicy shiftPolicy = attendancePolicy.getShiftPolicy();
+        AttendanceCapturingPolicy capturingPolicy = attendancePolicy.getCapturingPolicy();
+        LeaveDeductionConfig leaveConfig = attendancePolicy.getLeaveDeductionConfig();
 
         // Calculate Late Status
         if (record.getCheckIn() != null) {
-            LocalTime lateThreshold = shiftPolicy.getShiftStartTime().plusMinutes(shiftPolicy.getGracePeriodMinutes());
+            LocalTime lateThreshold = shiftPolicy.getShiftStartTime().plusMinutes(capturingPolicy.getGraceTimeMinutes());
             if (record.getCheckIn().isAfter(lateThreshold)) {
                 record.setIsLate(true);
             }
@@ -134,9 +136,19 @@ public class AttendanceRecordService {
 
         // Calculate Half_day Status
         if (record.getCheckIn() != null){
-            LocalTime halfDayThreshold = shiftPolicy.getShiftStartTime().plusMinutes(shiftPolicy.getGraceHalfDayMinutes());
+            LocalTime halfDayThreshold = shiftPolicy.getShiftStartTime().plusMinutes(capturingPolicy.getHalfDayThresholdMinutes());
             if (record.getCheckIn().isAfter(halfDayThreshold)) {
                 record.setStatus(AttendanceStatus.HALF_DAY);
+            }
+        }
+
+        // Calculate Early Going (if configured)
+        if (leaveConfig != null && Boolean.TRUE.equals(leaveConfig.getPenalizeEarlyGoing()) && record.getCheckOut() != null) {
+            if (record.getCheckOut().isBefore(shiftPolicy.getShiftEndTime())) {
+                // You can add more specific logic here, like marking it as a half-day
+                // or just flagging it. For now, we'll add a remark.
+                String remarks = record.getRemarks() == null ? "" : record.getRemarks() + " ";
+                record.setRemarks(remarks + "Marked for early going.");
             }
         }
 
@@ -147,11 +159,11 @@ public class AttendanceRecordService {
         }
     }
 
-    private ShiftPolicy findShiftPolicy(Long overrideShiftPolicyId) {
+    private AttendancePolicy findAttendancePolicy(Long overrideAttendancePolicyId) {
         // Priority: Override ID > Default policy
-        return Optional.ofNullable(overrideShiftPolicyId)
-                .flatMap(shiftPolicyRepository::findById)
-                .or(() -> shiftPolicyRepository.findByIsDefaultTrue())
+        return Optional.ofNullable(overrideAttendancePolicyId)
+                .flatMap(attendancePolicyRepository::findById)
+                .or(() -> attendancePolicyRepository.findByIsDefaultTrue())
                 .orElse(null);
     }
 
@@ -165,6 +177,11 @@ public class AttendanceRecordService {
         employeeRepository.findByEmployeeCode(employeeCode)
                 .orElseThrow(() -> new RuntimeException("Employee not found with code: " + employeeCode));
         return attendanceRepository.findByEmployeeEmployeeCodeAndAttendanceDateBetween(employeeCode, startDate, endDate);
+    }
+
+    @Transactional(readOnly = true)
+    public List<AttendanceRecord> getAllAttendanceRecords() {
+        return attendanceRepository.findAll();
     }
 
     public void deleteAttendanceRecord(Long id) {
@@ -209,11 +226,11 @@ public class AttendanceRecordService {
             record.setAttendanceDate(punchDate);
             record.setCheckIn(punchLocalTime);
             record.setStatus(AttendanceStatus.PRESENT);
-            applyShiftPolicyLogic(record, null); // Apply default shift policy
+            applyAttendancePolicyLogic(record, null); // Apply default attendance policy
         } else { // This is a subsequent punch for the day
             record.setCheckOut(punchLocalTime);
             // Re-apply logic to calculate overtime if applicable
-            applyShiftPolicyLogic(record, record.getShiftPolicy() != null ? record.getShiftPolicy().getId() : null);
+            applyAttendancePolicyLogic(record, record.getAttendancePolicy() != null ? record.getAttendancePolicy().getId() : null);
         }
 
         return attendanceRepository.save(record);
@@ -260,5 +277,9 @@ public class AttendanceRecordService {
                 attendanceRepository.save(newRecord);
             }
         }
+    }
+
+    public List<AttendanceRecord> getAttendanceForDate(LocalDate date) {
+        return attendanceRepository.findByAttendanceDate(date);
     }
 }

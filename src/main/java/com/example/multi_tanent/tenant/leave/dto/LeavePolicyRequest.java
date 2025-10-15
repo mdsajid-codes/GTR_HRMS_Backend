@@ -1,12 +1,18 @@
 package com.example.multi_tanent.tenant.leave.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
+
+import java.util.List;
 
 @Data
 public class LeavePolicyRequest {
-    private String policyName;
-    private String leaveType;
-    private Long jobBandId;
-    private Integer allocatedDays;
-    private Boolean active;
+    @NotBlank(message = "Policy name is required")
+    private String name;
+    private boolean defaultPolicy;
+    private String appliesToExpression;
+    @Valid @NotEmpty
+    private List<LeaveTypePolicyRequest> leaveTypePolicies;
 }

@@ -15,4 +15,6 @@ public interface LeaveAllocationRepository extends JpaRepository<LeaveAllocation
 
     @Query("SELECT la FROM LeaveAllocation la JOIN FETCH la.employee e JOIN FETCH la.leaveType WHERE e.employeeCode = :employeeCode")
     List<LeaveAllocation> findByEmployeeEmployeeCode(@Param("employeeCode") String employeeCode);
+    boolean existsByLeaveTypeId(Long leaveTypeId);
+
 }

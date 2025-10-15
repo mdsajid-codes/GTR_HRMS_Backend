@@ -12,4 +12,5 @@ public class UserUpdateRequest {
     private Boolean isActive;
     private Long storeId;
     private Long locationId;
+    private String password;
 }

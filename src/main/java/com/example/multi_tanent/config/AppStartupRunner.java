@@ -24,6 +24,7 @@ public class AppStartupRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         String port = env.getProperty("server.port", "8080");
         String hostAddress = "localhost";
+        String protocol = env.getProperty("server.ssl.enabled", "false").equals("true") ? "https" : "http";
         try {
             hostAddress = InetAddress.getLocalHost().getHostAddress();
         } catch (Exception e) {
@@ -31,8 +32,8 @@ public class AppStartupRunner implements ApplicationRunner {
         }
         LOG.info("\n----------------------------------------------------------\n\t" +
                 "✅ Application '{}' is running! Access URLs:\n\t" +
-                "Local: \t\thttp://localhost:{}\n\t" +
-                "External: \thttp://{}:{}\n----------------------------------------------------------",
-                env.getProperty("spring.application.name", "App"), port, hostAddress, port);
+                "Local: \t\t{}://localhost:{}\n\t" +
+                "External: \t{}://{}:{}\n----------------------------------------------------------",
+                env.getProperty("spring.application.name", "App"), protocol, port, protocol, hostAddress, port);
     }
 }

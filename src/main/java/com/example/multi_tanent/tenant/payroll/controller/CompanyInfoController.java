@@ -31,4 +31,10 @@ public class CompanyInfoController {
         CompanyInfo companyInfo = companyInfoService.createOrUpdateCompanyInfo(request);
         return ResponseEntity.ok(CompanyInfoResponse.fromEntity(companyInfo));
     }
+
+    @PutMapping
+    public ResponseEntity<CompanyInfoResponse> updateCompanyInfo(@RequestBody CompanyInfoRequest request) {
+        CompanyInfo companyInfo = companyInfoService.createOrUpdateCompanyInfo(request);
+        return ResponseEntity.ok(CompanyInfoResponse.fromEntity(companyInfo));
+    }
 }

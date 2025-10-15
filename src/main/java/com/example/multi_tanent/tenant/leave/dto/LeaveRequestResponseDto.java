@@ -38,13 +38,23 @@ public class LeaveRequestResponseDto {
         }
 
         // Accessing lazy-loaded properties while the session is still open
-        String employeeName = entity.getEmployee() != null ? (entity.getEmployee().getFirstName() + " " + entity.getEmployee().getLastName()).trim() : null;
+        String employeeName = null;
+        if (entity.getEmployee() != null) {
+            String firstName = entity.getEmployee().getFirstName() != null ? entity.getEmployee().getFirstName() : "";
+            String lastName = entity.getEmployee().getLastName() != null ? entity.getEmployee().getLastName() : "";
+            employeeName = (firstName + " " + lastName).trim();
+        }
+
+        String leaveTypeName = null;
+        if (entity.getLeaveType() != null) {
+            leaveTypeName = entity.getLeaveType().getLeaveType();
+        }
 
         return new LeaveRequestResponseDto(
                 entity.getId(),
                 entity.getEmployee() != null ? entity.getEmployee().getEmployeeCode() : null,
                 employeeName,
-                entity.getLeaveType() != null ? entity.getLeaveType().getLeaveType() : null,
+                leaveTypeName,
                 entity.getFromDate(),
                 entity.getToDate(),
                 entity.getDaysRequested(),

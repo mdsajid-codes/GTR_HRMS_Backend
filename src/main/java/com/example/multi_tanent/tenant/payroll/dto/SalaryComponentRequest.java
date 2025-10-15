@@ -24,8 +24,8 @@ public class SalaryComponentRequest {
     private CalculationType calculationType;
 
     @NotNull(message = "isTaxable flag must be provided.")
-    private Boolean isTaxable;
+    private Boolean isTaxable = true;
 
     @NotNull(message = "isPartOfGrossSalary flag must be provided.")
-    private Boolean isPartOfGrossSalary;
+    private Boolean isPartOfGrossSalary = true;
 }

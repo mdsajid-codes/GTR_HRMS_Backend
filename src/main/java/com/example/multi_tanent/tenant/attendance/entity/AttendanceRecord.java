@@ -37,8 +37,8 @@ public class AttendanceRecord {
     private AttendanceStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_policy_id")
-    private ShiftPolicy shiftPolicy;
+    @JoinColumn(name = "attendance_policy_id")
+    private AttendancePolicy attendancePolicy;
 
     @Column(name = "is_late")
     private Boolean isLate = false;

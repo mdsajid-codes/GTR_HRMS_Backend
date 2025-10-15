@@ -78,45 +78,75 @@ public class PayslipGenerationService {
                 List<PayslipComponent> components = new ArrayList<>();
                 Map<String, BigDecimal> calculatedAmounts = new HashMap<>();
 
-                BigDecimal grossEarnings = BigDecimal.ZERO;
-                BigDecimal totalDeductions = BigDecimal.ZERO;
+                final BigDecimal[] grossEarnings = {BigDecimal.ZERO};
+                final BigDecimal[] totalDeductions = {BigDecimal.ZERO};
 
-                // First pass: Calculate all FLAT_AMOUNT components and store them in a map.
+                // --- Refactored Calculation Logic ---
+                // Pass 1: Calculate prerequisite components (FLAT_AMOUNT and PERCENTAGE_OF_BASIC)
+                BigDecimal basicAmount = BigDecimal.ZERO;
                 for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
-                    if (ssc.getSalaryComponent().getCalculationType() == CalculationType.FLAT_AMOUNT) {
-                        BigDecimal amount = ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO;
-                        String componentCode = ssc.getSalaryComponent().getCode();
-                        calculatedAmounts.put(componentCode, amount);
+                    String code = ssc.getSalaryComponent().getCode();
+                    CalculationType type = ssc.getSalaryComponent().getCalculationType();
+                    BigDecimal value = ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO;
+
+                    if (type == CalculationType.FLAT_AMOUNT) {
+                        calculatedAmounts.put(code, value);
+                        if ("BASIC".equalsIgnoreCase(code)) {
+                            basicAmount = value;
+                        }
                     }
                 }
 
-                // Create the evaluation context with the calculated amounts as the root object.
+                // Now that we have BASIC, we can calculate PERCENTAGE_OF_BASIC
+                for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
+                    if (ssc.getSalaryComponent().getCalculationType() == CalculationType.PERCENTAGE_OF_BASIC) {
+                        BigDecimal percentage = ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO;
+                        BigDecimal calculatedValue = basicAmount.multiply(percentage).divide(new BigDecimal("100"));
+                        calculatedAmounts.put(ssc.getSalaryComponent().getCode(), calculatedValue);
+                    }
+                }
+
+                // Pass 2: Calculate initial gross earnings from already calculated components
+                for (Map.Entry<String, BigDecimal> entry : calculatedAmounts.entrySet()) {
+                    salaryComponentRepository.findByCode(entry.getKey()).ifPresent(sc -> {
+                        if (sc.getType() == SalaryComponentType.EARNING && sc.isPartOfGrossSalary()) {
+                            grossEarnings[0] = grossEarnings[0].add(entry.getValue());
+                        }
+                    });
+                }
+
+                // Pass 3: Calculate PERCENTAGE_OF_GROSS components
+                for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
+                    if (ssc.getSalaryComponent().getCalculationType() == CalculationType.PERCENTAGE_OF_GROSS) {
+                        BigDecimal percentage = ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO;
+                        BigDecimal calculatedValue = grossEarnings[0].multiply(percentage).divide(new BigDecimal("100"));
+                        calculatedAmounts.put(ssc.getSalaryComponent().getCode(), calculatedValue);
+                    }
+                }
+
+                // Pass 4: Calculate FORMULA_BASED components
                 StandardEvaluationContext context = new StandardEvaluationContext(calculatedAmounts);
                 context.addPropertyAccessor(new MapAccessor());
-
-                // Second pass: Calculate all formula-based components
                 for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
-                    String componentCode = ssc.getSalaryComponent().getCode();
-                    BigDecimal amount;
-
                     if (ssc.getSalaryComponent().getCalculationType() == CalculationType.FORMULA_BASED && ssc.getFormula() != null) {
-                        // SpEL can now find 'BASIC' as a key in the root map.
-                        amount = expressionParser.parseExpression(ssc.getFormula()).getValue(context, BigDecimal.class);
-                    } else {
-                        // This handles FLAT_AMOUNT and any others that might not have a formula
-                        amount = calculatedAmounts.getOrDefault(componentCode, ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO);
+                        BigDecimal calculatedValue = expressionParser.parseExpression(ssc.getFormula()).getValue(context, BigDecimal.class);
+                        calculatedAmounts.put(ssc.getSalaryComponent().getCode(), calculatedValue);
                     }
+                }
 
+                // Final Pass: Create PayslipComponents and calculate final totals
+                grossEarnings[0] = BigDecimal.ZERO; // Reset and calculate final gross
+                for (Map.Entry<String, BigDecimal> entry : calculatedAmounts.entrySet()) {
+                    SalaryComponent sc = salaryComponentRepository.findByCode(entry.getKey()).orElseThrow();
                     PayslipComponent pc = new PayslipComponent();
                     pc.setPayslip(payslip);
-                    pc.setSalaryComponent(ssc.getSalaryComponent());
-                    pc.setAmount(amount);
+                    pc.setSalaryComponent(sc);
+                    pc.setAmount(entry.getValue());
                     components.add(pc);
-
-                    if (ssc.getSalaryComponent().getType() == SalaryComponentType.EARNING && ssc.getSalaryComponent().isPartOfGrossSalary()) {
-                        grossEarnings = grossEarnings.add(amount);
-                    } else if (ssc.getSalaryComponent().getType() == SalaryComponentType.DEDUCTION) {
-                        totalDeductions = totalDeductions.add(amount);
+                    if (sc.getType() == SalaryComponentType.EARNING && sc.isPartOfGrossSalary()) {
+                        grossEarnings[0] = grossEarnings[0].add(entry.getValue());
+                    } else if (sc.getType() == SalaryComponentType.DEDUCTION || sc.getType() == SalaryComponentType.STATUTORY_CONTRIBUTION) {
+                        totalDeductions[0] = totalDeductions[0].add(entry.getValue());
                     }
                 }
 
@@ -125,9 +155,9 @@ public class PayslipGenerationService {
                     PayslipComponent loanPc = new PayslipComponent();
                     loanPc.setPayslip(payslip);
                     loanPc.setSalaryComponent(loanDeductionComponent);
-                    loanPc.setAmount(loan.getEmiAmount());
+                    loanPc.setAmount(loan.getEmiAmount().min(loan.getLoanAmount().subtract(loan.getEmiAmount().multiply(BigDecimal.valueOf(loan.getTotalInstallments() - loan.getRemainingInstallments()))))); // Ensure EMI doesn't exceed remaining loan amount
                     components.add(loanPc);
-                    totalDeductions = totalDeductions.add(loan.getEmiAmount());
+                    totalDeductions[0] = totalDeductions[0].add(loanPc.getAmount());
 
                     loan.setRemainingInstallments(loan.getRemainingInstallments() - 1);
                     if (loan.getRemainingInstallments() == 0) {
@@ -136,9 +166,9 @@ public class PayslipGenerationService {
                     employeeLoanRepository.save(loan);
                 }
 
-                payslip.setGrossEarnings(grossEarnings);
-                payslip.setTotalDeductions(totalDeductions);
-                payslip.setNetSalary(grossEarnings.subtract(totalDeductions));
+                payslip.setGrossEarnings(grossEarnings[0]);
+                payslip.setTotalDeductions(totalDeductions[0]);
+                payslip.setNetSalary(grossEarnings[0].subtract(totalDeductions[0]));
                 payslip.setComponents(components);
 
                 payslipRepository.save(payslip);

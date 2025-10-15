@@ -166,6 +166,11 @@ public class UserController {
                         user.setLocation(userLocation);
                         updated = true;
                     }
+                    // Update password if provided
+                    if (request.getPassword() != null && !request.getPassword().toString().isBlank()) {
+                        user.setPasswordHash(passwordEncoder.encode(request.getPassword().toString()));
+                        updated = true;
+                    }
 
                     user.setUpdatedAt(LocalDateTime.now()); // Always update the timestamp
                     User savedUser = userRepository.save(user);

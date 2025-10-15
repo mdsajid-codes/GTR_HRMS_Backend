@@ -29,6 +29,7 @@ public class User {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "tenant_id") // Temporarily nullable for migration
+    @JsonIgnore
     private Tenant tenant;
 
     @ManyToOne

@@ -14,6 +14,9 @@ public class AttendanceCapturingPolicy {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
+    private String policyName;
+
     private Integer graceTimeMinutes;
 
     private Integer halfDayThresholdMinutes; // if total working minutes < threshold -> half day

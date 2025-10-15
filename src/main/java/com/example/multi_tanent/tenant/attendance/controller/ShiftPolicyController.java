@@ -1,7 +1,7 @@
 package com.example.multi_tanent.tenant.attendance.controller;
 
+import com.example.multi_tanent.tenant.attendance.dto.ShiftPolicyResponse;
 import com.example.multi_tanent.tenant.attendance.dto.ShiftPolicyRequest;
-import com.example.multi_tanent.tenant.attendance.entity.ShiftPolicy;
 import com.example.multi_tanent.tenant.attendance.service.ShiftPolicyService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -24,8 +24,8 @@ public class ShiftPolicyController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
-    public ResponseEntity<ShiftPolicy> createShiftPolicy(@RequestBody ShiftPolicyRequest request) {
-        ShiftPolicy createdPolicy = shiftPolicyService.createShiftPolicy(request);
+    public ResponseEntity<ShiftPolicyResponse> createShiftPolicy(@RequestBody ShiftPolicyRequest request) {
+        ShiftPolicyResponse createdPolicy = shiftPolicyService.createShiftPolicy(request);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(createdPolicy.getId()).toUri();
@@ -33,12 +33,12 @@ public class ShiftPolicyController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ShiftPolicy>> getAllShiftPolicies() {
+    public ResponseEntity<List<ShiftPolicyResponse>> getAllShiftPolicies() {
         return ResponseEntity.ok(shiftPolicyService.getAllShiftPolicies());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ShiftPolicy> getShiftPolicyById(@PathVariable Long id) {
+    public ResponseEntity<ShiftPolicyResponse> getShiftPolicyById(@PathVariable Long id) {
         return shiftPolicyService.getShiftPolicyById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -46,8 +46,8 @@ public class ShiftPolicyController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
-    public ResponseEntity<ShiftPolicy> updateShiftPolicy(@PathVariable Long id, @RequestBody ShiftPolicyRequest request) {
-        ShiftPolicy updatedPolicy = shiftPolicyService.updateShiftPolicy(id, request);
+    public ResponseEntity<ShiftPolicyResponse> updateShiftPolicy(@PathVariable Long id, @RequestBody ShiftPolicyRequest request) {
+        ShiftPolicyResponse updatedPolicy = shiftPolicyService.updateShiftPolicy(id, request);
         return ResponseEntity.ok(updatedPolicy);
     }
 

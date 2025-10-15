@@ -1,5 +1,6 @@
 package com.example.multi_tanent.tenant.attendance.service;
 
+import com.example.multi_tanent.tenant.attendance.dto.ShiftPolicyResponse;
 import com.example.multi_tanent.tenant.attendance.dto.ShiftPolicyRequest;
 import com.example.multi_tanent.tenant.attendance.entity.ShiftPolicy;
 import com.example.multi_tanent.tenant.attendance.repository.ShiftPolicyRepository;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional(transactionManager = "tenantTx")
@@ -19,10 +21,18 @@ public class ShiftPolicyService {
         this.shiftPolicyRepository = shiftPolicyRepository;
     }
 
-    public ShiftPolicy createShiftPolicy(ShiftPolicyRequest request) {
+    public ShiftPolicyResponse createShiftPolicy(ShiftPolicyRequest request) {
         shiftPolicyRepository.findByPolicyName(request.getPolicyName()).ifPresent(p -> {
             throw new RuntimeException("Shift policy with name '" + request.getPolicyName() + "' already exists.");
         });
+
+        // If this policy is being set as the default, unset any other default policy.
+        if (Boolean.TRUE.equals(request.getIsDefault())) {
+            shiftPolicyRepository.findByIsDefaultTrue().ifPresent(defaultPolicy -> {
+                defaultPolicy.setIsDefault(false);
+                shiftPolicyRepository.save(defaultPolicy);
+            });
+        }
 
         ShiftPolicy policy = new ShiftPolicy();
         policy.setPolicyName(request.getPolicyName());
@@ -33,20 +43,24 @@ public class ShiftPolicyService {
         policy.setIsDefault(request.getIsDefault());
         policy.setDescription(request.getDescription());
 
-        return shiftPolicyRepository.save(policy);
+        ShiftPolicy savedPolicy = shiftPolicyRepository.save(policy);
+        return ShiftPolicyResponse.fromEntity(savedPolicy);
     }
 
     @Transactional(readOnly = true)
-    public List<ShiftPolicy> getAllShiftPolicies() {
-        return shiftPolicyRepository.findAll();
+    public List<ShiftPolicyResponse> getAllShiftPolicies() {
+        return shiftPolicyRepository.findAll().stream()
+                .map(ShiftPolicyResponse::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public Optional<ShiftPolicy> getShiftPolicyById(Long id) {
-        return shiftPolicyRepository.findById(id);
+    public Optional<ShiftPolicyResponse> getShiftPolicyById(Long id) {
+        return shiftPolicyRepository.findById(id)
+                .map(ShiftPolicyResponse::fromEntity);
     }
 
-    public ShiftPolicy updateShiftPolicy(Long id, ShiftPolicyRequest request) {
+    public ShiftPolicyResponse updateShiftPolicy(Long id, ShiftPolicyRequest request) {
         ShiftPolicy policy = shiftPolicyRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Shift policy not found with id: " + id));
 
@@ -54,6 +68,16 @@ public class ShiftPolicyService {
         if (!policy.getPolicyName().equals(request.getPolicyName())) {
             shiftPolicyRepository.findByPolicyName(request.getPolicyName()).ifPresent(p -> {
                 throw new RuntimeException("Shift policy with name '" + request.getPolicyName() + "' already exists.");
+            });
+        }
+
+        // If this policy is being set as the default, unset any other default policy.
+        if (Boolean.TRUE.equals(request.getIsDefault())) {
+            shiftPolicyRepository.findByIsDefaultTrue().ifPresent(defaultPolicy -> {
+                if (!defaultPolicy.getId().equals(id)) {
+                    defaultPolicy.setIsDefault(false);
+                    shiftPolicyRepository.save(defaultPolicy);
+                }
             });
         }
 
@@ -65,7 +89,8 @@ public class ShiftPolicyService {
         policy.setIsDefault(request.getIsDefault());
         policy.setDescription(request.getDescription());
 
-        return shiftPolicyRepository.save(policy);
+        ShiftPolicy savedPolicy = shiftPolicyRepository.save(policy);
+        return ShiftPolicyResponse.fromEntity(savedPolicy);
     }
 
     public void deleteShiftPolicy(Long id) {
@@ -75,4 +100,3 @@ public class ShiftPolicyService {
         shiftPolicyRepository.deleteById(id);
     }
 }
-

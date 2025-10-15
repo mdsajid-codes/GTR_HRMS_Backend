@@ -17,4 +17,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
 
     @Query("SELECT lr FROM LeaveRequest lr JOIN FETCH lr.employee JOIN FETCH lr.leaveType")
     List<LeaveRequest> findAllWithDetails();
+    boolean existsByLeaveTypeId(Long leaveTypeId);
+
 }

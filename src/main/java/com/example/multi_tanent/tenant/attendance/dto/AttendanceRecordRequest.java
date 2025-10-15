@@ -15,5 +15,5 @@ public class AttendanceRecordRequest {
     private LocalTime checkOut;
     private AttendanceStatus status;
     private String remarks;
-    private Long shiftPolicyId; // Optional: to assign a specific shift for this day
+    private Long attendancePolicyId; // Optional: to assign a specific attendance policy for this day
 }
