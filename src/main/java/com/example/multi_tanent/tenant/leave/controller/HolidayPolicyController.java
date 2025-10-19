@@ -1,9 +1,9 @@
 package com.example.multi_tanent.tenant.leave.controller;
 
+import com.example.multi_tanent.tenant.base.entity.Holiday;
+import com.example.multi_tanent.tenant.base.entity.HolidayPolicy;
 import com.example.multi_tanent.tenant.leave.dto.HolidayPolicyRequest;
 import com.example.multi_tanent.tenant.leave.dto.HolidayRequest;
-import com.example.multi_tanent.tenant.leave.entity.Holiday;
-import com.example.multi_tanent.tenant.leave.entity.HolidayPolicy;
 import com.example.multi_tanent.tenant.leave.service.HolidayService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

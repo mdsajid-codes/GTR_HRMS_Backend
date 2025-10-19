@@ -3,11 +3,13 @@ package com.example.multi_tanent.tenant.payroll.service;
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.payroll.dto.SalaryStructureRequest;
+import com.example.multi_tanent.tenant.payroll.dto.SyncSalaryStructureRequest;
 import com.example.multi_tanent.tenant.payroll.entity.SalaryComponent;
 import com.example.multi_tanent.tenant.payroll.entity.SalaryStructure;
 import com.example.multi_tanent.tenant.payroll.entity.SalaryStructureComponent;
 import com.example.multi_tanent.tenant.payroll.repository.SalaryComponentRepository;
 import com.example.multi_tanent.tenant.payroll.repository.SalaryStructureRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,97 +26,95 @@ public class SalaryStructureService {
     private final EmployeeRepository employeeRepository;
     private final SalaryComponentRepository salaryComponentRepository;
 
-    public SalaryStructureService(SalaryStructureRepository salaryStructureRepository, EmployeeRepository employeeRepository, SalaryComponentRepository salaryComponentRepository) {
+    public SalaryStructureService(SalaryStructureRepository salaryStructureRepository,
+                                  EmployeeRepository employeeRepository,
+                                  SalaryComponentRepository salaryComponentRepository) {
         this.salaryStructureRepository = salaryStructureRepository;
         this.employeeRepository = employeeRepository;
         this.salaryComponentRepository = salaryComponentRepository;
     }
 
-    public List<SalaryStructure> getAllSalaryStructures() {
-        List<SalaryStructure> structures = salaryStructureRepository.findAll();
-        structures.forEach(this::initializeStructureDetails);
-        return structures;
-    }
-
-    public Optional<SalaryStructure> getSalaryStructureByEmployeeCode(String employeeCode) {
-        Optional<SalaryStructure> structureOpt = salaryStructureRepository.findByEmployeeEmployeeCode(employeeCode);
-        structureOpt.ifPresent(this::initializeStructureDetails);
-        return structureOpt;
-    }
-
     public SalaryStructure createSalaryStructure(SalaryStructureRequest request) {
         Employee employee = employeeRepository.findByEmployeeCode(request.getEmployeeCode())
-                .orElseThrow(() -> new RuntimeException("Employee not found with code: " + request.getEmployeeCode()));
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found with code: " + request.getEmployeeCode()));
 
-        salaryStructureRepository.findByEmployeeId(employee.getId()).ifPresent(s -> {
-            throw new IllegalStateException("A salary structure already exists for employee: " + request.getEmployeeCode());
-        });
+        if (salaryStructureRepository.findByEmployeeId(employee.getId()).isPresent()) {
+            throw new IllegalStateException("A salary structure already exists for this employee.");
+        }
 
         SalaryStructure structure = new SalaryStructure();
         structure.setEmployee(employee);
-        mapRequestToEntity(request, structure);
-
-        SalaryStructure savedStructure = salaryStructureRepository.save(structure);
-        initializeStructureDetails(savedStructure);
-        return savedStructure;
+        return updateStructureFromRequest(structure, request);
     }
 
     public SalaryStructure updateSalaryStructure(Long id, SalaryStructureRequest request) {
         SalaryStructure structure = salaryStructureRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("SalaryStructure not found with id: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("SalaryStructure not found with id: " + id));
+        return updateStructureFromRequest(structure, request);
+    }
 
-        if (!structure.getEmployee().getEmployeeCode().equals(request.getEmployeeCode())) {
-            throw new IllegalArgumentException("Cannot change the employee associated with a salary structure.");
+    public void syncStructure(SyncSalaryStructureRequest request) {
+        SalaryStructure sourceStructure = salaryStructureRepository.findById(request.getStructureId())
+                .orElseThrow(() -> new EntityNotFoundException("Source salary structure not found."));
+
+        for (String employeeCode : request.getEmployeeCodes()) {
+            Employee targetEmployee = employeeRepository.findByEmployeeCode(employeeCode)
+                    .orElseThrow(() -> new EntityNotFoundException("Employee not found with code: " + employeeCode));
+
+            SalaryStructure targetStructure = salaryStructureRepository.findByEmployeeId(targetEmployee.getId())
+                    .orElse(new SalaryStructure());
+
+            targetStructure.setEmployee(targetEmployee);
+            targetStructure.setStructureName(targetEmployee.getFirstName() + "'s Structure"); // Generate a unique name
+            targetStructure.setEffectiveDate(sourceStructure.getEffectiveDate());
+
+            // Clear old components and copy new ones
+            targetStructure.getComponents().clear();
+            for (SalaryStructureComponent sourceComp : sourceStructure.getComponents()) { // Fix: The method setStructure(SalaryStructure) is undefined for the type SalaryStructureComponent
+                SalaryStructureComponent newComp = new SalaryStructureComponent();
+                newComp.setSalaryStructure(targetStructure);
+                newComp.setSalaryComponent(sourceComp.getSalaryComponent());
+                newComp.setValue(sourceComp.getValue());
+                newComp.setFormula(sourceComp.getFormula());
+                targetStructure.getComponents().add(newComp);
+            }
+            salaryStructureRepository.save(targetStructure);
         }
+    }
 
-        mapRequestToEntity(request, structure);
-        SalaryStructure savedStructure = salaryStructureRepository.save(structure);
-        initializeStructureDetails(savedStructure);
-        return savedStructure;
+    private SalaryStructure updateStructureFromRequest(SalaryStructure structure, SalaryStructureRequest request) {
+        structure.setStructureName(request.getStructureName());
+        structure.setEffectiveDate(request.getEffectiveDate());
+
+        // Clear existing components to handle updates and removals
+        structure.getComponents().clear();
+
+        if (request.getComponents() != null) {
+            for (SalaryStructureRequest.ComponentRequest compReq : request.getComponents()) {
+                SalaryComponent salaryComponent = salaryComponentRepository.findByCode(compReq.getComponentCode())
+                        .orElseThrow(() -> new EntityNotFoundException("SalaryComponent not found with code: " + compReq.getComponentCode()));
+
+                SalaryStructureComponent ssc = new SalaryStructureComponent();
+                ssc.setSalaryStructure(structure);
+                ssc.setSalaryComponent(salaryComponent);
+                ssc.setValue(compReq.getValue());
+                ssc.setFormula(compReq.getFormula());
+                structure.getComponents().add(ssc);
+            }
+        }
+        return salaryStructureRepository.save(structure);
+    }
+
+    public Optional<SalaryStructure> getSalaryStructureByEmployeeCode(String employeeCode) {
+        return employeeRepository.findByEmployeeCode(employeeCode)
+                .flatMap(employee -> salaryStructureRepository.findByEmployeeIdWithDetails(employee.getId()));
+    }
+
+    public List<SalaryStructure> getAllSalaryStructures() {
+        return salaryStructureRepository.findAll();
     }
 
     public void deleteSalaryStructure(Long id) {
         salaryStructureRepository.deleteById(id);
-    }
-
-    private void mapRequestToEntity(SalaryStructureRequest request, SalaryStructure structure) {
-        structure.setStructureName(request.getStructureName());
-        structure.setEffectiveDate(request.getEffectiveDate());
-
-        if (structure.getComponents() == null) {
-            structure.setComponents(new ArrayList<>());
-        }
-        structure.getComponents().clear();
-
-        List<SalaryStructureComponent> newComponents = request.getComponents().stream()
-                .map(compRequest -> {
-                    SalaryComponent salaryComponent = salaryComponentRepository.findByCode(compRequest.getComponentCode())
-                            .orElseThrow(() -> new RuntimeException("SalaryComponent not found with code: " + compRequest.getComponentCode()));
-
-                    SalaryStructureComponent ssc = new SalaryStructureComponent();
-                    ssc.setSalaryStructure(structure);
-                    ssc.setSalaryComponent(salaryComponent);
-                    ssc.setValue(compRequest.getValue());
-                    ssc.setFormula(compRequest.getFormula());
-                    return ssc;
-                }).collect(Collectors.toList());
-
-        structure.getComponents().addAll(newComponents);
-    }
-
-    private void initializeStructureDetails(SalaryStructure structure) {
-        // Accessing these getters will trigger the lazy loading while the session is active.
-        if (structure.getEmployee() != null) {
-            structure.getEmployee().getEmployeeCode(); // Initialize Employee proxy
-        }
-        if (structure.getComponents() != null) {
-            structure.getComponents().size(); // Initialize components collection
-            // Also initialize the SalaryComponent inside each SalaryStructureComponent
-            for (SalaryStructureComponent ssc : structure.getComponents()) {
-                if (ssc.getSalaryComponent() != null) {
-                    ssc.getSalaryComponent().getCode();
-                }
-            }
-        }
     }
 }

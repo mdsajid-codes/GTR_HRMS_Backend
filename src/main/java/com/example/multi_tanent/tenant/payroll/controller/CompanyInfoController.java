@@ -1,8 +1,8 @@
 package com.example.multi_tanent.tenant.payroll.controller;
 
+import com.example.multi_tanent.tenant.base.entity.CompanyInfo;
 import com.example.multi_tanent.tenant.payroll.dto.CompanyInfoRequest;
 import com.example.multi_tanent.tenant.payroll.dto.CompanyInfoResponse;
-import com.example.multi_tanent.tenant.payroll.entity.CompanyInfo;
 import com.example.multi_tanent.tenant.payroll.service.CompanyInfoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -2,6 +2,10 @@ package com.example.multi_tanent.tenant.payroll.service;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
+import com.example.multi_tanent.tenant.attendance.entity.AttendanceRecord;
+import com.example.multi_tanent.tenant.attendance.repository.AttendanceRecordRepository;
+import com.example.multi_tanent.tenant.leave.entity.LeaveBalance;
+import com.example.multi_tanent.tenant.leave.repository.LeaveBalanceRepository;
 import com.example.multi_tanent.tenant.payroll.entity.*;
 import com.example.multi_tanent.tenant.payroll.enums.CalculationType;
 import com.example.multi_tanent.tenant.payroll.enums.LoanStatus;
@@ -16,6 +20,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,17 +36,29 @@ public class PayslipGenerationService {
     private final EmployeeLoanRepository employeeLoanRepository;
     private final EmployeeRepository employeeRepository;
     private final PayslipRepository payslipRepository;
+    private final BonusRepository bonusRepository;
+    private final AttendanceRecordRepository attendanceRecordRepository;
+    private final LeaveBalanceRepository leaveBalanceRepository;
+    private final PayrollSettingRepository payrollSettingRepository;
     private final SalaryComponentRepository salaryComponentRepository;
     private final ExpressionParser expressionParser;
 
     public PayslipGenerationService(SalaryStructureRepository salaryStructureRepository,
                                     EmployeeLoanRepository employeeLoanRepository,
                                     EmployeeRepository employeeRepository, PayslipRepository payslipRepository,
+                                    BonusRepository bonusRepository,
+                                    AttendanceRecordRepository attendanceRecordRepository,
+                                    LeaveBalanceRepository leaveBalanceRepository,
+                                    PayrollSettingRepository payrollSettingRepository,
                                     SalaryComponentRepository salaryComponentRepository) {
         this.salaryStructureRepository = salaryStructureRepository;
         this.employeeLoanRepository = employeeLoanRepository;
         this.employeeRepository = employeeRepository;
         this.payslipRepository = payslipRepository;
+        this.bonusRepository = bonusRepository;
+        this.attendanceRecordRepository = attendanceRecordRepository;
+        this.leaveBalanceRepository = leaveBalanceRepository;
+        this.payrollSettingRepository = payrollSettingRepository;
         this.salaryComponentRepository = salaryComponentRepository;
         this.expressionParser = new SpelExpressionParser();
     }
@@ -53,8 +70,26 @@ public class PayslipGenerationService {
         Map<Long, EmployeeLoan> employeeIdToLoanMap = activeLoans.stream()
                 .collect(Collectors.toMap(loan -> loan.getEmployee().getId(), loan -> loan));
 
+        List<Bonus> bonusesForPeriod = bonusRepository.findByPayDateBetween(payrollRun.getPayPeriodStart(), payrollRun.getPayPeriodEnd());
+        Map<Long, List<Bonus>> employeeIdToBonusesMap = bonusesForPeriod.stream()
+                .collect(Collectors.groupingBy(b -> b.getEmployee().getId()));
+
         SalaryComponent loanDeductionComponent = salaryComponentRepository.findByCode("LOAN_EMI")
                 .orElseGet(this::createLoanEmiComponent);
+
+        // Get payroll settings once
+        PayrollSetting settings = payrollSettingRepository.findAll().stream().findFirst().orElse(new PayrollSetting());
+
+        // Create a generic "Bonus" salary component if it doesn't exist
+        SalaryComponent bonusComponent = salaryComponentRepository.findByCode("BONUS")
+                .orElseGet(() -> {
+                    SalaryComponent sc = new SalaryComponent();
+                    sc.setCode("BONUS");
+                    sc.setName("Bonus");
+                    sc.setType(SalaryComponentType.EARNING);
+                    sc.setTaxable(true); // Or based on rules
+                    return salaryComponentRepository.save(sc);
+                });
 
         for (Employee employee : employees) {
             salaryStructureRepository.findByEmployeeId(employee.getId()).ifPresent(salaryStructure -> {
@@ -75,6 +110,29 @@ public class PayslipGenerationService {
                 payslip.setPayDate(payDate);
                 payslip.setStatus(PayrollStatus.GENERATED);
 
+                // --- Calculate Payable Days ---
+                int totalDaysInMonth = payrollRun.getPayPeriodEnd().getDayOfMonth();
+                List<AttendanceRecord> attendanceForMonth = attendanceRecordRepository.findByEmployeeEmployeeCodeAndAttendanceDateBetweenWithDetails(
+                        employee.getEmployeeCode(), payrollRun.getPayPeriodStart(), payrollRun.getPayPeriodEnd());
+                BigDecimal totalPayableDays = attendanceForMonth.stream()
+                        .map(AttendanceRecord::getPayableDays)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                BigDecimal lossOfPayDays = new BigDecimal(totalDaysInMonth).subtract(totalPayableDays);
+
+                // --- Populate new payslip fields ---
+                payslip.setTotalDaysInMonth(totalDaysInMonth);
+                payslip.setPayableDays(totalPayableDays);
+                payslip.setLossOfPayDays(lossOfPayDays);
+
+                // --- Get and set Leave Balance Summary ---
+                if (Boolean.TRUE.equals(settings.isIncludeLeaveBalanceInPayslip())) {
+                    List<LeaveBalance> leaveBalances = leaveBalanceRepository.findByEmployeeId(employee.getId());
+                    String leaveSummary = leaveBalances.stream()
+                            .map(lb -> lb.getLeaveType().getLeaveType() + ": " + lb.getAvailable())
+                            .collect(Collectors.joining(", "));
+                    payslip.setLeaveBalanceSummary(leaveSummary);
+                }
+
                 List<PayslipComponent> components = new ArrayList<>();
                 Map<String, BigDecimal> calculatedAmounts = new HashMap<>();
 
@@ -82,6 +140,9 @@ public class PayslipGenerationService {
                 final BigDecimal[] totalDeductions = {BigDecimal.ZERO};
 
                 // --- Refactored Calculation Logic ---
+                // Proration factor based on payable days
+                BigDecimal prorationFactor = totalPayableDays.divide(new BigDecimal(totalDaysInMonth), 4, RoundingMode.HALF_UP);
+
                 // Pass 1: Calculate prerequisite components (FLAT_AMOUNT and PERCENTAGE_OF_BASIC)
                 BigDecimal basicAmount = BigDecimal.ZERO;
                 for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
@@ -90,7 +151,8 @@ public class PayslipGenerationService {
                     BigDecimal value = ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO;
 
                     if (type == CalculationType.FLAT_AMOUNT) {
-                        calculatedAmounts.put(code, value);
+                        // Prorate the flat amount
+                        calculatedAmounts.put(code, value.multiply(prorationFactor));
                         if ("BASIC".equalsIgnoreCase(code)) {
                             basicAmount = value;
                         }
@@ -101,7 +163,8 @@ public class PayslipGenerationService {
                 for (SalaryStructureComponent ssc : salaryStructure.getComponents()) {
                     if (ssc.getSalaryComponent().getCalculationType() == CalculationType.PERCENTAGE_OF_BASIC) {
                         BigDecimal percentage = ssc.getValue() != null ? ssc.getValue() : BigDecimal.ZERO;
-                        BigDecimal calculatedValue = basicAmount.multiply(percentage).divide(new BigDecimal("100"));
+                        // Prorate the base for calculation
+                        BigDecimal calculatedValue = basicAmount.multiply(prorationFactor).multiply(percentage).divide(new BigDecimal("100"));
                         calculatedAmounts.put(ssc.getSalaryComponent().getCode(), calculatedValue);
                     }
                 }
@@ -150,8 +213,22 @@ public class PayslipGenerationService {
                     }
                 }
 
+                // Add Bonuses
+                if (employeeIdToBonusesMap.containsKey(employee.getId())) {
+                    for (Bonus bonus : employeeIdToBonusesMap.get(employee.getId())) {
+                        PayslipComponent bonusPc = new PayslipComponent();
+                        bonusPc.setPayslip(payslip);
+                        bonusPc.setSalaryComponent(bonusComponent);
+                        bonusPc.setAmount(bonus.getAmount());
+                        components.add(bonusPc);
+                        grossEarnings[0] = grossEarnings[0].add(bonus.getAmount());
+                    }
+                }
+
+                // Add Loan Deductions
                 EmployeeLoan loan = employeeIdToLoanMap.get(employee.getId());
-                if (loan != null && loan.getRemainingInstallments() > 0) {
+                // Only deduct if the loan product is configured for salary deduction.
+                if (loan != null && loan.getRemainingInstallments() > 0 && loan.getLoanProduct() != null && loan.getLoanProduct().isDeductFromSalary()) {
                     PayslipComponent loanPc = new PayslipComponent();
                     loanPc.setPayslip(payslip);
                     loanPc.setSalaryComponent(loanDeductionComponent);

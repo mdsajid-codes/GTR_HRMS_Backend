@@ -65,6 +65,17 @@ public class AttendanceRecordController {
         return ResponseEntity.ok(records);
     }
 
+     @GetMapping(params = "date")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HRMS_ADMIN', 'HR')")
+    public ResponseEntity<List<AttendanceRecordResponse>> getAttendanceForDate(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<AttendanceRecordResponse> records = attendanceService.getAttendanceForDate(date)
+                .stream()
+                .map(AttendanceRecordResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(records);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'HRMS_ADMIN', 'HR')")
     public ResponseEntity<Void> deleteAttendance(@PathVariable Long id) {

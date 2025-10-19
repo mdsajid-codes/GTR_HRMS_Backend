@@ -3,6 +3,7 @@ package com.example.multi_tanent.tenant.payroll.dto;
 import com.example.multi_tanent.tenant.payroll.entity.LoanProduct;
 import lombok.Data;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 public class LoanProductResponse {
@@ -13,6 +14,9 @@ public class LoanProductResponse {
     private Integer maxInstallments;
     private BigDecimal maxLoanAmount;
     private boolean isActive;
+    private LocalDate availabilityStartDate;
+    private LocalDate availabilityEndDate;
+    private boolean deductFromSalary;
 
     public static LoanProductResponse fromEntity(LoanProduct loanProduct) {
         if (loanProduct == null) return null;
@@ -24,6 +28,9 @@ public class LoanProductResponse {
         dto.setMaxInstallments(loanProduct.getMaxInstallments());
         dto.setMaxLoanAmount(loanProduct.getMaxLoanAmount());
         dto.setActive(loanProduct.isActive());
+        dto.setAvailabilityStartDate(loanProduct.getAvailabilityStartDate());
+        dto.setAvailabilityEndDate(loanProduct.getAvailabilityEndDate());
+        dto.setDeductFromSalary(loanProduct.isDeductFromSalary());
         return dto;
     }
 }

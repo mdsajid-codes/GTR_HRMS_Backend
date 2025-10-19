@@ -51,5 +51,8 @@ public class LoanProductService {
         entity.setMaxInstallments(req.getMaxInstallments());
         entity.setMaxLoanAmount(req.getMaxLoanAmount());
         entity.setActive(req.isActive());
+        entity.setAvailabilityStartDate(req.getAvailabilityStartDate());
+        entity.setAvailabilityEndDate(req.getAvailabilityEndDate());
+        entity.setDeductFromSalary(req.isDeductFromSalary());
     }
 }

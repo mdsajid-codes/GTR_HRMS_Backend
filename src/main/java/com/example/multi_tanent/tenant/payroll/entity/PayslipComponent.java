@@ -22,4 +22,6 @@ public class PayslipComponent {
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;
+
+    private String remarks;
 }

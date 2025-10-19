@@ -1,6 +1,7 @@
 package com.example.multi_tanent.tenant.payroll.dto;
 
-import com.example.multi_tanent.tenant.payroll.entity.CompanyBankAccount;
+import com.example.multi_tanent.tenant.base.entity.CompanyBankAccount;
+
 import lombok.Data;
 
 @Data

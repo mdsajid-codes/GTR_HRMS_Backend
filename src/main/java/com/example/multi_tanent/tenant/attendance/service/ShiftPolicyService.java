@@ -38,8 +38,6 @@ public class ShiftPolicyService {
         policy.setPolicyName(request.getPolicyName());
         policy.setShiftStartTime(request.getShiftStartTime());
         policy.setShiftEndTime(request.getShiftEndTime());
-        policy.setGracePeriodMinutes(request.getGracePeriodMinutes());
-        policy.setGraceHalfDayMinutes(request.getGraceHalfDayMinutes());
         policy.setIsDefault(request.getIsDefault());
         policy.setDescription(request.getDescription());
 
@@ -74,18 +72,16 @@ public class ShiftPolicyService {
         // If this policy is being set as the default, unset any other default policy.
         if (Boolean.TRUE.equals(request.getIsDefault())) {
             shiftPolicyRepository.findByIsDefaultTrue().ifPresent(defaultPolicy -> {
-                if (!defaultPolicy.getId().equals(id)) {
+                // if (!defaultPolicy.getId().equals(id)) {
                     defaultPolicy.setIsDefault(false);
                     shiftPolicyRepository.save(defaultPolicy);
-                }
+                // }
             });
         }
 
         policy.setPolicyName(request.getPolicyName());
         policy.setShiftStartTime(request.getShiftStartTime());
         policy.setShiftEndTime(request.getShiftEndTime());
-        policy.setGracePeriodMinutes(request.getGracePeriodMinutes());
-        policy.setGraceHalfDayMinutes(request.getGraceHalfDayMinutes());
         policy.setIsDefault(request.getIsDefault());
         policy.setDescription(request.getDescription());
 

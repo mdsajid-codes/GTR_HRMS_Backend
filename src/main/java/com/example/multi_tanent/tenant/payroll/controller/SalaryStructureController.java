@@ -1,6 +1,7 @@
 package com.example.multi_tanent.tenant.payroll.controller;
 
 import com.example.multi_tanent.tenant.payroll.dto.SalaryStructureRequest;
+import com.example.multi_tanent.tenant.payroll.dto.SyncSalaryStructureRequest;
 import com.example.multi_tanent.tenant.payroll.dto.SalaryStructureResponse;
 import com.example.multi_tanent.tenant.payroll.service.SalaryStructureService;
 import org.springframework.http.ResponseEntity;
@@ -62,5 +63,12 @@ public class SalaryStructureController {
     public ResponseEntity<Void> deleteSalaryStructure(@PathVariable Long id) {
         salaryStructureService.deleteSalaryStructure(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/sync")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+    public ResponseEntity<Void> syncSalaryStructure(@RequestBody SyncSalaryStructureRequest request) {
+        salaryStructureService.syncStructure(request);
+        return ResponseEntity.ok().build();
     }
 }

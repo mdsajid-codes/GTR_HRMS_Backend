@@ -72,6 +72,7 @@ public class SecurityConfig {
         .requestMatchers("/api/leaves/**", "/api/leave-requests/**", "/api/leave-groups/**", "/api/leave-types/**", "/api/leave-policies/**", "/api/leave-allocations/**", "/api/leave-balances/**", "/api/leave-encashment-requests/**", "/api/leave-approvals/**", "/api/holiday-policies/**", "/api/holidays/**").authenticated()
         .requestMatchers("/api/payrolls/**", "/api/payroll-runs/**", "/api/payslips/**", "/api/payroll-settings/**", "/api/salary-components/**", "/api/salary-structures/**", "/api/salary-structure-components/**", "/api/statutory-rules/**").authenticated()
         .requestMatchers("/api/loan-products/**", "/api/employee-loans/**", "/api/expenses/**", "/api/employee-bank-accounts/**").authenticated()
+        .requestMatchers("/api/admin/tasks/**").authenticated()
         .requestMatchers("/api/employee-documents/**", "/api/employee-profiles/**", "/api/company-info/**", "/api/company-locations/**", "/api/company-bank-accounts/**").authenticated()
 
         // POS Module Endpoints

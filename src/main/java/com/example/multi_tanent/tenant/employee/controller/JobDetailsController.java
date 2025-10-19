@@ -1,6 +1,7 @@
 package com.example.multi_tanent.tenant.employee.controller;
 
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import com.example.multi_tanent.tenant.employee.dto.JobDetailsResponse;
 import com.example.multi_tanent.tenant.employee.dto.JobDetailsRequest;
 import com.example.multi_tanent.tenant.employee.entity.JobDetails;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
@@ -13,6 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/job-details")
@@ -32,7 +35,7 @@ public class JobDetailsController {
 
     @PutMapping("/{employeeCode}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
-    public ResponseEntity<JobDetails> createOrUpdateJobDetails(@PathVariable String employeeCode, @RequestBody JobDetailsRequest request) {
+    public ResponseEntity<JobDetailsResponse> createOrUpdateJobDetails(@PathVariable String employeeCode, @RequestBody JobDetailsRequest request) {
         return employeeRepository.findByEmployeeCode(employeeCode)
                 .map(employee -> {
                     JobDetails jobDetails = jobDetailsRepository.findByEmployeeId(employee.getId())
@@ -50,20 +53,30 @@ public class JobDetailsController {
                         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
                                 .path("/api/job-details/{employeeCode}")
                                 .buildAndExpand(employeeCode).toUri();
-                        return ResponseEntity.created(location).body(savedJobDetails);
+                        return ResponseEntity.created(location).body(JobDetailsResponse.fromEntity(savedJobDetails));
                     } else {
-                        return ResponseEntity.ok(savedJobDetails);
+                        return ResponseEntity.ok(JobDetailsResponse.fromEntity(savedJobDetails));
                     }
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<JobDetailsResponse>> getAll(){
+        List<JobDetailsResponse> allJobDetails = jobDetailsRepository.findAll().stream()
+                .map(JobDetailsResponse::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(allJobDetails);
+    }
+
     @GetMapping("/{employeeCode}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<JobDetails> getJobDetails(@PathVariable String employeeCode) {
+    public ResponseEntity<JobDetailsResponse> getJobDetails(@PathVariable String employeeCode) {
         return employeeRepository.findByEmployeeCode(employeeCode)
                 .flatMap(employee -> jobDetailsRepository.findByEmployeeId(employee.getId()))
-                .map(ResponseEntity::ok)
+                .map(jobDetails -> ResponseEntity.ok(JobDetailsResponse.fromEntity(jobDetails)))
                 .orElse(ResponseEntity.notFound().build());
     }
 

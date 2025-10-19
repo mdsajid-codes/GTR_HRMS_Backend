@@ -8,9 +8,6 @@ public class ShiftPolicyRequest {
     private String policyName;
     private LocalTime shiftStartTime;
     private LocalTime shiftEndTime;
-    private Integer gracePeriodMinutes;
-    private Integer graceHalfDayMinutes;
     private Boolean isDefault;
     private String description;
 }
-

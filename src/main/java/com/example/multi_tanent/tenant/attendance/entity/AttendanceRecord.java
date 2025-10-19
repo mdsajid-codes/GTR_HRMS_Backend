@@ -48,4 +48,7 @@ public class AttendanceRecord {
 
     @Column(length = 500)
     private String remarks;
+
+    @Column(precision = 3, scale = 2)
+    private java.math.BigDecimal payableDays = java.math.BigDecimal.ONE; // 1.0 for full day, 0.5 for half, 0.0 for absent
 }

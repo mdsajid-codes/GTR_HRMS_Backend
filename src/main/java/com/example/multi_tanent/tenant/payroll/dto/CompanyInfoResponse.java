@@ -1,10 +1,11 @@
 package com.example.multi_tanent.tenant.payroll.dto;
 
-import com.example.multi_tanent.tenant.payroll.entity.CompanyInfo;
 import lombok.Data;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.example.multi_tanent.tenant.base.entity.CompanyInfo;
 
 @Data
 public class CompanyInfoResponse {

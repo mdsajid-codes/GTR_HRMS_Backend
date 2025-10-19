@@ -66,7 +66,7 @@ public class AttendancePolicyService {
 
     @Transactional(readOnly = true)
     public List<AttendancePolicyResponse> getAllPolicies() {
-        return attendancePolicyRepository.findAll().stream()
+        return attendancePolicyRepository.findAllWithDetails().stream()
                 .map(AttendancePolicyResponse::fromEntity)
                 .collect(Collectors.toList());
     }

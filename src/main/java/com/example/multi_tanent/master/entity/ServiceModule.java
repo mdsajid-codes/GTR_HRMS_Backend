@@ -45,6 +45,12 @@ public enum ServiceModule {
             return new String[0];
         }
 
+        // If the core HRMS module is present, we MUST also include the attendance module
+        // because TimeAttendence entity has a direct dependency on AttendancePolicy.
+        if (modules.contains(HRMS_CORE)) {
+            modules.add(HRMS_ATTENDANCE);
+        }
+
         // Recursively collect all modules and their dependencies
         Set<ServiceModule> allModules = modules.stream()
                 .flatMap(ServiceModule::getSelfAndAllDependencies)

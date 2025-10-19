@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import java.math.BigDecimal;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "loan_products")
 @Data
@@ -26,4 +28,11 @@ public class LoanProduct {
     private BigDecimal maxLoanAmount;
 
     private boolean isActive;
+
+    private LocalDate availabilityStartDate;
+
+    private LocalDate availabilityEndDate;
+
+    @Column(nullable = false)
+    private boolean deductFromSalary = true;
 }

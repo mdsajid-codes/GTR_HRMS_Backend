@@ -1,11 +1,11 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.tenant.base.entity.CompanyInfo;
 import com.example.multi_tanent.tenant.employee.entity.EmployeeProfile;
 import com.example.multi_tanent.tenant.employee.entity.JobDetails;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeProfileRepository;
 import com.example.multi_tanent.tenant.employee.repository.JobDetailsRepository;
-import com.example.multi_tanent.tenant.payroll.entity.CompanyInfo;
 import com.example.multi_tanent.tenant.payroll.entity.Payslip;
 import com.example.multi_tanent.tenant.payroll.entity.PayslipComponent;
 import com.example.multi_tanent.tenant.payroll.enums.SalaryComponentType;
@@ -23,6 +23,7 @@ import com.itextpdf.layout.element.Table;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import org.springframework.stereotype.Service;
+import java.lang.Exception;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -34,15 +35,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class PdfGenerationService {
-
     private final CompanyInfoService companyInfoService;
     private final JobDetailsRepository jobDetailsRepository;
     private final EmployeeProfileRepository employeeProfileRepository;
 
-    public PdfGenerationService(
-            CompanyInfoService companyInfoService,
-            JobDetailsRepository jobDetailsRepository,
-            EmployeeProfileRepository employeeProfileRepository) {
+    public PdfGenerationService(CompanyInfoService companyInfoService,
+                                JobDetailsRepository jobDetailsRepository,
+                                EmployeeProfileRepository employeeProfileRepository) {
         this.companyInfoService = companyInfoService;
         this.jobDetailsRepository = jobDetailsRepository;
         this.employeeProfileRepository = employeeProfileRepository;
@@ -50,11 +49,10 @@ public class PdfGenerationService {
 
     public byte[] generatePayslipPdf(Payslip payslip) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (
-            PdfWriter writer = new PdfWriter(baos);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf, PageSize.A4)
-        ) {
+        try (PdfWriter writer = new PdfWriter(baos);
+             PdfDocument pdf = new PdfDocument(writer);
+             Document document = new Document(pdf, PageSize.A4)) {
+
             document.setMargins(36, 36, 36, 36);
 
             CompanyInfo companyInfo = companyInfoService.getCompanyInfo();
@@ -62,13 +60,12 @@ public class PdfGenerationService {
             addHeader(document, payslip, companyInfo);
             document.add(new Paragraph("\n"));
             addEmployeeDetails(document, payslip);
-            document.add(new Paragraph("\n"));
+            addAttendanceSummary(document, payslip); // Add the new attendance summary section
             addEarningsAndDeductions(document, payslip);
             document.add(new Paragraph("\n"));
             addNetPaySummary(document, payslip);
             document.add(new Paragraph("\n\n"));
             addFooter(document);
-
         } catch (Exception e) {
             // In a real app, you'd want more robust error handling
             throw new RuntimeException("Error generating PDF", e);
@@ -132,6 +129,22 @@ public class PdfGenerationService {
         cell.add(new Paragraph(label).setBold().setFontSize(8).setFontColor(ColorConstants.GRAY));
         cell.add(new Paragraph(value).setFontSize(9).setMargin(0));
         return cell;
+    }
+
+    private void addAttendanceSummary(Document document, Payslip payslip) {
+        Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1})).useAllAvailableWidth();
+
+        summaryTable.addCell(createDetailCell("Month Days", String.valueOf(payslip.getTotalDaysInMonth())));
+        summaryTable.addCell(createDetailCell("Payable Days", String.valueOf(payslip.getPayableDays())));
+        summaryTable.addCell(createDetailCell("Loss of Pay Days", String.valueOf(payslip.getLossOfPayDays())));
+
+        document.add(summaryTable);
+
+        if (payslip.getLeaveBalanceSummary() != null && !payslip.getLeaveBalanceSummary().isEmpty()) {
+            Paragraph leaveBalancePara = new Paragraph("Leave Balances: " + payslip.getLeaveBalanceSummary()).setFontSize(9).setItalic();
+            document.add(leaveBalancePara);
+        }
+        document.add(new Paragraph("\n"));
     }
 
     private void addEarningsAndDeductions(Document document, Payslip payslip) {

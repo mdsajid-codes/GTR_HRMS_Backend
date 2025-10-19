@@ -50,4 +50,13 @@ public class Payslip {
 
     @OneToMany(mappedBy = "payslip", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PayslipComponent> components;
+
+    // Fields for additional payslip details
+    private Integer totalDaysInMonth;
+    private BigDecimal payableDays;
+    private BigDecimal lossOfPayDays;
+
+    @Column(length = 1000)
+    private String leaveBalanceSummary; // e.g., "CL: 5.0, SL: 10.0, EL: 12.5"
+
 }

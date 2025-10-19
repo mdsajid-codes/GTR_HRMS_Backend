@@ -1,8 +1,8 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
+import com.example.multi_tanent.tenant.base.entity.CompanyInfo;
+import com.example.multi_tanent.tenant.base.entity.CompanyLocation;
 import com.example.multi_tanent.tenant.payroll.dto.CompanyLocationRequest;
-import com.example.multi_tanent.tenant.payroll.entity.CompanyInfo;
-import com.example.multi_tanent.tenant.payroll.entity.CompanyLocation;
 import com.example.multi_tanent.tenant.payroll.repository.CompanyInfoRepository;
 import com.example.multi_tanent.tenant.payroll.repository.CompanyLocationRepository;
 import org.springframework.stereotype.Service;

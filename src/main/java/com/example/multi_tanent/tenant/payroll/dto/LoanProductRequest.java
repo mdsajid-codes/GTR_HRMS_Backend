@@ -3,6 +3,7 @@ package com.example.multi_tanent.tenant.payroll.dto;
 import lombok.Data;
 import java.math.BigDecimal;
 
+import java.time.LocalDate;
 @Data
 public class LoanProductRequest {
     private String productName;
@@ -11,4 +12,7 @@ public class LoanProductRequest {
     private Integer maxInstallments;
     private BigDecimal maxLoanAmount;
     private boolean isActive;
+    private LocalDate availabilityStartDate;
+    private LocalDate availabilityEndDate;
+    private boolean deductFromSalary;
 }

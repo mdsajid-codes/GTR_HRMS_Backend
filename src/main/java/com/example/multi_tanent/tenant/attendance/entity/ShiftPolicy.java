@@ -21,12 +21,6 @@ public class ShiftPolicy {
     @Column(name = "shift_end_time", nullable = false)
     private LocalTime shiftEndTime;
 
-    @Column(name = "grace_period_minutes")
-    private Integer gracePeriodMinutes = 0;
-
-    @Column (name = "grace_halfday_minutes")
-    private Integer graceHalfDayMinutes = 0;
-
     @Column(name = "is_default", nullable = false)
     private Boolean isDefault = false;
 

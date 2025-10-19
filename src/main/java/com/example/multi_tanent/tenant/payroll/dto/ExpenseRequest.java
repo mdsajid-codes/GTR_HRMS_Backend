@@ -11,5 +11,6 @@ public class ExpenseRequest {
     private String category;
     private BigDecimal amount;
     private String description;
-    private String receiptPath;
+    private String billNumber;
+    private String merchentName;
 }

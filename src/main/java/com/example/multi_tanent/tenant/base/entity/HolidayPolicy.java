@@ -1,4 +1,4 @@
-package com.example.multi_tanent.tenant.leave.entity;
+package com.example.multi_tanent.tenant.base.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

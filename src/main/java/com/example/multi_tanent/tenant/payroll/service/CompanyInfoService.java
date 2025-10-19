@@ -1,7 +1,7 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
+import com.example.multi_tanent.tenant.base.entity.CompanyInfo;
 import com.example.multi_tanent.tenant.payroll.dto.CompanyInfoRequest;
-import com.example.multi_tanent.tenant.payroll.entity.CompanyInfo;
 import com.example.multi_tanent.tenant.payroll.repository.CompanyInfoRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,5 +1,6 @@
 package com.example.multi_tanent.tenant.payroll.controller;
 
+import com.example.multi_tanent.tenant.payroll.dto.EmployeeLoanResponse;
 import com.example.multi_tanent.tenant.payroll.dto.EmployeeLoanRequest;
 import com.example.multi_tanent.tenant.payroll.dto.EmployeeLoanResponse;
 import com.example.multi_tanent.tenant.payroll.entity.EmployeeLoan;
@@ -25,7 +26,7 @@ public class EmployeeLoanController {
     }
 
     @PostMapping("/request")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER', 'EMPLOYEE')")
     public ResponseEntity<EmployeeLoanResponse> requestLoan(@RequestBody EmployeeLoanRequest request) {
         EmployeeLoan newLoan = employeeLoanService.requestLoan(request);
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/employee-loans/{id}")

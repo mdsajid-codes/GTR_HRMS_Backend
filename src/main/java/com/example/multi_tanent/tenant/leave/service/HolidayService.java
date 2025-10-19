@@ -1,9 +1,9 @@
 package com.example.multi_tanent.tenant.leave.service;
 
+import com.example.multi_tanent.tenant.base.entity.Holiday;
+import com.example.multi_tanent.tenant.base.entity.HolidayPolicy;
 import com.example.multi_tanent.tenant.leave.dto.HolidayPolicyRequest;
 import com.example.multi_tanent.tenant.leave.dto.HolidayRequest;
-import com.example.multi_tanent.tenant.leave.entity.Holiday;
-import com.example.multi_tanent.tenant.leave.entity.HolidayPolicy;
 import com.example.multi_tanent.tenant.leave.repository.HolidayPolicyRepository;
 import com.example.multi_tanent.tenant.leave.repository.HolidayRepository;
 import jakarta.persistence.EntityNotFoundException;
