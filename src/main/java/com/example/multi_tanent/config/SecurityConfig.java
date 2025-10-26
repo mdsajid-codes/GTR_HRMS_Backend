@@ -68,7 +68,7 @@ public class SecurityConfig {
 
         // HRMS Module Endpoints
         .requestMatchers("/api/employees/**", "/api/departments/**", "/api/designations/**", "/api/job-details/**", "/api/jobBands/**", "/api/nationalities/**").authenticated()
-        .requestMatchers("/api/attendance-records/**", "/api/time-attendence/**", "/api/time-types/**", "/api/work-types/**", "/api/shift-types/**", "/api/shift-policies/**", "/api/weekly-off-policies/**", "/api/attendance-policies/**", "/api/attendance-capturing-policies/**").authenticated()
+        .requestMatchers("/api/attendance-records/**", "/api/time-attendence/**", "/api/time-types/**", "/api/work-types/**", "/api/shift-types/**", "/api/shift-policies/**", "/api/weekly-off-policies/**", "/api/attendance-policies/**", "/api/attendance-capturing-policies/**", "/api/attendance-settings/**").authenticated()
         .requestMatchers("/api/leaves/**", "/api/leave-requests/**", "/api/leave-groups/**", "/api/leave-types/**", "/api/leave-policies/**", "/api/leave-allocations/**", "/api/leave-balances/**", "/api/leave-encashment-requests/**", "/api/leave-approvals/**", "/api/holiday-policies/**", "/api/holidays/**").authenticated()
         .requestMatchers("/api/payrolls/**", "/api/payroll-runs/**", "/api/payslips/**", "/api/payroll-settings/**", "/api/salary-components/**", "/api/salary-structures/**", "/api/salary-structure-components/**", "/api/statutory-rules/**").authenticated()
         .requestMatchers("/api/loan-products/**", "/api/employee-loans/**", "/api/expenses/**", "/api/employee-bank-accounts/**").authenticated()
@@ -78,7 +78,10 @@ public class SecurityConfig {
         // POS Module Endpoints
         .requestMatchers("/api/pos/**").authenticated()
         
-        .anyRequest().denyAll()
+        // CRM Module Endpoints
+        .requestMatchers("/api/crm/**").authenticated()
+                
+        .anyRequest().permitAll() // Allow SPA routing to handle other paths
       )
       .addFilterBefore(spaRedirectFilter(), ChannelProcessingFilter.class)
       .addFilterBefore(new JwtAuthFilter(jwt), UsernamePasswordAuthenticationFilter.class)
@@ -93,8 +96,8 @@ public class SecurityConfig {
           HttpServletRequest request = (HttpServletRequest) servletRequest;
           String path = request.getRequestURI();
 
-          // Forward to index.html if it's not an API call and not a static file
-          if (!path.startsWith("/api") && !path.contains(".") && path.matches("/(.*)")) {
+          // Forward to index.html if it's not an API call, not a static file, and not the root
+          if (!path.startsWith("/api") && !path.contains(".") && !path.equals("/")) {
               request.getRequestDispatcher("/index.html").forward(servletRequest, servletResponse);
               return;
           }

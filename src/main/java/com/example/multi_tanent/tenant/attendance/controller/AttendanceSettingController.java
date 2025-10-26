@@ -14,10 +14,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/attendance-settings")
 @CrossOrigin(origins = "*")
-public class AttendenceSettingController {
+public class AttendanceSettingController {
     private final AttendanceSettingService settingService;
 
-    public AttendenceSettingController(AttendanceSettingService settingService) {
+    public AttendanceSettingController(AttendanceSettingService settingService) {
         this.settingService = settingService;
     }
 
@@ -32,11 +32,13 @@ public class AttendenceSettingController {
     }
 
     @GetMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<AttendanceSetting>> getAllSettings() {
         return ResponseEntity.ok(settingService.getAllSettings());
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<AttendanceSetting> getSettingById(@PathVariable Long id) {
         return settingService.getSettingById(id)
                 .map(ResponseEntity::ok)

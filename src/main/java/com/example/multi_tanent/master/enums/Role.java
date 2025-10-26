@@ -12,5 +12,12 @@ public enum Role {
     // POS Roles
     POS_ADMIN,
     POS_MANAGER,
-    POS_CASHIER;
+    POS_CASHIER,
+
+    // CRM Roles
+    CRM_ADMIN,
+
+    // Production Rules
+    PRODUCTION_ADMIN;
+
 }

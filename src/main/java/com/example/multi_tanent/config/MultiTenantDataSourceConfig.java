@@ -16,7 +16,8 @@ import java.util.Properties;
   basePackages = {
     "com.example.multi_tanent.tenant", 
     "com.example.multi_tanent.pos.repository", 
-    "com.example.multi_tanent.spersusers.repository"
+    "com.example.multi_tanent.spersusers.repository",
+    "com.example.multi_tanent.crm.repository"
   },
   entityManagerFactoryRef = "tenantEmf",
   transactionManagerRef   = "tenantTx"
@@ -55,7 +56,8 @@ public class MultiTenantDataSourceConfig {
         "com.example.multi_tanent.tenant.leave.entity",
         "com.example.multi_tanent.tenant.payroll.entity",
         "com.example.multi_tanent.tenant.recruitment.entity",
-        "com.example.multi_tanent.pos.entity", 
+        "com.example.multi_tanent.pos.entity",
+        "com.example.multi_tanent.crm.entity",
         "com.example.multi_tanent.spersusers.enitity" // Add the shared user entity package
       );
       emf.setJpaVendorAdapter(new HibernateJpaVendorAdapter());

@@ -11,18 +11,21 @@ import com.example.multi_tanent.tenant.employee.entity.TimeAttendence;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.employee.repository.TimeAttendenceRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.example.multi_tanent.tenant.attendance.service.AttendanceRecordService;
 import java.net.URI;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/api/time-attendence")
 @CrossOrigin(origins = "*")
-@Transactional(transactionManager = "tenantTx")
 public class TimeAttendenceController {
     private final EmployeeRepository employeeRepository;
     private final TimeAttendenceRepository timeAttendenceRepository;
@@ -31,6 +34,7 @@ public class TimeAttendenceController {
     private final WeeklyOffPolicyRepository weeklyOffPolicyRepository;
     private final LeaveGroupRepository leaveGroupRepository;
     private final AttendancePolicyRepository attendancePolicyRepository;
+    private final AttendanceRecordService attendanceRecordService;
 
 
     public TimeAttendenceController(EmployeeRepository employeeRepository,
@@ -39,7 +43,8 @@ public class TimeAttendenceController {
                                     WorkTypeRepository workTypeRepository,
                                     WeeklyOffPolicyRepository weeklyOffPolicyRepository,
                                     LeaveGroupRepository leaveGroupRepository,
-                                    AttendancePolicyRepository attendancePolicyRepository) {
+                                    AttendancePolicyRepository attendancePolicyRepository,
+                                    AttendanceRecordService attendanceRecordService) {
         this.employeeRepository = employeeRepository;
         this.timeAttendenceRepository = timeAttendenceRepository;
         this.timeTypeRepository = timeTypeRepository;
@@ -47,10 +52,12 @@ public class TimeAttendenceController {
         this.weeklyOffPolicyRepository = weeklyOffPolicyRepository;
         this.leaveGroupRepository = leaveGroupRepository;
         this.attendancePolicyRepository = attendancePolicyRepository;
+        this.attendanceRecordService = attendanceRecordService;
     }
 
     @PutMapping("/{employeeCode}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+    @Transactional(transactionManager = "tenantTx")
     public ResponseEntity<TimeAttendenceResponse> createOrUpdateTimeAttendence(@PathVariable String employeeCode, @RequestBody TimeAttendenceRequest request) {
         return employeeRepository.findByEmployeeCode(employeeCode)
                 .map(employee -> {
@@ -87,6 +94,7 @@ public class TimeAttendenceController {
 
     @DeleteMapping("/{employeeCode}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
+    @Transactional(transactionManager = "tenantTx")
     public ResponseEntity<Void> deleteTimeAttendence(@PathVariable String employeeCode) {
         return employeeRepository.findByEmployeeCode(employeeCode)
             .flatMap(employee -> timeAttendenceRepository.findByEmployeeId(employee.getId()))
@@ -95,6 +103,29 @@ public class TimeAttendenceController {
                 return ResponseEntity.noContent().<Void>build();
             })
             .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/auto-mark-absent")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR')")
+    @Transactional(transactionManager = "tenantTx")
+    public ResponseEntity<String> triggerAutoMarkAbsent(
+            @RequestParam(value = "date", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        try {
+            LocalDate processingDate = (date != null) ? date : LocalDate.now();
+            attendanceRecordService.autoMarkAbsentEmployees(processingDate);
+            return ResponseEntity.ok("Auto-marking absent employees process triggered successfully for " + processingDate);
+        } catch (IllegalStateException e) {
+            // This specific exception is now handled by the exception handler below.
+            // We re-throw it so Spring can catch it and direct it to the handler.
+            throw e;
+        } catch (Exception e) { // Catch any other unexpected errors
+            return ResponseEntity.internalServerError().body("Failed to trigger process: " + e.getMessage());
+        }
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<String> handleIllegalStateException(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     private void updateTimeAttendenceFromRequest(TimeAttendence timeAttendence, TimeAttendenceRequest request) {

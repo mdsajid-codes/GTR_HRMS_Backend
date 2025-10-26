@@ -22,7 +22,13 @@ public enum ServiceModule {
     HRMS_RECRUITMENT(false, "com.example.multi_tanent.tenant.recruitment.entity"),
 
     // Point of Sale (POS) Module
-    POS(false, "com.example.multi_tanent.pos.entity", USER);
+    POS(false, "com.example.multi_tanent.pos.entity", USER),
+
+    // CRM Module
+    CRM(false, "com.example.multi_tanent.crm.entity", USER),
+
+    // Production Module
+    PRODUCTION(false, "com.example.multi_tanent.modules.production.entity", USER);
 
     private final boolean isFoundation;
     private final List<String> entityPackages;

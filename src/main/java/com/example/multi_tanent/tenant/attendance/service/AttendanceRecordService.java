@@ -16,9 +16,7 @@ import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.employee.repository.TimeAttendenceRepository;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.leave.repository.HolidayPolicyRepository;
-import com.example.multi_tanent.tenant.leave.entity.LeaveType;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -312,62 +310,70 @@ public class AttendanceRecordService {
      * iterate over all tenants and execute this logic within each tenant's context.
      */
     public void autoMarkAbsentEmployees() {
-        LocalDate today = LocalDate.now();
+        autoMarkAbsentEmployees(LocalDate.now());
+    }
 
+    /**
+     * Scheduled task to automatically mark employees as absent if they haven't checked in for a specific date.
+     * This can be run manually or by a scheduler.
+     * Note: For this to work in a multi-tenant environment, the scheduler must be adapted to
+     * iterate over all tenants and execute this logic within each tenant's context.
+     *
+     * @param date The date for which to mark absentees.
+     */
+    public void autoMarkAbsentEmployees(LocalDate date) {
         Optional<AttendanceSetting> settingOpt = attendanceSettingRepository.findAll().stream().findFirst();
         if (settingOpt.isEmpty() || !Boolean.TRUE.equals(settingOpt.get().getAutoMarkAbsentAfter())) {
-            return; // Feature is disabled for this tenant.
+            throw new IllegalStateException("Auto-marking absent employees is disabled for this tenant.");
         }
 
         List<Employee> activeEmployees = employeeRepository.findByStatus(EmployeeStatus.ACTIVE);
 
         for (Employee employee : activeEmployees) {
-            boolean recordExists = attendanceRepository.findByEmployeeEmployeeCodeAndAttendanceDate(employee.getEmployeeCode(), today).isPresent();
+            boolean recordExists = attendanceRepository.findByEmployeeEmployeeCodeAndAttendanceDate(employee.getEmployeeCode(), date).isPresent();
 
-            if (!recordExists) {
-                // Before marking absent, check if the employee is on an approved leave.
-                boolean onPaidLeave = leaveRequestRepository.findByEmployeeId(employee.getId()).stream()
-                        .anyMatch(leave -> leave.getStatus() == com.example.multi_tanent.tenant.leave.enums.LeaveStatus.APPROVED &&
-                                leave.getLeaveType() != null && Boolean.TRUE.equals(leave.getLeaveType().getIsPaid()) &&
-                                !today.isBefore(leave.getFromDate()) && !today.isAfter(leave.getToDate()));
-
-                // Check if today is a weekly off day for the employee.
-                Optional<TimeAttendence> timeAttendenceOpt = timeAttendenceRepository.findByEmployeeId(employee.getId());
-                boolean isWeeklyOff = timeAttendenceOpt.map(TimeAttendence::getWeeklyOffPolicy)
-                                                     .map(policy -> policy.getOffDays().contains(today.getDayOfWeek()))
-                                                     .orElse(false);
-
-                // Check if today is a holiday for the employee.
-                boolean isHoliday = timeAttendenceOpt.map(TimeAttendence::getHolidayList)
-                                                     .flatMap(holidayPolicyRepository::findByName)
-                                                     .map(policy -> policy.getHolidays().stream()
-                                                             .anyMatch(holiday -> holiday.getDate().equals(today) && !holiday.isOptional()))
-                                                     .orElse(false);
-
-                AttendanceRecord newRecord = new AttendanceRecord();
-                newRecord.setEmployee(employee);
-                newRecord.setAttendanceDate(today);
-
-                if (onPaidLeave) {
-                    newRecord.setStatus(AttendanceStatus.ON_LEAVE);
-                    newRecord.setRemarks("Auto-marked as ON LEAVE based on approved leave.");
-                } else if (isWeeklyOff) {
-                    newRecord.setStatus(AttendanceStatus.WEEKLY_OFF);
-                    newRecord.setRemarks("Auto-marked as WEEKLY OFF.");
-                } else if (isHoliday) {
-                    newRecord.setStatus(AttendanceStatus.HOLIDAY);
-                    newRecord.setRemarks("Auto-marked as HOLIDAY.");
-                } else if (isWeeklyOff) {
-                    newRecord.setStatus(AttendanceStatus.WEEKLY_OFF);
-                    newRecord.setRemarks("Auto-marked as WEEKLY OFF.");
-                } else {
-                    // Further checks for holidays or weekly offs could be added here.
-                    newRecord.setStatus(AttendanceStatus.ABSENT);
-                    newRecord.setRemarks("Auto-marked as ABSENT. No check-in recorded.");
-                }
-                updatePayableDays(newRecord);
-                attendanceRepository.save(newRecord);
+            if (recordExists) {
+                continue; // Skip if a record already exists for this employee on this date.
             }
+
+            // Before marking absent, check if the employee is on an approved leave.
+            boolean onPaidLeave = leaveRequestRepository.findByEmployeeId(employee.getId()).stream()
+                    .anyMatch(leave -> leave.getStatus() == com.example.multi_tanent.tenant.leave.enums.LeaveStatus.APPROVED &&
+                            leave.getLeaveType() != null && Boolean.TRUE.equals(leave.getLeaveType().getIsPaid()) &&
+                            !date.isBefore(leave.getFromDate()) && !date.isAfter(leave.getToDate()));
+
+            // Check if today is a weekly off day for the employee.
+            Optional<TimeAttendence> timeAttendenceOpt = timeAttendenceRepository.findByEmployeeId(employee.getId());
+            boolean isWeeklyOff = timeAttendenceOpt.map(TimeAttendence::getWeeklyOffPolicy)
+                                                 .map(policy -> policy.getOffDays().contains(date.getDayOfWeek()))
+                                                 .orElse(false);
+
+            // Check if today is a holiday for the employee.
+            boolean isHoliday = timeAttendenceOpt.map(TimeAttendence::getHolidayList)
+                                                 .flatMap(holidayPolicyRepository::findByName)
+                                                 .map(policy -> policy.getHolidays().stream()
+                                                         .anyMatch(holiday -> holiday.getDate().equals(date) && !holiday.isOptional()))
+                                                 .orElse(false);
+
+            AttendanceRecord newRecord = new AttendanceRecord();
+            newRecord.setEmployee(employee);
+            newRecord.setAttendanceDate(date);
+
+            if (onPaidLeave) {
+                newRecord.setStatus(AttendanceStatus.ON_LEAVE);
+                newRecord.setRemarks("Auto-marked as ON LEAVE based on approved leave.");
+            } else if (isWeeklyOff) {
+                newRecord.setStatus(AttendanceStatus.WEEKLY_OFF);
+                newRecord.setRemarks("Auto-marked as WEEKLY OFF.");
+            } else if (isHoliday) {
+                newRecord.setStatus(AttendanceStatus.HOLIDAY);
+                newRecord.setRemarks("Auto-marked as HOLIDAY.");
+            } else {
+                newRecord.setStatus(AttendanceStatus.ABSENT);
+                newRecord.setRemarks("Auto-marked as ABSENT. No check-in recorded.");
+            }
+            updatePayableDays(newRecord);
+            attendanceRepository.save(newRecord);
         }
     }
 
