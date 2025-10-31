@@ -1,5 +1,6 @@
 package com.example.multi_tanent.production.entity;
 
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import jakarta.persistence.*;
 import lombok.*;
@@ -23,7 +24,11 @@ public class ProInventoryType {
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
-    @Column(nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id") // This makes the relationship optional
+    private Location location;
+
+    @Column(nullable = false)
     private String name;
 
     @Lob

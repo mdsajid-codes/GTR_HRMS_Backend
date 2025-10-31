@@ -26,6 +26,8 @@ public class CrmKpiRequest {
     @NotNull(message = "KPI type is required.")
     private KpiType type;
 
+    private Long locationId; // Optional
+
     @Valid
     private Set<CrmKpiEmployeeRequest> assignedEmployees = new HashSet<>();
 }

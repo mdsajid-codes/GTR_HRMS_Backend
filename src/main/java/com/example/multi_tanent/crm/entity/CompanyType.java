@@ -1,5 +1,6 @@
 package com.example.multi_tanent.crm.entity;
 
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 
 import java.time.OffsetDateTime;
@@ -35,6 +36,10 @@ public class CompanyType {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false, foreignKey = @ForeignKey(name = "fk_company_type_tenant"))
     private Tenant tenant;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id") // Optional relationship
+    private Location location;
 
     @NotBlank
     @Column(name = "name", nullable = false, length = 150)

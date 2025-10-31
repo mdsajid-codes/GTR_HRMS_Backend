@@ -11,6 +11,8 @@ import com.example.multi_tanent.crm.entity.CrmKpiRange;
 import com.example.multi_tanent.crm.repository.CrmKpiRangeRepository;
 import com.example.multi_tanent.crm.repository.CrmKpiRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
+import com.example.multi_tanent.spersusers.enitity.Location;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.config.TenantContext;
 
@@ -23,6 +25,7 @@ public class CrmKpiRangeService {
   private final CrmKpiRangeRepository rangeRepo;
   private final CrmKpiRepository kpiRepo;
   private final TenantRepository tenantRepo;
+  private final LocationRepository locationRepository;
 
   private Tenant getCurrentTenant() {
     String tenantId = TenantContext.getTenantId();
@@ -50,6 +53,13 @@ public class CrmKpiRangeService {
     CrmKpi kpi = kpiRepo.findByIdAndTenantId(r.getKpiId(), getCurrentTenant().getId())
         .orElseThrow(() -> new ResourceNotFoundException("KPI not found with id: " + r.getKpiId()));
     CrmKpiRange rng = new CrmKpiRange();
+
+    if (r.getLocationId() != null) {
+        Location location = locationRepository.findById(r.getLocationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Location not found with id: " + r.getLocationId()));
+        rng.setLocation(location);
+    }
+
     rng.setKpi(kpi);
     rng.setFromPercent(r.getFromPercent());
     rng.setToPercent(r.getToPercent());
@@ -59,6 +69,13 @@ public class CrmKpiRangeService {
 
   public CrmKpiRange update(Long kpiId, Long id, CrmKpiRangeRequest r) {
     CrmKpiRange existing = getById(kpiId, id);
+    if (r.getLocationId() != null) {
+        Location location = locationRepository.findById(r.getLocationId())
+                .orElseThrow(() -> new ResourceNotFoundException("Location not found with id: " + r.getLocationId()));
+        existing.setLocation(location);
+    } else {
+        existing.setLocation(null);
+    }
     existing.setFromPercent(r.getFromPercent());
     existing.setToPercent(r.getToPercent());
     existing.setColor(r.getColor());

@@ -1,11 +1,13 @@
 package com.example.multi_tanent.crm.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.Data;
 
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@Data
 public class CompanyTypeRequest {
-    @NotBlank(message = "Type name is required")
+
+    @NotBlank(message = "Company type name is required.")
     private String name;
+
+    private Long locationId; // Optional
 }

@@ -1,6 +1,7 @@
 package com.example.multi_tanent.production.entity;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,6 +31,10 @@ public class ProWorkStation {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "workgroup_id", nullable = false)
     private ProWorkGroup workGroup;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "location_id") // Optional relationship
+    private Location location;
 
     @Column(nullable = false, unique = true, updatable = false)
     private String workstationNumber;

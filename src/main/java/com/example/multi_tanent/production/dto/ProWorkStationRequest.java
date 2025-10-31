@@ -18,4 +18,6 @@ public class ProWorkStationRequest {
     private String workstationName;
 
     private List<Long> employeeIds;
+
+    private Long locationId; // Optional: ID of the location to associate with
 }

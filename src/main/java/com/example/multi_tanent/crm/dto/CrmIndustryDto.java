@@ -1,11 +1,21 @@
 package com.example.multi_tanent.crm.dto;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import java.time.OffsetDateTime;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CrmIndustryDto {
-  @NotBlank(message = "Industry name is required")
-  private String name;
+    private Long id;
+    private String name;
+    private Long locationId;
+    private String locationName;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
 }

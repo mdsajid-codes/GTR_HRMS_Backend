@@ -6,6 +6,7 @@ import java.time.OffsetDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 
 import jakarta.persistence.*;
@@ -20,7 +21,11 @@ import lombok.*;
     @UniqueConstraint(name = "uk_industry_tenant_name", columnNames = {"tenant_id", "name"})
   }
 )
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter 
+@Setter 
+@NoArgsConstructor 
+@AllArgsConstructor 
+@Builder
 public class CrmIndustry {
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +36,10 @@ public class CrmIndustry {
   @JoinColumn(name = "tenant_id", nullable = false,
               foreignKey = @ForeignKey(name = "fk_industry_tenant"))
   private Tenant tenant;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "location_id") // Optional relationship
+  private Location location;
 
   @NotBlank
   @Column(name = "name", nullable = false, length = 150)

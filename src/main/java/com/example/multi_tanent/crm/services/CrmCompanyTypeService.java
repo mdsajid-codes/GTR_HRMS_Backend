@@ -1,17 +1,22 @@
 package com.example.multi_tanent.crm.services;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.crm.dto.CompanyTypeDto;
 import com.example.multi_tanent.crm.dto.CompanyTypeRequest;
 import com.example.multi_tanent.crm.entity.CompanyType;
 import com.example.multi_tanent.crm.repository.CrmCompanyTypeRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -20,7 +25,8 @@ import lombok.RequiredArgsConstructor;
 public class CrmCompanyTypeService {
 
     private final CrmCompanyTypeRepository companyTypeRepository;
-    private final TenantRepository tenantRepository; // adjust to your project
+    private final TenantRepository tenantRepository;
+    private final LocationRepository locationRepository;
 
     private Tenant getCurrentTenant() {
         // Use the TenantContext to get the current tenant from the JWT
@@ -29,36 +35,47 @@ public class CrmCompanyTypeService {
                 .orElseThrow(() -> new IllegalStateException("Tenant not found in current DB for tenantId: " + tenantId));
     }
 
-    public List<CompanyType> getAllCompanyTypes() {
+    public List<CompanyTypeDto> getAllCompanyTypes() {
         Tenant tenant = getCurrentTenant();
-        return companyTypeRepository.findByTenantIdOrderByNameAsc(tenant.getId());
+        return companyTypeRepository.findByTenantIdOrderByNameAsc(tenant.getId())
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
-    public CompanyType getCompanyTypeById(Long id) {
+    public CompanyTypeDto getCompanyTypeById(Long id) {
         Tenant tenant = getCurrentTenant();
         return companyTypeRepository.findByIdAndTenantId(id, tenant.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Company type not found"));
+                .map(this::toDto)
+                .orElseThrow(() -> new EntityNotFoundException("Company type not found with id: " + id));
     }
 
-    public CompanyType createCompanyType(CompanyTypeRequest request) {
+    public CompanyTypeDto createCompanyType(CompanyTypeRequest request) {
         Tenant tenant = getCurrentTenant();
 
         if (companyTypeRepository.existsByTenantIdAndNameIgnoreCase(tenant.getId(), request.getName())) {
             throw new IllegalArgumentException("Company type already exists for this tenant");
         }
 
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
         CompanyType companyType = CompanyType.builder()
                 .tenant(tenant)
+                .location(location)
                 .name(request.getName().trim())
                 .build();
 
-        return companyTypeRepository.save(companyType);
+        return toDto(companyTypeRepository.save(companyType));
     }
 
-    public CompanyType updateCompanyType(Long id, CompanyTypeRequest request) {
+    public CompanyTypeDto updateCompanyType(Long id, CompanyTypeRequest request) {
         Tenant tenant = getCurrentTenant();
         CompanyType companyType = companyTypeRepository.findByIdAndTenantId(id, tenant.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Company type not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Company type not found with id: " + id));
 
         String newName = request.getName().trim();
         if (!companyType.getName().equalsIgnoreCase(newName)
@@ -66,14 +83,32 @@ public class CrmCompanyTypeService {
             throw new IllegalArgumentException("Company type name already exists");
         }
 
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
         companyType.setName(newName);
-        return companyTypeRepository.save(companyType);
+        companyType.setLocation(location);
+        return toDto(companyTypeRepository.save(companyType));
     }
 
     public void deleteCompanyType(Long id) {
         Tenant tenant = getCurrentTenant();
         CompanyType companyType = companyTypeRepository.findByIdAndTenantId(id, tenant.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Company type not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Company type not found with id: " + id));
         companyTypeRepository.delete(companyType);
+    }
+
+    private CompanyTypeDto toDto(CompanyType entity) {
+        CompanyTypeDto dto = CompanyTypeDto.builder()
+                .id(entity.getId()).name(entity.getName())
+                .createdAt(entity.getCreatedAt()).updatedAt(entity.getUpdatedAt()).build();
+        if (entity.getLocation() != null) {
+            dto.setLocationId(entity.getLocation().getId());
+            dto.setLocationName(entity.getLocation().getName());
+        }
+        return dto;
     }
 }

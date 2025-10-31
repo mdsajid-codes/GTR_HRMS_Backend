@@ -7,7 +7,9 @@ import com.example.multi_tanent.production.dto.ProWorkGroupDayScheduleDto;
 import com.example.multi_tanent.production.entity.ProWorkGroup;
 import com.example.multi_tanent.production.entity.ProWorkGroupDaySchedule;
 import com.example.multi_tanent.production.repository.ProWorkGroupRepository;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,10 +23,12 @@ public class ProWorkGroupService {
 
     private final ProWorkGroupRepository workGroupRepository;
     private final TenantRepository tenantRepository;
+    private final LocationRepository locationRepository;
 
-    public ProWorkGroupService(ProWorkGroupRepository workGroupRepository, TenantRepository tenantRepository) {
+    public ProWorkGroupService(ProWorkGroupRepository workGroupRepository, TenantRepository tenantRepository, LocationRepository locationRepository) {
         this.workGroupRepository = workGroupRepository;
         this.tenantRepository = tenantRepository;
+        this.locationRepository = locationRepository;
     }
 
     private Tenant getCurrentTenant() {
@@ -34,8 +38,15 @@ public class ProWorkGroupService {
 
     public ProWorkGroupDto createWorkGroup(ProWorkGroupRequest request) {
         Tenant tenant = getCurrentTenant();
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
         ProWorkGroup workGroup = ProWorkGroup.builder()
                 .tenant(tenant)
+                .location(location)
                 .name(request.getName())
                 .designation(request.getDesignation())
                 .numberOfEmployees(request.getNumberOfEmployees())
@@ -73,6 +84,13 @@ public class ProWorkGroupService {
         ProWorkGroup workGroup = workGroupRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Work Group not found with id: " + id));
 
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
+        workGroup.setLocation(location);
         workGroup.setName(request.getName());
         workGroup.setDesignation(request.getDesignation());
         workGroup.setNumberOfEmployees(request.getNumberOfEmployees());
@@ -84,6 +102,7 @@ public class ProWorkGroupService {
 
         // Update schedules
         workGroup.getDaySchedules().clear();
+        workGroupRepository.flush(); // Force the DELETE statements to execute now
         if (request.getDaySchedules() != null) {
             request.getDaySchedules().forEach(dto -> workGroup.getDaySchedules().add(toScheduleEntity(dto, workGroup)));
         }
@@ -103,13 +122,20 @@ public class ProWorkGroupService {
         List<ProWorkGroupDayScheduleDto> scheduleDtos = entity.getDaySchedules() != null ?
                 entity.getDaySchedules().stream().map(this::toScheduleDto).collect(Collectors.toList()) : List.of();
 
-        return ProWorkGroupDto.builder()
+        ProWorkGroupDto dto = ProWorkGroupDto.builder()
                 .id(entity.getId()).number(entity.getNumber()).name(entity.getName()).designation(entity.getDesignation())
                 .numberOfEmployees(entity.getNumberOfEmployees())
                 .instanceCount(entity.getInstanceCount()).hourlyRate(entity.getHourlyRate())
                 .fixedWorkingMinutes(entity.getFixedWorkingMinutes()).customWorkingHours(entity.isCustomWorkingHours())
                 .colorHex(entity.getColorHex()).createdAt(entity.getCreatedAt()).daySchedules(scheduleDtos)
                 .build();
+
+        if (entity.getLocation() != null) {
+            dto.setLocationId(entity.getLocation().getId());
+            dto.setLocationName(entity.getLocation().getName());
+        }
+
+        return dto;
     }
 
     private ProWorkGroupDayScheduleDto toScheduleDto(ProWorkGroupDaySchedule entity) {

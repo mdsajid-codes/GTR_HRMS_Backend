@@ -26,4 +26,6 @@ public class ProWorkGroupDto {
     private String colorHex;
     private OffsetDateTime createdAt;
     private List<ProWorkGroupDayScheduleDto> daySchedules;
+    private Long locationId;
+    private String locationName;
 }

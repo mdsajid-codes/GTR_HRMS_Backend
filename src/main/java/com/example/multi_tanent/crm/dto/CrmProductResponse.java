@@ -16,6 +16,8 @@ public class CrmProductResponse {
     private String name;
     private Long industryId;
     private String industryName;
+    private Long locationId;
+    private String locationName;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
 }

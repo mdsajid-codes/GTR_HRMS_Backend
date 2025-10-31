@@ -11,7 +11,7 @@ public class CrmKpiEmployeeResponse {
     private Long id;
     private Long kpiId;
     private String kpiName;
-    private EmployeeSlimDto employee; 
+    private EmployeeSlimDto employee;
     private String employeeName;
     private Double targetValue;
 }

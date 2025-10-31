@@ -7,6 +7,7 @@ import java.time.OffsetDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 
 import jakarta.persistence.*;
@@ -38,6 +39,11 @@ public class CrmProduct {
   @JoinColumn(name = "industry_id", nullable = false,
               foreignKey = @ForeignKey(name = "fk_product_industry"))
   private CrmIndustry industry;
+
+  /** Optional: The location where this product is relevant */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "location_id", foreignKey = @ForeignKey(name = "fk_product_location"))
+  private Location location;
 
   @NotBlank
   @Column(name = "name", nullable = false, length = 200)

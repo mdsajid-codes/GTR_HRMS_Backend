@@ -5,7 +5,9 @@ import com.example.multi_tanent.production.dto.ProInventoryTypeDto;
 import com.example.multi_tanent.production.dto.ProInventoryTypeRequest;
 import com.example.multi_tanent.production.entity.ProInventoryType;
 import com.example.multi_tanent.production.repository.ProInventoryTypeRepository;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,10 +21,12 @@ public class ProInventoryTypeService {
 
     private final ProInventoryTypeRepository inventoryTypeRepository;
     private final TenantRepository tenantRepository;
+    private final LocationRepository locationRepository;
 
-    public ProInventoryTypeService(ProInventoryTypeRepository inventoryTypeRepository, TenantRepository tenantRepository) {
+    public ProInventoryTypeService(ProInventoryTypeRepository inventoryTypeRepository, TenantRepository tenantRepository, LocationRepository locationRepository) {
         this.inventoryTypeRepository = inventoryTypeRepository;
         this.tenantRepository = tenantRepository;
+        this.locationRepository = locationRepository;
     }
 
     private Tenant getCurrentTenant() {
@@ -32,8 +36,15 @@ public class ProInventoryTypeService {
 
     public ProInventoryTypeDto createInventoryType(ProInventoryTypeRequest request) {
         Tenant tenant = getCurrentTenant();
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
         ProInventoryType inventoryType = ProInventoryType.builder()
                 .tenant(tenant)
+                .location(location)
                 .name(request.getName())
                 .description(request.getDescription())
                 .active(true)
@@ -58,8 +69,15 @@ public class ProInventoryTypeService {
         ProInventoryType inventoryType = inventoryTypeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Inventory Type not found with id: " + id));
 
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
         inventoryType.setName(request.getName());
         inventoryType.setDescription(request.getDescription());
+        inventoryType.setLocation(location);
 
         ProInventoryType updated = inventoryTypeRepository.save(inventoryType);
         return toDto(updated);
@@ -73,12 +91,16 @@ public class ProInventoryTypeService {
     }
 
     private ProInventoryTypeDto toDto(ProInventoryType entity) {
-        return new ProInventoryTypeDto(
-                entity.getId(),
-                entity.getName(),
-                entity.getDescription(),
-                entity.isActive(),
-                entity.getCreatedAt()
-        );
+        ProInventoryTypeDto dto = new ProInventoryTypeDto();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setDescription(entity.getDescription());
+        dto.setActive(entity.isActive());
+        dto.setCreatedAt(entity.getCreatedAt());
+        if (entity.getLocation() != null) {
+            dto.setLocationId(entity.getLocation().getId());
+            dto.setLocationName(entity.getLocation().getName());
+        }
+        return dto;
     }
 }

@@ -16,7 +16,10 @@ import com.example.multi_tanent.crm.entity.CrmProduct;
 import com.example.multi_tanent.crm.repository.CrmIndustryRepository;
 import com.example.multi_tanent.crm.repository.CrmProductRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import jakarta.persistence.EntityNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +31,7 @@ public class CrmProductService {
   private final CrmProductRepository productRepository;
   private final CrmIndustryRepository industryRepository;
   private final TenantRepository tenantRepository;
+  private final LocationRepository locationRepository;
 
   private Tenant getCurrentTenant() {
     String tenantId = TenantContext.getTenantId();
@@ -65,9 +69,16 @@ public class CrmProductService {
     CrmIndustry industry = industryRepository.findByIdAndTenantId(req.getIndustryId(), t.getId())
         .orElseThrow(() -> new IllegalArgumentException("Industry not found for current tenant"));
 
+    Location location = null;
+    if (req.getLocationId() != null) {
+        location = locationRepository.findById(req.getLocationId())
+                .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + req.getLocationId()));
+    }
+
     CrmProduct p = CrmProduct.builder()
         .tenant(t)
         .industry(industry)
+        .location(location)
         .name(name)
         .build();
 
@@ -82,6 +93,12 @@ public class CrmProductService {
     CrmIndustry industry = industryRepository.findByIdAndTenantId(req.getIndustryId(), t.getId())
         .orElseThrow(() -> new IllegalArgumentException("Industry not found for current tenant"));
 
+    Location location = null;
+    if (req.getLocationId() != null) {
+        location = locationRepository.findById(req.getLocationId())
+                .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + req.getLocationId()));
+    }
+
     String newName = req.getName().trim();
     if (!p.getName().equalsIgnoreCase(newName)
         && productRepository.existsByTenantIdAndNameIgnoreCase(t.getId(), newName)) {
@@ -90,6 +107,7 @@ public class CrmProductService {
 
     p.setIndustry(industry);
     p.setName(newName);
+    p.setLocation(location);
     return toDto(productRepository.save(p));
   }
 
@@ -101,13 +119,19 @@ public class CrmProductService {
   }
 
   private CrmProductResponse toDto(CrmProduct product) {
-    return CrmProductResponse.builder()
+    CrmProductResponse.CrmProductResponseBuilder builder = CrmProductResponse.builder()
         .id(product.getId())
         .name(product.getName())
         .industryId(product.getIndustry().getId())
         .industryName(product.getIndustry().getName())
         .createdAt(product.getCreatedAt())
-        .updatedAt(product.getUpdatedAt())
-        .build();
+        .updatedAt(product.getUpdatedAt());
+
+    if (product.getLocation() != null) {
+        builder.locationId(product.getLocation().getId());
+        builder.locationName(product.getLocation().getName());
+    }
+
+    return builder.build();
   }
 }

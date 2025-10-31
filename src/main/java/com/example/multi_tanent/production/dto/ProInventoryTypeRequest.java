@@ -16,4 +16,6 @@ public class ProInventoryTypeRequest {
     private String name;
 
     private String description;
+
+    private Long locationId; // Optional: ID of the location to associate with
 }

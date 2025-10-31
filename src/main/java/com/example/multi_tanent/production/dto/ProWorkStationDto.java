@@ -18,5 +18,7 @@ public class ProWorkStationDto {
     private String workstationName;
     private String workGroupName;
     private List<EmployeeSlimDto> employees;
+    private Long locationId;
+    private String locationName;
     private OffsetDateTime createdAt;
 }

@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CrmKpiRangeResponse {
     private Long id;
+    private Long locationId;
+    private String locationName;
     private Double fromPercent;
     private Double toPercent;
     private String color;

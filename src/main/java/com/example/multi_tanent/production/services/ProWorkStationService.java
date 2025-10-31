@@ -9,8 +9,10 @@ import com.example.multi_tanent.production.entity.ProWorkStation;
 import com.example.multi_tanent.production.repository.ProWorkGroupRepository;
 import com.example.multi_tanent.production.repository.ProWorkStationRepository;
 import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -28,12 +30,14 @@ public class ProWorkStationService {
     private final ProWorkGroupRepository workGroupRepository;
     private final EmployeeRepository employeeRepository;
     private final TenantRepository tenantRepository;
+    private final LocationRepository locationRepository;
 
-    public ProWorkStationService(ProWorkStationRepository workStationRepository, ProWorkGroupRepository workGroupRepository, EmployeeRepository employeeRepository, TenantRepository tenantRepository) {
+    public ProWorkStationService(ProWorkStationRepository workStationRepository, ProWorkGroupRepository workGroupRepository, EmployeeRepository employeeRepository, TenantRepository tenantRepository, LocationRepository locationRepository) {
         this.workStationRepository = workStationRepository;
         this.workGroupRepository = workGroupRepository;
         this.employeeRepository = employeeRepository;
         this.tenantRepository = tenantRepository;
+        this.locationRepository = locationRepository;
     }
 
     private Tenant getCurrentTenant() {
@@ -46,11 +50,18 @@ public class ProWorkStationService {
         ProWorkGroup workGroup = workGroupRepository.findById(request.getWorkGroupId())
                 .orElseThrow(() -> new EntityNotFoundException("Work Group not found with id: " + request.getWorkGroupId()));
 
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
         List<Employee> employees = fetchEmployees(request.getEmployeeIds());
 
         ProWorkStation workStation = ProWorkStation.builder()
                 .tenant(tenant)
                 .workGroup(workGroup)
+                .location(location)
                 .workstationName(request.getWorkstationName())
                 .employees(employees)
                 .build();
@@ -78,10 +89,17 @@ public class ProWorkStationService {
         ProWorkGroup workGroup = workGroupRepository.findById(request.getWorkGroupId())
                 .orElseThrow(() -> new EntityNotFoundException("Work Group not found with id: " + request.getWorkGroupId()));
 
+        Location location = null;
+        if (request.getLocationId() != null) {
+            location = locationRepository.findById(request.getLocationId())
+                    .orElseThrow(() -> new EntityNotFoundException("Location not found with id: " + request.getLocationId()));
+        }
+
         List<Employee> employees = fetchEmployees(request.getEmployeeIds());
 
         workStation.setWorkGroup(workGroup);
         workStation.setWorkstationName(request.getWorkstationName());
+        workStation.setLocation(location);
         workStation.setEmployees(employees);
 
         ProWorkStation updated = workStationRepository.save(workStation);
@@ -100,15 +118,22 @@ public class ProWorkStationService {
     }
 
     private ProWorkStationDto toDto(ProWorkStation entity) {
-        return ProWorkStationDto.builder()
+        ProWorkStationDto dto = ProWorkStationDto.builder()
                 .id(entity.getId())
                 .workstationNumber(entity.getWorkstationNumber())
                 .workstationName(entity.getWorkstationName())
                 .workGroupName(entity.getWorkGroup().getName())
                 .employees(entity.getEmployees().stream()
                         .map(emp -> new EmployeeSlimDto(emp.getId(), emp.getFirstName() + " " + emp.getLastName()))
-                        .collect(Collectors.toList()))
+                        .collect(Collectors.toList()))                
                 .createdAt(entity.getCreatedAt())
                 .build();
+
+        if (entity.getLocation() != null) {
+            dto.setLocationId(entity.getLocation().getId());
+            dto.setLocationName(entity.getLocation().getName());
+        }
+
+        return dto;
     }
 }

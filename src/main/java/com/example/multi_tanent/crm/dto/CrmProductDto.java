@@ -12,4 +12,6 @@ public class CrmProductDto {
 
   @NotBlank(message = "Product name is required")
   private String name;
+
+  private Long locationId; // Optional
 }

@@ -13,6 +13,8 @@ public class CrmKpiResponse {
     private String dataType;
     private String type;
     private Long tenantId;
+    private Long locationId;
+    private String locationName;
 
     private Set<CrmKpiRangeResponse> ranges = new HashSet<>();
     private Set<CrmKpiEmployeeResponse> assignedEmployees = new HashSet<>();

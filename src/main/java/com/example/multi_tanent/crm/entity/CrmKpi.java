@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Set;
 import com.example.multi_tanent.crm.enums.KpiType;
 import com.example.multi_tanent.crm.enums.KpidataType;
+import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 
 import jakarta.persistence.*;
@@ -25,6 +26,11 @@ public class CrmKpi {
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "tenant_id", nullable = false)
   private Tenant tenant;
+
+  /** Optional: The location where this KPI is relevant */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "location_id", foreignKey = @ForeignKey(name = "fk_kpi_location"))
+  private Location location;
 
   private String name;
   private String description;

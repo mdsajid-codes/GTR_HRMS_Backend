@@ -9,8 +9,8 @@ public class CrmKpiRangeRequest {
     @NotNull(message = "KPI ID is required")
     private Long kpiId;
 
+    private Long locationId; // Optional
     private Double fromPercent;
     private Double toPercent;
     private String color;
 }
-

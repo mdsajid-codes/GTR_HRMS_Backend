@@ -4,9 +4,8 @@ import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import com.example.multi_tanent.crm.dto.CompanyTypeDto;
 import com.example.multi_tanent.crm.dto.CompanyTypeRequest;
-import com.example.multi_tanent.crm.entity.CompanyType;
 import com.example.multi_tanent.crm.services.CrmCompanyTypeService;
 
 import jakarta.validation.Valid;
@@ -21,18 +20,18 @@ public class CompanyTypeController {
     private final CrmCompanyTypeService companyTypeService;
 
     @GetMapping
-    public ResponseEntity<List<CompanyType>> getAllCompanyTypes() {
+    public ResponseEntity<List<CompanyTypeDto>> getAllCompanyTypes() {
         return ResponseEntity.ok(companyTypeService.getAllCompanyTypes());
     }
 
     @PostMapping
-    public ResponseEntity<CompanyType> createCompanyType(@Valid @RequestBody CompanyTypeRequest request) {
+    public ResponseEntity<CompanyTypeDto> createCompanyType(@Valid @RequestBody CompanyTypeRequest request) {
         return ResponseEntity.ok(companyTypeService.createCompanyType(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CompanyType> updateCompanyType(@PathVariable Long id,
-                                                         @Valid @RequestBody CompanyTypeRequest request) {
+    public ResponseEntity<CompanyTypeDto> updateCompanyType(@PathVariable Long id,
+                                                            @Valid @RequestBody CompanyTypeRequest request) {
         return ResponseEntity.ok(companyTypeService.updateCompanyType(id, request));
     }
 

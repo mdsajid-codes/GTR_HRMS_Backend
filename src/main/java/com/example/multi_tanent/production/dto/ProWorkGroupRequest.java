@@ -48,4 +48,6 @@ public class ProWorkGroupRequest {
 
     @Valid
     private List<ProWorkGroupDayScheduleDto> daySchedules;
+
+    private Long locationId; // Optional: ID of the location to associate with
 }

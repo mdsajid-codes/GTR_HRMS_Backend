@@ -22,6 +22,8 @@ import com.example.multi_tanent.crm.repository.CrmKpiEmployeeRepository;
 import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.enitity.Location;
+import com.example.multi_tanent.spersusers.repository.LocationRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,7 @@ public class CrmKpiService {
   private final CrmKpiEmployeeRepository kpiEmployeeRepo;
   private final com.example.multi_tanent.tenant.employee.repository.EmployeeRepository employeeRepo; // Assuming this is the correct EmployeeRepository
   private final TenantRepository tenantRepo;
+  private final LocationRepository locationRepository;
 
   private Tenant getCurrentTenant() {
     String tenantId = TenantContext.getTenantId();
@@ -40,108 +43,139 @@ public class CrmKpiService {
         .orElseThrow(() -> new IllegalStateException("Tenant not found in current DB for tenantId: " + tenantId));
   }
 
- @Transactional(readOnly = true)
-  public List<CrmKpiResponse> getAll() {
-    return kpiRepo.findByTenantIdOrderByNameAsc(getCurrentTenant().getId()).stream()
-        .map(this::toCrmKpiResponse)
-        .collect(Collectors.toList());
-  }
+	@Transactional(readOnly = true)
+	public List<CrmKpiResponse> getAll() {
+		return kpiRepo.findByTenantIdOrderByNameAsc(getCurrentTenant().getId()).stream()
+				.map(this::toCrmKpiResponse)
+				.collect(Collectors.toList());
+	}
 
- @Transactional(readOnly = true)
-  public CrmKpiResponse getById(Long id) {
-    return kpiRepo.findByIdAndTenantId(id, getCurrentTenant().getId())
-        .map(this::toCrmKpiResponse)
-        .orElseThrow(() -> new ResourceNotFoundException("KPI not found with id: " + id));
-  }
+	@Transactional(readOnly = true)
+	public CrmKpiResponse getById(Long id) {
+		return kpiRepo.findByIdAndTenantId(id, getCurrentTenant().getId())
+				.map(this::toCrmKpiResponse)
+				.orElseThrow(() -> new ResourceNotFoundException("KPI not found with id: " + id));
+	}
 
-  public CrmKpiResponse create(CrmKpiRequest r) { // Changed return type
-    Tenant t = getCurrentTenant();
-    if (kpiRepo.existsByTenantIdAndNameIgnoreCase(t.getId(), r.getName())) {
-      throw new IllegalArgumentException("KPI name already exists");
-    }
-    CrmKpi k = new CrmKpi();
-    k.setTenant(t);
-    k.setName(r.getName().trim());
-    k.setDescription(r.getDescription());
-    k.setDataType(r.getDataType());
-    k.setType(r.getType());
+	public CrmKpiResponse create(CrmKpiRequest r) { // Changed return type
+		Tenant t = getCurrentTenant();
+		if (kpiRepo.existsByTenantIdAndNameIgnoreCase(t.getId(), r.getName())) {
+			throw new IllegalArgumentException("KPI name already exists");
+		}
+		CrmKpi k = new CrmKpi();
+		k.setTenant(t);
+		k.setName(r.getName().trim());
+		k.setDescription(r.getDescription());
 
-    CrmKpi savedKpi = kpiRepo.save(k);
+		if (r.getLocationId() != null) {
+			Location location = locationRepository.findById(r.getLocationId())
+					.orElseThrow(() -> new ResourceNotFoundException("Location not found with id: " + r.getLocationId()));
+			k.setLocation(location);
+		}
 
-    if (r.getAssignedEmployees() != null && !r.getAssignedEmployees().isEmpty()) {
-        Set<CrmKpiEmployee> kpiEmployees = r.getAssignedEmployees().stream()
-            .map(empReq -> toCrmKpiEmployeeEntity(empReq, savedKpi))
-            .collect(Collectors.toSet());
-        savedKpi.setKpiEmployees(kpiEmployees);
- }
-    return toCrmKpiResponse(kpiRepo.save(savedKpi));
-  }
+		k.setDataType(r.getDataType());
+		k.setType(r.getType());
 
-  public CrmKpiResponse update(Long id, CrmKpiRequest r) { // Changed return type
-    Tenant t = getCurrentTenant();
-    CrmKpi k = kpiRepo.findByIdAndTenantId(id, t.getId())
-        .orElseThrow(() -> new ResourceNotFoundException("KPI not found with id: " + id));
-    String newName = r.getName().trim();
-    if (!k.getName().equalsIgnoreCase(newName)
-        && kpiRepo.existsByTenantIdAndNameIgnoreCase(t.getId(), newName)) {
-      throw new IllegalArgumentException("KPI name already exists");
-    }
-    k.setName(newName);
-    k.setDescription(r.getDescription());
-    k.setDataType(r.getDataType());
-    k.setType(r.getType());
+		CrmKpi savedKpi = kpiRepo.save(k);
 
-    // Handle assigned employees: clear existing and add new ones
-    k.getKpiEmployees().clear(); // orphanRemoval=true will delete old ones
-    if (r.getAssignedEmployees() != null && !r.getAssignedEmployees().isEmpty()) {
-        Set<CrmKpiEmployee> newKpiEmployees = r.getAssignedEmployees().stream()
-            .map(empReq -> toCrmKpiEmployeeEntity(empReq, k))
-            .collect(Collectors.toSet());
-        k.getKpiEmployees().addAll(newKpiEmployees);
-    }
+		if (r.getAssignedEmployees() != null && !r.getAssignedEmployees().isEmpty()) {
+			Set<CrmKpiEmployee> kpiEmployees = r.getAssignedEmployees().stream()
+					.map(empReq -> toCrmKpiEmployeeEntity(empReq, savedKpi))
+					.collect(Collectors.toSet());
+			savedKpi.setKpiEmployees(kpiEmployees);
+		}
+		return toCrmKpiResponse(kpiRepo.save(savedKpi));
+	}
 
-    return toCrmKpiResponse(kpiRepo.save(k));
-  }
+	public CrmKpiResponse update(Long id, CrmKpiRequest r) { // Changed return type
+		Tenant t = getCurrentTenant();
+		CrmKpi k = kpiRepo.findByIdAndTenantId(id, t.getId())
+				.orElseThrow(() -> new ResourceNotFoundException("KPI not found with id: " + id));
+		String newName = r.getName().trim();
+		if (!k.getName().equalsIgnoreCase(newName)
+				&& kpiRepo.existsByTenantIdAndNameIgnoreCase(t.getId(), newName)) {
+			throw new IllegalArgumentException("KPI name already exists");
+		}
+		k.setName(newName);
+		k.setDescription(r.getDescription());
+		k.setDataType(r.getDataType());
 
-  public void delete(Long id) {
-    CrmKpi kpi = kpiRepo.findByIdAndTenantId(id, getCurrentTenant().getId())
-        .orElseThrow(() -> new ResourceNotFoundException("KPI not found with id: " + id));
-    kpiRepo.delete(kpi);
-  }
+		if (r.getLocationId() != null) {
+			Location location = locationRepository.findById(r.getLocationId())
+					.orElseThrow(() -> new ResourceNotFoundException("Location not found with id: " + r.getLocationId()));
+			k.setLocation(location);
+		} else {
+			k.setLocation(null);
+		}
+		k.setType(r.getType());
 
-  // --- Helper methods for DTO conversion ---
-  private CrmKpiResponse toCrmKpiResponse(CrmKpi kpi) {
-      Set<CrmKpiEmployeeResponse> assignedEmployees = kpi.getKpiEmployees().stream()
-          .map(this::toCrmKpiEmployeeResponse)
-          .collect(Collectors.toSet());
+		// Handle assigned employees: clear existing and add new ones
+		k.getKpiEmployees().clear(); // orphanRemoval=true will delete old ones
+		if (r.getAssignedEmployees() != null && !r.getAssignedEmployees().isEmpty()) {
+			Set<CrmKpiEmployee> newKpiEmployees = r.getAssignedEmployees().stream()
+					.map(empReq -> toCrmKpiEmployeeEntity(empReq, k))
+					.collect(Collectors.toSet());
+			k.getKpiEmployees().addAll(newKpiEmployees);
+		}
 
-      Set<CrmKpiRangeResponse> ranges = kpi.getRanges().stream()
-          .map(range -> new CrmKpiRangeResponse(range.getId(), range.getFromPercent(), range.getToPercent(), range.getColor()))
-          .collect(Collectors.toSet());
+		return toCrmKpiResponse(kpiRepo.save(k));
+	}
 
-      return CrmKpiResponse.builder()
-              .id(kpi.getId()).name(kpi.getName()).description(kpi.getDescription())
-              .dataType(kpi.getDataType() != null ? kpi.getDataType().name() : null)
-              .type(kpi.getType() != null ? kpi.getType().name() : null)
-              .tenantId(kpi.getTenant().getId())
-              .assignedEmployees(assignedEmployees).ranges(ranges).build();
-  }
+	public void delete(Long id) {
+		CrmKpi kpi = kpiRepo.findByIdAndTenantId(id, getCurrentTenant().getId())
+				.orElseThrow(() -> new ResourceNotFoundException("KPI not found with id: " + id));
+		kpiRepo.delete(kpi);
+	}
 
-  private CrmKpiEmployee toCrmKpiEmployeeEntity(CrmKpiEmployeeRequest empReq, CrmKpi kpi) {
-      Employee employee = employeeRepo.findById(empReq.getEmployeeId())
-          .orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + empReq.getEmployeeId()));
-      return new CrmKpiEmployee(null, kpi, employee, empReq.getTargetValue());
-  }
+	// --- Helper methods for DTO conversion ---
+	private CrmKpiResponse toCrmKpiResponse(CrmKpi kpi) {
+		Set<CrmKpiEmployeeResponse> assignedEmployees = kpi.getKpiEmployees().stream()
+				.map(this::toCrmKpiEmployeeResponse)
+				.collect(Collectors.toSet());
 
-  private CrmKpiEmployeeResponse toCrmKpiEmployeeResponse(CrmKpiEmployee kpiEmployee) {
-      Employee employee = kpiEmployee.getEmployee();
-      EmployeeSlimDto employeeDto = new EmployeeSlimDto(employee.getId(), employee.getFirstName(), employee.getLastName()); // Correctly creating the slim DTO
-      return CrmKpiEmployeeResponse.builder()
-              .id(kpiEmployee.getId())
-              .kpiId(kpiEmployee.getKpi().getId()) // Set the ID
-              .kpiName(kpiEmployee.getKpi().getName()) // Set the name
-              .employee(employeeDto)
-              .targetValue(kpiEmployee.getTargetValue() != null ? kpiEmployee.getTargetValue().doubleValue() : null)
-              .build();
-  }
+		Set<CrmKpiRangeResponse> ranges = kpi.getRanges().stream()
+				.map(range -> {
+					CrmKpiRangeResponse rangeDto = new CrmKpiRangeResponse(range.getId(), null, null, range.getFromPercent(), range.getToPercent(), range.getColor());
+					if (range.getLocation() != null) {
+						rangeDto.setLocationId(range.getLocation().getId());
+						rangeDto.setLocationName(range.getLocation().getName());
+					}
+					return rangeDto;
+				})
+				.collect(Collectors.toSet());
+
+		CrmKpiResponse.CrmKpiResponseBuilder builder = CrmKpiResponse.builder()
+				.id(kpi.getId())
+				.name(kpi.getName())
+				.description(kpi.getDescription())
+				.dataType(kpi.getDataType() != null ? kpi.getDataType().name() : null)
+				.type(kpi.getType() != null ? kpi.getType().name() : null)
+				.tenantId(kpi.getTenant().getId())
+				.assignedEmployees(assignedEmployees)
+				.ranges(ranges);
+		if (kpi.getLocation() != null) {
+			builder.locationId(kpi.getLocation().getId());
+			builder.locationName(kpi.getLocation().getName());
+		}
+		return builder.build();
+	}
+
+	private CrmKpiEmployee toCrmKpiEmployeeEntity(CrmKpiEmployeeRequest empReq, CrmKpi kpi) {
+		Employee employee = employeeRepo.findById(empReq.getEmployeeId())
+				.orElseThrow(() -> new ResourceNotFoundException("Employee not found with id: " + empReq.getEmployeeId()));
+		return new CrmKpiEmployee(null, kpi, employee, empReq.getTargetValue());
+	}
+
+	private CrmKpiEmployeeResponse toCrmKpiEmployeeResponse(CrmKpiEmployee kpiEmployee) {
+		Employee employee = kpiEmployee.getEmployee();
+		EmployeeSlimDto employeeDto = new EmployeeSlimDto(employee.getId(), employee.getFirstName(), employee.getLastName()); // Correctly creating the slim DTO
+		return CrmKpiEmployeeResponse.builder()
+				.id(kpiEmployee.getId())
+				.kpiId(kpiEmployee.getKpi().getId()) // Set the ID
+				.employeeName(employee.getFirstName() + " " + employee.getLastName())
+				.kpiName(kpiEmployee.getKpi().getName()) // Set the name
+				.employee(employeeDto)
+				.targetValue(kpiEmployee.getTargetValue() != null ? kpiEmployee.getTargetValue().doubleValue() : null)
+				.build();
+	}
 }

@@ -1,13 +1,12 @@
 package com.example.multi_tanent.crm.controller;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.List; 
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.multi_tanent.crm.dto.CrmIndustryDto;
-import com.example.multi_tanent.crm.entity.CrmIndustry;
+import com.example.multi_tanent.crm.dto.CrmIndustryRequest; 
 import com.example.multi_tanent.crm.services.CrmIndustryService;
 
 import jakarta.validation.Valid;
@@ -22,23 +21,23 @@ public class CrmIndustryController {
   private final CrmIndustryService industryService;
 
   @GetMapping
-  public ResponseEntity<List<CrmIndustry>> list() {
+  public ResponseEntity<List<CrmIndustryDto>> list() {
     return ResponseEntity.ok(industryService.getAllIndustries());
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<CrmIndustry> getById(@PathVariable Long id) {
+  public ResponseEntity<CrmIndustryDto> getById(@PathVariable Long id) {
     return ResponseEntity.ok(industryService.getIndustryById(id));
   }
 
   @PostMapping
-  public ResponseEntity<CrmIndustry> create(@Valid @RequestBody CrmIndustryDto req) {
+  public ResponseEntity<CrmIndustryDto> create(@Valid @RequestBody CrmIndustryRequest req) {
     return ResponseEntity.ok(industryService.create(req));
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<CrmIndustry> update(@PathVariable Long id,
-                                         @Valid @RequestBody CrmIndustryDto req) {
+  public ResponseEntity<CrmIndustryDto> update(@PathVariable Long id,
+                                         @Valid @RequestBody CrmIndustryRequest req) {
     return ResponseEntity.ok(industryService.update(id, req));
   }
 
