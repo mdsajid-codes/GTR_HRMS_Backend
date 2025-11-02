@@ -2,13 +2,13 @@ master:
     datasource:
         url: jdbc:mysql://localhost:3306/master_db
         username: root
-        password : Sajid7254@
+        password : mustafa123@
 
 provisioning:
     datasource:
         host: localhost
         username: root
-        password: Sajid7254@
+        password: mustafa123@
         port : "3306"
 
 spring:
