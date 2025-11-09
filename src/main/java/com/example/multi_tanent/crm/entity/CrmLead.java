@@ -1,4 +1,88 @@
-package com.example.multi_tanent.crm.entity;
+ package com.example.multi_tanent.crm.entity;
+
+// import com.example.multi_tanent.spersusers.enitity.Employee;
+// import com.example.multi_tanent.spersusers.enitity.Location;
+// import com.example.multi_tanent.spersusers.enitity.Tenant;
+// import jakarta.persistence.*;
+// import lombok.*;
+// import org.hibernate.annotations.CreationTimestamp;
+// import org.hibernate.annotations.UpdateTimestamp;
+
+// import java.time.OffsetDateTime;
+// import java.util.HashSet;
+// import java.util.Set;
+
+// @Entity
+// @Table(name = "crm_leads")
+// @Getter
+// @Setter
+// @NoArgsConstructor
+// @AllArgsConstructor
+// @Builder
+// public class CrmLead {
+
+//     @Id
+//     @GeneratedValue(strategy = GenerationType.IDENTITY)
+//     private Long id;
+
+//     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+//     @JoinColumn(name = "tenant_id", nullable = false)
+//     private Tenant tenant;
+
+//     /** Optional: The location where this lead is relevant */
+//     @ManyToOne(fetch = FetchType.LAZY)
+//     @JoinColumn(name = "location_id", foreignKey = @ForeignKey(name = "fk_lead_location"))
+//     private Location location;
+
+//     @Column(nullable = false)
+//     private String firstName;
+
+//     @Column(nullable = false)
+//     private String lastName;
+
+//     @ManyToOne(optional = false)
+//     @JoinColumn(name = "company_id")
+//     private CrmCompany company;
+
+//     private String industry;
+//     private String designation;
+//     private String phone;
+//     private String email;
+//     private String website;
+
+//     @ElementCollection(fetch = FetchType.LAZY)
+//     @CollectionTable(name = "crm_lead_products", joinColumns = @JoinColumn(name = "lead_id"))
+//     @Column(name = "product_name")
+//     private Set<String> products = new HashSet<>();
+
+//     @Column(length = 4000)
+//     private String requirements;
+
+//     private String leadSource;
+
+//     @Embedded
+//     private Address address;
+
+//     @Column(length = 4000)
+//     private String notes;
+
+//     @ManyToOne(fetch = FetchType.LAZY)
+//     @JoinColumn(name = "owner_id")
+//     private Employee owner;
+
+//     @ManyToOne(fetch = FetchType.LAZY)
+//     @JoinColumn(name = "current_stage_id")
+//     private CrmLeadStage currentStage;
+
+//     @CreationTimestamp
+//     @Column(updatable = false, nullable = false)
+//     private OffsetDateTime createdAt;
+
+//     @UpdateTimestamp
+//     @Column(nullable = false)
+//     private OffsetDateTime updatedAt;
+// }
+
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Location;
@@ -8,57 +92,77 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "crm_leads")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Table(name = "crm_leads",
+       indexes = {
+         @Index(name = "idx_lead_tenant_created", columnList = "tenant_id,createdAt"),
+         @Index(name = "idx_lead_tenant_company", columnList = "tenant_id,company_id")
+       })
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor @Builder
 public class CrmLead {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    public enum ForecastCategory {
+        QUOTA, COMMIT_FORECAST, BEST_CASE_FORECAST, OPEN_PIPELINE, CLOSED_ONLY
+    }
+
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /* ---------- Multi-tenant ---------- */
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
+    @JoinColumn(name = "tenant_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_lead_tenant"))
     private Tenant tenant;
 
-    /** Optional: The location where this lead is relevant */
+    /* ---------- Master references ---------- */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "location_id", foreignKey = @ForeignKey(name = "fk_lead_location"))
     private Location location;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_lead_company"))
+    private CrmCompany company;
+
+    /** Optional: your Industry master. If you prefer plain text, replace with String. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "industry_id", foreignKey = @ForeignKey(name = "fk_lead_industry"))
+    private CrmIndustry industry;
+
+    /* ---------- People ---------- */
     @Column(nullable = false)
     private String firstName;
 
     @Column(nullable = false)
     private String lastName;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "company_id")
-    private CrmCompany company;
-
-    private String industry;
     private String designation;
+
     private String phone;
+
     private String email;
+
     private String website;
 
-    @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "crm_lead_products", joinColumns = @JoinColumn(name = "lead_id"))
-    @Column(name = "product_name")
-    private Set<String> products = new HashSet<>();
+    /** Many selected products/services for a lead */
+    @ManyToMany
+    @JoinTable(name = "crm_lead_products",
+            joinColumns = @JoinColumn(name = "lead_id"),
+            inverseJoinColumns = @JoinColumn(name = "product_id"))
+    @Builder.Default
+    private Set<CrmProduct> products = new LinkedHashSet<>();
 
     @Column(length = 4000)
     private String requirements;
 
-    private String leadSource;
+    private String leadSource; // free-text; you can normalize later
 
     @Embedded
     private Address address;
@@ -67,13 +171,23 @@ public class CrmLead {
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
+    @JoinColumn(name = "owner_id", foreignKey = @ForeignKey(name = "fk_lead_owner"))
     private Employee owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "current_stage_id")
+    @JoinColumn(name = "current_stage_id", foreignKey = @ForeignKey(name = "fk_lead_stage"))
     private CrmLeadStage currentStage;
 
+    /* ---------- Forecast/Amount ---------- */
+    @Enumerated(EnumType.STRING)
+    private ForecastCategory forecastCategory;
+
+    private LocalDate expectedCloseDate;
+
+    @Column(precision = 18, scale = 2)
+    private BigDecimal amount;
+
+    /* ---------- Audit ---------- */
     @CreationTimestamp
     @Column(updatable = false, nullable = false)
     private OffsetDateTime createdAt;
