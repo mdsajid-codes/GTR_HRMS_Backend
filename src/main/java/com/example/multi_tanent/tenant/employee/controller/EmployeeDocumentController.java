@@ -16,6 +16,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.time.LocalDate;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -34,13 +35,19 @@ public class EmployeeDocumentController {
         this.documentService = documentService;
     }
 
-    @PostMapping("/{employeeCode}")
+
+    @PostMapping(path = "/{employeeCode}/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeDocument> uploadDocument(@PathVariable String employeeCode,
                                                            @RequestParam("file") MultipartFile file,
-                                                           @RequestParam("docType") String docType,
+                                                           @RequestParam("docTypeId") Long docTypeId,
+                                                           @RequestParam(value = "documentId", required = false) String documentId,
+                                                           @RequestParam(value = "registrationDate", required = false) LocalDate registrationDate,
+                                                           @RequestParam(value = "endDate", required = false) LocalDate endDate,
                                                            @RequestParam(value = "remarks", required = false) String remarks) {
-        EmployeeDocument savedDoc = documentService.storeDocument(file, employeeCode, docType, remarks);
+        EmployeeDocument savedDoc = documentService.storeDocument(file, employeeCode, docTypeId, documentId,
+                registrationDate, endDate, remarks);
+
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/api/employee-documents/by-id/{id}")
                 .buildAndExpand(savedDoc.getId()).toUri();
@@ -112,7 +119,9 @@ public class EmployeeDocumentController {
     @PutMapping("/{documentId}")
     @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR','MANAGER')")
     public ResponseEntity<EmployeeDocument> updateDocumentDetails(@PathVariable Long documentId, @RequestBody EmployeeDocumentRequest request) {
-        EmployeeDocument updatedDoc = documentService.updateDocumentDetails(documentId, request.getDocType(), request.getRemarks(), request.getVerified());
+        EmployeeDocument updatedDoc = documentService.updateDocumentDetails(documentId, request.getDocTypeId(),
+                request.getDocumentId(), request.getRegistrationDate(), request.getEndDate(),
+                request.getRemarks(), request.getVerified());
         return ResponseEntity.ok(updatedDoc);
     }
 

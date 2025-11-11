@@ -1,8 +1,10 @@
 package com.example.multi_tanent.tenant.payroll.controller;
 
 import com.example.multi_tanent.tenant.payroll.dto.ExpenseRequest;
+import com.example.multi_tanent.tenant.payroll.dto.ExpensePayoutRequest;
 import com.example.multi_tanent.tenant.payroll.dto.ExpenseResponse;
 import com.example.multi_tanent.tenant.payroll.entity.Expense;
+import com.example.multi_tanent.tenant.payroll.entity.ExpenseFile;
 import com.example.multi_tanent.tenant.payroll.service.ExpenseService;
 import com.example.multi_tanent.tenant.service.FileStorageService;
 import org.slf4j.Logger;
@@ -13,12 +15,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,9 +45,9 @@ public class ExpenseController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ExpenseResponse> submitExpense(
             @RequestPart("expense") ExpenseRequest request,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
+            @RequestPart(value = "files", required = false) MultipartFile[] files) {
 
-        Expense newExpense = expenseService.submitExpense(request, file);
+        Expense newExpense = expenseService.submitExpense(request, files);
         URI location = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/expenses/{id}")
                 .buildAndExpand(newExpense.getId()).toUri();
         return ResponseEntity.created(location).body(ExpenseResponse.fromEntity(newExpense));
@@ -66,28 +70,24 @@ public class ExpenseController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/{id}/receipt")
+    @GetMapping("/attachments/{fileId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Resource> getExpenseReceipt(@PathVariable Long id) {
-        return expenseService.getExpenseById(id)
-                .map(expense -> {
-                    if (expense.getReceiptPath() == null || expense.getReceiptPath().isEmpty()) {
-                        return new ResponseEntity<Resource>(HttpStatus.NOT_FOUND);
-                    }
-                    Resource resource = fileStorageService.loadFileAsResource(expense.getReceiptPath());
-                    String contentType = "application/octet-stream";
-                    try {
-                        Path path = resource.getFile().toPath();
-                        contentType = java.nio.file.Files.probeContentType(path);
-                    } catch (IOException ex) {
-                        logger.warn("Could not determine content type for receipt: {}", resource.getFilename(), ex);
-                    }
-                    return ResponseEntity.ok()
-                            .contentType(MediaType.parseMediaType(contentType))
-                            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
-                            .body(resource);
-                })
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public ResponseEntity<Resource> viewAttachment(@PathVariable Long fileId) {
+        ExpenseFile expenseFile = expenseService.getExpenseFileById(fileId);
+        Resource resource = fileStorageService.loadFileAsResource(expenseFile.getFilePath());
+
+        String contentType = "application/octet-stream";
+        try {
+            Path path = resource.getFile().toPath();
+            contentType = Files.probeContentType(path);
+        } catch (IOException ex) {
+            logger.warn("Could not determine content type for file: {}", resource.getFilename(), ex);
+        }
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + expenseFile.getOriginalFilename() + "\"")
+                .body(resource);
     }
 
     @GetMapping("/employee/{employeeCode}")
@@ -112,6 +112,13 @@ public class ExpenseController {
     public ResponseEntity<ExpenseResponse> rejectExpense(@PathVariable Long id) {
         Expense rejectedExpense = expenseService.rejectExpense(id);
         return ResponseEntity.ok(ExpenseResponse.fromEntity(rejectedExpense));
+    }
+
+    @PostMapping("/{id}/payout")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR')")
+    public ResponseEntity<ExpenseResponse> payoutExpense(@PathVariable Long id, @Valid @RequestBody ExpensePayoutRequest payoutRequest) {
+        Expense paidExpense = expenseService.payoutExpense(id, payoutRequest);
+        return ResponseEntity.ok(ExpenseResponse.fromEntity(paidExpense));
     }
 
     @DeleteMapping("/{id}")

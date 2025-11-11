@@ -9,6 +9,8 @@ import com.example.multi_tanent.pos.entity.*;
 import com.example.multi_tanent.pos.repository.*;
 import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.StoreRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

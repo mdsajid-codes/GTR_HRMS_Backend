@@ -1,6 +1,7 @@
 package com.example.multi_tanent.tenant.attendance.service;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.spersusers.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.attendance.dto.AttendanceRecordResponse;
 import com.example.multi_tanent.tenant.attendance.dto.AttendanceRecordRequest;
 import com.example.multi_tanent.tenant.attendance.dto.BiometricPunchRequest;
@@ -12,13 +13,13 @@ import com.example.multi_tanent.tenant.attendance.repository.AttendanceSettingRe
 import com.example.multi_tanent.tenant.attendance.repository.BiometricDeviceRepository;
 import com.example.multi_tanent.tenant.attendance.repository.EmployeeBiometricMappingRepository;
 import com.example.multi_tanent.tenant.employee.entity.TimeAttendence;
-import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
 import com.example.multi_tanent.tenant.employee.repository.TimeAttendenceRepository;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.tenant.leave.repository.HolidayPolicyRepository;
 import com.example.multi_tanent.tenant.leave.repository.LeaveRequestRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.EntityNotFoundException;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -379,5 +380,36 @@ public class AttendanceRecordService {
 
     public List<AttendanceRecord> getAttendanceForDate(LocalDate date) {
         return attendanceRepository.findByAttendanceDateWithDetails(date);
+    }
+
+    /**
+     * Recalculates all derived fields for an existing attendance record, such as late status,
+     * overtime, and payable days, based on its current check-in/check-out times and the
+     * applicable attendance policies.
+     *
+     * @param attendanceRecordId The ID of the AttendanceRecord to recalculate.
+     * @return The updated and saved AttendanceRecord.
+     */
+    public AttendanceRecord recalculateAttendance(Long attendanceRecordId) {
+        AttendanceRecord record = attendanceRepository.findById(attendanceRecordId)
+                .orElseThrow(() -> new EntityNotFoundException("AttendanceRecord not found with id: " + attendanceRecordId));
+
+        // Reset all calculated fields to their default state before re-evaluation.
+        record.setIsLate(false);
+        record.setOvertimeMinutes(0);
+
+        // Determine the base status. If there's no check-in, it's ABSENT.
+        // Otherwise, start with PRESENT, and let the policy logic potentially change it to HALF_DAY.
+        if (record.getCheckIn() == null) {
+            record.setStatus(AttendanceStatus.ABSENT);
+            record.setAttendancePolicy(null); // No policy applies if absent
+        } else {
+            record.setStatus(AttendanceStatus.PRESENT);
+            // Re-apply all attendance policies (late, half-day, overtime, etc.)
+            applyAttendancePolicyLogic(record, null);
+        }
+
+        updatePayableDays(record);
+        return attendanceRepository.save(record);
     }
 }

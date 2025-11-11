@@ -33,6 +33,15 @@ public class PayrollRunController {
         return ResponseEntity.created(location).body(PayrollRunResponse.fromEntity(createdRun));
     }
 
+    @PostMapping("/{id}/execute/employee/{employeeId}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN','HRMS_ADMIN','HR')")
+    public ResponseEntity<PayslipResponse> executeForSingleEmployee(
+            @PathVariable Long id,
+            @PathVariable Long employeeId) {
+        var payslip = payrollRunService.executePayrollForSingleEmployee(id, employeeId);
+        return ResponseEntity.ok(PayslipResponse.fromEntity(payslip));
+    }
+
     @PostMapping("/{id}/execute")
     public ResponseEntity<PayrollRunResponse> executePayrollRun(@PathVariable Long id) {
         var executedRun = payrollRunService.executePayrollRun(id);

@@ -1,6 +1,5 @@
 package com.example.multi_tanent.production.services;
 
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.production.dto.ProToolCategoryDto;
 import com.example.multi_tanent.production.dto.ProToolCategoryRequest;
 import com.example.multi_tanent.production.entity.ProToolCategory;
@@ -8,6 +7,8 @@ import com.example.multi_tanent.production.repository.ProToolCategoryRepository;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,5 +1,6 @@
 package com.example.multi_tanent.tenant.employee.dto;
 
+import com.example.multi_tanent.spersusers.enums.ContractType;
 import com.example.multi_tanent.tenant.employee.entity.JobDetails;
 import lombok.Data;
 
@@ -21,6 +22,7 @@ public class JobDetailsResponse {
     private String profileName;
     private String employeeNumber;
     private String legalEntity;
+    private ContractType contractType;
 
     public static JobDetailsResponse fromEntity(JobDetails jobDetails) {
         JobDetailsResponse dto = new JobDetailsResponse();
@@ -43,6 +45,7 @@ public class JobDetailsResponse {
         dto.setProfileName(jobDetails.getProfileName());
         dto.setEmployeeNumber(jobDetails.getEmployeeNumber());
         dto.setLegalEntity(jobDetails.getLegalEntity());
+        dto.setContractType(jobDetails.getContractType());
         return dto;
     }
 }

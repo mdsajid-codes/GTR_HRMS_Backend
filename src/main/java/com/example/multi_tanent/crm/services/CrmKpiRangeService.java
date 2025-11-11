@@ -10,9 +10,9 @@ import com.example.multi_tanent.crm.entity.CrmKpi;
 import com.example.multi_tanent.crm.entity.CrmKpiRange;
 import com.example.multi_tanent.crm.repository.CrmKpiRangeRepository;
 import com.example.multi_tanent.crm.repository.CrmKpiRepository;
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.config.TenantContext;
 

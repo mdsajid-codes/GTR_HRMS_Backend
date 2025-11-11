@@ -7,9 +7,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
-import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
-import com.example.multi_tanent.tenant.employee.enums.Gender;
-import com.example.multi_tanent.tenant.employee.enums.MartialStatus;
+import com.example.multi_tanent.spersusers.enums.EmployeeStatus;
+import com.example.multi_tanent.spersusers.enums.Gender;
+import com.example.multi_tanent.spersusers.enums.MartialStatus;
 
 
 
@@ -29,4 +29,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     @Override
     List<Employee> findAll();
+
+    boolean existsByEmployeeCode(String employeeCode);
 }

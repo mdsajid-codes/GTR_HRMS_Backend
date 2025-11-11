@@ -41,39 +41,47 @@ public class SecurityConfig {
     http.csrf(csrf -> csrf.disable())
       .cors(Customizer.withDefaults())
       .authorizeHttpRequests(auth -> auth
+      // Publicly accessible endpoints
       .requestMatchers(
         "/", "/index.html",
-        "/dist/**",          // your current build is under static/dist
+        "/dist/**",
         "/favicon.ico",
         "/css/**", "/js/**", "/assets/**", "/images/**",
-        "/static/**",        // in case files end up here
-        "/uploads/**"        // Allow public access to uploaded files
+        "/static/**",
+        "/uploads/**"
           ).permitAll()
-        .requestMatchers("/api/master/auth/login").permitAll()
-        .requestMatchers("/api/auth/login").permitAll()
+        .requestMatchers("/api/master/auth/login", "/api/auth/login").permitAll()
         .requestMatchers("/api/master/tenant-requests/register").permitAll()
-        .requestMatchers("/api/biometric-punch/**").permitAll() // Allow device punches
-        .requestMatchers("/public/products/**").permitAll() // Allow public access to product info via QR code
+        .requestMatchers("/api/biometric-punch/**").permitAll()
+        .requestMatchers("/public/products/**").permitAll()
 
         // Master Admin Endpoints
         .requestMatchers("/api/master/tenant-requests/**").authenticated()
-        .requestMatchers("/api/provision").hasRole("MASTER_ADMIN") // Allow provisioning for master admins
+        .requestMatchers("/api/provision").hasRole("MASTER_ADMIN")
         .requestMatchers("/api/master/tenants/**").hasRole("MASTER_ADMIN")
         .requestMatchers("/api/master/users/**").authenticated()
 
         // Shared/Base Tenant Endpoints
         .requestMatchers("/api/users/**").authenticated()
         .requestMatchers("/api/locations/**").authenticated()
-        .requestMatchers("/api/base/categories/**").authenticated()
 
         // HRMS Module Endpoints
-        .requestMatchers("/api/employees/**", "/api/departments/**", "/api/designations/**", "/api/job-details/**", "/api/jobBands/**", "/api/nationalities/**").authenticated()
-        .requestMatchers("/api/attendance-records/**", "/api/time-attendence/**", "/api/time-types/**", "/api/work-types/**", "/api/shift-types/**", "/api/shift-policies/**", "/api/weekly-off-policies/**", "/api/attendance-policies/**", "/api/attendance-capturing-policies/**", "/api/attendance-settings/**").authenticated()
-        .requestMatchers("/api/leaves/**", "/api/leave-requests/**", "/api/leave-groups/**", "/api/leave-types/**", "/api/leave-policies/**", "/api/leave-allocations/**", "/api/leave-balances/**", "/api/leave-encashment-requests/**", "/api/leave-approvals/**", "/api/holiday-policies/**", "/api/holidays/**").authenticated()
-        .requestMatchers("/api/payrolls/**", "/api/payroll-runs/**", "/api/payslips/**", "/api/payroll-settings/**", "/api/salary-components/**", "/api/salary-structures/**", "/api/salary-structure-components/**", "/api/statutory-rules/**").authenticated()
-        .requestMatchers("/api/loan-products/**", "/api/employee-loans/**", "/api/expenses/**", "/api/employee-bank-accounts/**").authenticated()
-        .requestMatchers("/api/admin/tasks/**").authenticated()
-        .requestMatchers("/api/employee-documents/**", "/api/employee-profiles/**", "/api/company-info/**", "/api/company-locations/**", "/api/company-bank-accounts/**").authenticated()
+        .requestMatchers("/api/base/**", "/api/employees/**", "/api/job-details/**").authenticated()
+        .requestMatchers("/api/employee-profiles/**", "/api/employee-documents/**").authenticated()
+        // Attendance
+        .requestMatchers("/api/attendance-records/**", "/api/attendance-missing/**", "/api/time-attendence/**").authenticated()
+        .requestMatchers("/api/attendance-policies/**", "/api/shift-policies/**", "/api/weekly-off-policies/**").authenticated()
+        // Leave
+        .requestMatchers("/api/leaves/**", "/api/leave-requests/**", "/api/leave-balances/**", "/api/leave-policies/**").authenticated()
+        // Payroll, Benefits, and EOS
+        .requestMatchers("/api/payroll-runs/**", "/api/payslips/**", "/api/payroll-settings/**").authenticated()
+        .requestMatchers("/api/salary-components/**", "/api/salary-structures/**").authenticated()
+        .requestMatchers("/api/benefit-types/**", "/api/provisions/**").authenticated() // Added new benefit endpoints
+        .requestMatchers("/api/eos/**").authenticated() // Added End of Service endpoint
+        .requestMatchers("/api/loan-products/**", "/api/employee-loans/**", "/api/expenses/**").authenticated()
+        // Company and Admin
+        .requestMatchers("/api/company-info/**", "/api/company-locations/**", "/api/company-bank-accounts/**").authenticated()
+        .requestMatchers("/api/admin/**").authenticated()
 
         // POS Module Endpoints
         .requestMatchers("/api/pos/**").authenticated()
@@ -81,7 +89,7 @@ public class SecurityConfig {
         // CRM Module Endpoints
         .requestMatchers("/api/crm/**").authenticated()
                 
-        .anyRequest().permitAll() // Allow SPA routing to handle other paths
+        .anyRequest().authenticated() // Secure all other API endpoints by default
       )
       .addFilterBefore(spaRedirectFilter(), ChannelProcessingFilter.class)
       .addFilterBefore(new JwtAuthFilter(jwt), UsernamePasswordAuthenticationFilter.class)

@@ -59,6 +59,15 @@ public class PayrollRunService {
         return payrollRunRepository.save(payrollRun);
     }
 
+    public Payslip executePayrollForSingleEmployee(Long payrollRunId, Long employeeId) {
+        PayrollRun payrollRun = payrollRunRepository.findById(payrollRunId)
+                .orElseThrow(() -> new EntityNotFoundException("PayrollRun not found with id: " + payrollRunId));
+
+        // The status of the main payroll run is not changed here, as this is an individual action.
+        // We just use the payroll run for its period details.
+        return payslipGenerationService.generatePayslipForSingleEmployee(payrollRun, employeeId);
+    }
+
     @Transactional(readOnly = true)
     public List<PayrollRun> getAllPayrollRuns() {
         return payrollRunRepository.findAll();

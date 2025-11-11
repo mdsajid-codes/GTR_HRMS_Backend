@@ -2,11 +2,16 @@ package com.example.multi_tanent.tenant.base.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
 import java.util.List;
 
 @Entity
 @Table(name = "company_info")
-@Data
+@Getter @Setter
+@ToString(exclude = "companyBankAccounts") 
 public class CompanyInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

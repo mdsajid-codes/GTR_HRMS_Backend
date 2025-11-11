@@ -1,12 +1,13 @@
 package com.example.multi_tanent.production.services;
 
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.production.dto.ProPriceCategoryDto;
 import com.example.multi_tanent.production.dto.ProPriceCategoryRequest;
 import com.example.multi_tanent.production.entity.ProPriceCategory;
 import com.example.multi_tanent.production.repository.ProPriceCategoryRepository;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

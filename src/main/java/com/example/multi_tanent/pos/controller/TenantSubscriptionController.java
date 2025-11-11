@@ -1,8 +1,9 @@
 package com.example.multi_tanent.pos.controller;
 
-import com.example.multi_tanent.pos.dto.TenantSubscriptionRequest;
 import com.example.multi_tanent.pos.entity.TenantSubscription;
 import com.example.multi_tanent.pos.service.TenantSubscriptionService;
+import com.example.multi_tanent.spersusers.dto.TenantSubscriptionRequest;
+
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

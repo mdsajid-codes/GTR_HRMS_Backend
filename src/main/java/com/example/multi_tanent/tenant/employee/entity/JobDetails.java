@@ -3,14 +3,11 @@ package com.example.multi_tanent.tenant.employee.entity;
 import java.time.LocalDate;
 
 import com.example.multi_tanent.spersusers.enitity.Employee;
+import com.example.multi_tanent.spersusers.enums.ContractType;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
@@ -55,4 +52,7 @@ public class JobDetails {
     private String profileName;
     private String employeeNumber;
     private String legalEntity;
+
+    @Enumerated(EnumType.STRING)
+    private ContractType contractType;
 }

@@ -3,9 +3,9 @@ package com.example.multi_tanent.spersusers.enitity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.example.multi_tanent.tenant.employee.enums.EmployeeStatus;
-import com.example.multi_tanent.tenant.employee.enums.Gender;
-import com.example.multi_tanent.tenant.employee.enums.MartialStatus;
+import com.example.multi_tanent.spersusers.enums.EmployeeStatus;
+import com.example.multi_tanent.spersusers.enums.Gender;
+import com.example.multi_tanent.spersusers.enums.MartialStatus;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.*;

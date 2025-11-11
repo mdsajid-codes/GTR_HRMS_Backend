@@ -7,6 +7,8 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Data
 public class ExpenseResponse {
@@ -19,7 +21,7 @@ public class ExpenseResponse {
     private String description;
     private String billNumber;
     private String merchentName;
-    private String receiptPath;
+    private List<ExpenseFileResponse> attachments;
     private ExpenseStatus status;
     private LocalDateTime submittedAt;
     private LocalDateTime processedAt;
@@ -38,7 +40,10 @@ public class ExpenseResponse {
         dto.setDescription(expense.getDescription());
         dto.setBillNumber(expense.getBillNumber());
         dto.setMerchentName(expense.getMerchentName());
-        dto.setReceiptPath(expense.getReceiptPath());
+        if (expense.getAttachments() != null) {
+            dto.setAttachments(expense.getAttachments().stream()
+                    .map(ExpenseFileResponse::fromEntity).collect(Collectors.toList()));
+        }
         dto.setStatus(expense.getStatus());
         dto.setSubmittedAt(expense.getSubmittedAt());
         dto.setProcessedAt(expense.getProcessedAt());

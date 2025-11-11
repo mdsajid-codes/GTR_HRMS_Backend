@@ -10,4 +10,6 @@ public interface BonusRepository extends JpaRepository<Bonus, Long> {
 
     List<Bonus> findByPayDateBetween(LocalDate startDate, LocalDate endDate);
 
+    List<Bonus> findByEmployeeIdAndPayDateBetween(Long id, LocalDate payPeriodStart, LocalDate payPeriodEnd);
+
 }

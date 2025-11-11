@@ -10,8 +10,8 @@ import com.example.multi_tanent.pos.repository.ProductRepository;
 import com.example.multi_tanent.pos.repository.ProductVariantRepository;
 import com.example.multi_tanent.pos.repository.SaleItemRepository;
 import com.example.multi_tanent.pos.repository.TaxRateRepository;
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import com.google.zxing.WriterException;
 import java.io.IOException;
 

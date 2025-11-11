@@ -7,6 +7,8 @@ import com.example.multi_tanent.pos.entity.*;
 import com.example.multi_tanent.spersusers.enitity.Store;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.enitity.User; // Corrected import
+import com.example.multi_tanent.spersusers.repository.StoreRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.repository.UserRepository; // Corrected import
 import com.example.multi_tanent.pos.repository.*;
 import org.springframework.security.core.context.SecurityContextHolder;

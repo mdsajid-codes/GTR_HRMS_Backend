@@ -97,5 +97,6 @@ public class JobDetailsController {
         jobDetails.setProfileName(request.getProfileName());
         jobDetails.setEmployeeNumber(request.getEmployeeNumber());
         jobDetails.setLegalEntity(request.getLegalEntity());
+        jobDetails.setContractType(request.getContractType());
     }
 }

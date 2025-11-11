@@ -1,7 +1,6 @@
 package com.example.multi_tanent.production.services;
 
 import com.example.multi_tanent.config.TenantContext;
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.production.dto.ProProcessRequest;
 import com.example.multi_tanent.production.dto.ProProcessResponse;
 import com.example.multi_tanent.production.entity.ProProcess;
@@ -12,6 +11,8 @@ import com.example.multi_tanent.production.repository.ProWorkGroupRepository;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

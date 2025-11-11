@@ -2,6 +2,7 @@ package com.example.multi_tanent.tenant.employee.entity;
 
 import jakarta.persistence.*;
 
+import com.example.multi_tanent.tenant.base.entity.DocumentType;
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
@@ -9,6 +10,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import java.time.LocalDate;
 
 @Entity
 @Table (name = "employee_document")
@@ -26,8 +29,18 @@ public class EmployeeDocument {
     @JsonBackReference
     private Employee employee;
 
-    @Column(name = "doc_type", nullable = false, length = 50)
-    private String docType;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "doc_type_id", nullable = false)
+    private DocumentType documentType;
+
+    @Column(name = "document_id", length = 100)
+    private String documentId;
+
+    @Column(name = "registration_date")
+    private LocalDate registrationDate;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
 
     @Column(name = "file_name", length = 255)
     private String fileName;

@@ -4,8 +4,9 @@ import com.example.multi_tanent.crm.dto.ContactDto;
 import com.example.multi_tanent.crm.dto.ContactRequestDto;
 import com.example.multi_tanent.crm.entity.Contact;
 import com.example.multi_tanent.crm.repository.ContactRepository;
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;

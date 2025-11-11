@@ -48,13 +48,13 @@ public class PayslipController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> downloadPayslipPdf(@PathVariable Long id) {
         // TODO: Add security check to ensure user can only download their own payslip.
-        return payslipService.getPayslipById(id)
-                .map(payslip -> {
-                    byte[] pdfBytes = pdfGenerationService.generatePayslipPdf(payslip);
+        return payslipService.getPayslipDataForPdf(id)
+                .map(pdfData -> {
+                    byte[] pdfBytes = pdfGenerationService.generatePayslipPdf(pdfData);
                     String filename = String.format("Payslip-%s-%d-%s.pdf",
-                            payslip.getPayDate().getMonth().getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH),
-                            payslip.getYear(),
-                            payslip.getEmployee().getEmployeeCode());
+                            pdfData.getPayslip().getPayDate().getMonth().getDisplayName(java.time.format.TextStyle.SHORT, java.util.Locale.ENGLISH),
+                            pdfData.getPayslip().getYear(),
+                            pdfData.getPayslip().getEmployee().getEmployeeCode());
 
                     HttpHeaders headers = new HttpHeaders();
                     headers.setContentType(MediaType.APPLICATION_PDF);

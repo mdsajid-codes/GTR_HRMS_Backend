@@ -1,6 +1,5 @@
 package com.example.multi_tanent.production.services;
 
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.production.dto.EmployeeSlimDto;
 import com.example.multi_tanent.production.dto.ProManageTaskDto;
 import com.example.multi_tanent.production.dto.ProManageTaskRequest;
@@ -10,6 +9,7 @@ import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;

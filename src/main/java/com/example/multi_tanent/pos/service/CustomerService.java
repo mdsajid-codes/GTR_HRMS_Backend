@@ -3,8 +3,8 @@ package com.example.multi_tanent.pos.service;
 import com.example.multi_tanent.pos.dto.CustomerRequest;
 import com.example.multi_tanent.pos.entity.Customer;
 import com.example.multi_tanent.pos.repository.CustomerRepository;
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -1,5 +1,14 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
+import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+import com.example.multi_tanent.tenant.base.entity.CompanyInfo;
+import com.example.multi_tanent.tenant.employee.entity.EmployeeProfile;
+import com.example.multi_tanent.tenant.employee.entity.JobDetails;
+import com.example.multi_tanent.tenant.employee.repository.EmployeeProfileRepository;
+import com.example.multi_tanent.tenant.employee.repository.JobDetailsRepository;
+import com.example.multi_tanent.tenant.payroll.dto.PayslipPdfData;
 import com.example.multi_tanent.tenant.payroll.entity.Payslip;
 import com.example.multi_tanent.tenant.payroll.entity.PayslipComponent;
 import com.example.multi_tanent.tenant.payroll.repository.PayslipRepository;
@@ -15,9 +24,21 @@ import java.util.Optional;
 public class PayslipService {
 
     private final PayslipRepository payslipRepository;
+    private final CompanyInfoService companyInfoService;
+    private final TenantRepository tenantRepository;
+    private final JobDetailsRepository jobDetailsRepository;
+    private final EmployeeProfileRepository employeeProfileRepository;
 
-    public PayslipService(PayslipRepository payslipRepository) {
+    public PayslipService(PayslipRepository payslipRepository,
+                          CompanyInfoService companyInfoService,
+                          TenantRepository tenantRepository,
+                          JobDetailsRepository jobDetailsRepository,
+                          EmployeeProfileRepository employeeProfileRepository) {
         this.payslipRepository = payslipRepository;
+        this.companyInfoService = companyInfoService;
+        this.tenantRepository = tenantRepository;
+        this.jobDetailsRepository = jobDetailsRepository;
+        this.employeeProfileRepository = employeeProfileRepository;
     }
 
     public List<Payslip> getPayslipsForEmployee(String employeeCode) {
@@ -28,9 +49,25 @@ public class PayslipService {
     }
 
     public Optional<Payslip> getPayslipById(Long id) {
-        Optional<Payslip> payslipOpt = payslipRepository.findById(id);
-        payslipOpt.ifPresent(this::initializePayslipDetails);
+        // Use the new query to fetch everything in one go, preventing LazyInitializationException
+        Optional<Payslip> payslipOpt = payslipRepository.findByIdWithDetails(id);
         return payslipOpt;
+    }
+
+    public Optional<PayslipPdfData> getPayslipDataForPdf(Long payslipId) {
+        return getPayslipById(payslipId).map(payslip -> {
+            Long employeeId = payslip.getEmployee().getId();
+
+            CompanyInfo companyInfo = companyInfoService.getCompanyInfo();
+            // Use the correct method to find the tenant by its string name/ID
+            Tenant tenant = tenantRepository.findByName(TenantContext.getTenantId()).orElse(null);
+            JobDetails jobDetails = jobDetailsRepository.findByEmployeeId(employeeId)
+                    .orElse(new JobDetails());
+            EmployeeProfile employeeProfile = employeeProfileRepository.findByEmployeeId(employeeId)
+                    .orElse(new EmployeeProfile());
+
+            return new PayslipPdfData(payslip, companyInfo, tenant, jobDetails, employeeProfile);
+        });
     }
 
     public List<Payslip> getPayslipsForPayrollRun(Long payrollRunId) {

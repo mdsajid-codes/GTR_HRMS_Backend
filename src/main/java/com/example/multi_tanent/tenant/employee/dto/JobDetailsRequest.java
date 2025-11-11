@@ -1,6 +1,9 @@
 package com.example.multi_tanent.tenant.employee.dto;
 
 import java.time.LocalDate;
+
+import com.example.multi_tanent.spersusers.enums.ContractType;
+
 import lombok.Data;
 
 @Data
@@ -17,4 +20,5 @@ public class JobDetailsRequest {
     private String profileName;
     private String employeeNumber;
     private String legalEntity;
+    private ContractType contractType;
 }

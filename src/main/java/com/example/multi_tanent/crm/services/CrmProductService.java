@@ -15,10 +15,11 @@ import com.example.multi_tanent.crm.entity.CrmIndustry;
 import com.example.multi_tanent.crm.entity.CrmProduct;
 import com.example.multi_tanent.crm.repository.CrmIndustryRepository;
 import com.example.multi_tanent.crm.repository.CrmProductRepository;
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+
 import jakarta.persistence.EntityNotFoundException;
 
 import lombok.RequiredArgsConstructor;

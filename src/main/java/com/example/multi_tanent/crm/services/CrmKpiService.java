@@ -19,11 +19,11 @@ import com.example.multi_tanent.crm.entity.CrmKpi;
 import com.example.multi_tanent.crm.entity.CrmKpiEmployee;
 import com.example.multi_tanent.crm.repository.CrmKpiRepository;
 import com.example.multi_tanent.crm.repository.CrmKpiEmployeeRepository;
-import com.example.multi_tanent.pos.repository.TenantRepository;
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.spersusers.enitity.Location;
 import com.example.multi_tanent.spersusers.repository.LocationRepository;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 
 import lombok.RequiredArgsConstructor;
 
