@@ -1,6 +1,7 @@
 package com.example.multi_tanent.crm.entity;
 
 import com.example.multi_tanent.spersusers.enitity.Location;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import jakarta.persistence.*;
 import lombok.*;
@@ -45,8 +46,27 @@ public class CrmCompany {
     private String email;
     private String website;
 
-    @Embedded
-    private Address address;
+    /** Company Owner Name */
+    private String companyOwner;
+
+    /** Parent Company for hierarchies */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_company_id", foreignKey = @ForeignKey(name = "fk_company_parent"))
+    private CrmCompany parentCompany;
+
+    /* ---------- Billing Address ---------- */
+    private String billingStreet;
+    private String billingCity;
+    private String billingZip;
+    private String billingState;
+    private String billingCountry;
+
+    /* ---------- Shipping Address ---------- */
+    private String shippingStreet;
+    private String shippingCity;
+    private String shippingZip;
+    private String shippingState;
+    private String shippingCountry;
 
     @CreationTimestamp
     @Column(updatable = false, nullable = false)

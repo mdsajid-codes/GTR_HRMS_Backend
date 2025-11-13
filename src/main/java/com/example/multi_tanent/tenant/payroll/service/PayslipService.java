@@ -1,8 +1,5 @@
 package com.example.multi_tanent.tenant.payroll.service;
 
-import com.example.multi_tanent.config.TenantContext;
-import com.example.multi_tanent.spersusers.enitity.Tenant;
-import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import com.example.multi_tanent.tenant.base.entity.CompanyInfo;
 import com.example.multi_tanent.tenant.employee.entity.EmployeeProfile;
 import com.example.multi_tanent.tenant.employee.entity.JobDetails;
@@ -25,18 +22,15 @@ public class PayslipService {
 
     private final PayslipRepository payslipRepository;
     private final CompanyInfoService companyInfoService;
-    private final TenantRepository tenantRepository;
     private final JobDetailsRepository jobDetailsRepository;
     private final EmployeeProfileRepository employeeProfileRepository;
 
     public PayslipService(PayslipRepository payslipRepository,
                           CompanyInfoService companyInfoService,
-                          TenantRepository tenantRepository,
                           JobDetailsRepository jobDetailsRepository,
                           EmployeeProfileRepository employeeProfileRepository) {
         this.payslipRepository = payslipRepository;
         this.companyInfoService = companyInfoService;
-        this.tenantRepository = tenantRepository;
         this.jobDetailsRepository = jobDetailsRepository;
         this.employeeProfileRepository = employeeProfileRepository;
     }
@@ -59,14 +53,16 @@ public class PayslipService {
             Long employeeId = payslip.getEmployee().getId();
 
             CompanyInfo companyInfo = companyInfoService.getCompanyInfo();
-            // Use the correct method to find the tenant by its string name/ID
-            Tenant tenant = tenantRepository.findByName(TenantContext.getTenantId()).orElse(null);
+            if (companyInfo == null) {
+                throw new IllegalStateException("Company Information is not configured for this tenant. Please set it up before generating payslips.");
+            }
+
             JobDetails jobDetails = jobDetailsRepository.findByEmployeeId(employeeId)
                     .orElse(new JobDetails());
             EmployeeProfile employeeProfile = employeeProfileRepository.findByEmployeeId(employeeId)
                     .orElse(new EmployeeProfile());
 
-            return new PayslipPdfData(payslip, companyInfo, tenant, jobDetails, employeeProfile);
+            return new PayslipPdfData(payslip, companyInfo, companyInfo.getTenant(), jobDetails, employeeProfile);
         });
     }
 

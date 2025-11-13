@@ -28,7 +28,10 @@ public enum ServiceModule {
     CRM(false, "com.example.multi_tanent.crm.entity", USER),
 
     // Production Module
-    PRODUCTION(false, "com.example.multi_tanent.production.entity", USER);
+    PRODUCTION(false, "com.example.multi_tanent.production.entity", USER),
+
+    // Sales Module
+    SALES(false, "com.example.multi_tanent.sales.entity");
 
     private final boolean isFoundation;
     private final List<String> entityPackages;

@@ -44,10 +44,11 @@
 		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
-			<artifactId>kernel</artifactId>
-			<version>7.2.5</version>
+			<artifactId>html2pdf</artifactId>
+			<version>5.0.4</version> <!-- Use a recent version -->
 		</dependency>
 		<dependency>
+			<!-- The kernel and layout dependencies will be transitively managed by html2pdf -->
 			<groupId>com.google.zxing</groupId>
 			<artifactId>core</artifactId>
 			<version>3.5.1</version>
@@ -61,11 +62,6 @@
 		<groupId>jakarta.validation</groupId>
 		<artifactId>jakarta.validation-api</artifactId>
 		<version>3.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.itextpdf</groupId>
-			<artifactId>layout</artifactId>
-			<version>7.2.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>

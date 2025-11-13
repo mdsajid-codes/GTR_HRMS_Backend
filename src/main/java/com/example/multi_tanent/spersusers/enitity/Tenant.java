@@ -1,5 +1,6 @@
 package com.example.multi_tanent.spersusers.enitity;
 
+import com.example.multi_tanent.config.TenantContext;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -17,6 +18,9 @@ public class Tenant {
     @GeneratedValue (strategy = GenerationType.IDENTITY)
     private Long id; 
 
+    @Column(nullable = false, unique = true)
+    private String tenantId;
+
     @Column(nullable = false)
     private String name;
 
@@ -33,5 +37,8 @@ public class Tenant {
     @PrePersist
     public void prePersist() {
         if (createdAt == null) createdAt = OffsetDateTime.now();
+        if (tenantId == null) {
+            tenantId = TenantContext.getTenantId();
+        }
     }
 }

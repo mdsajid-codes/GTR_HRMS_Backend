@@ -195,6 +195,7 @@ public class TenantProvisioningService {
             // Create the tenant record within its own database first.
             Tenant tenantRecord = new Tenant();
             tenantRecord.setName(masterTenant.getCompanyName());
+            tenantRecord.setTenantId(masterTenant.getTenantId()); // Explicitly set the tenantId
             em.persist(tenantRecord);
 
             // Seed a default Store for the tenant

@@ -191,8 +191,8 @@ public class EndOfServiceCalculationService {
             Long employeeId = eos.getEmployee().getId();
 
             CompanyInfo companyInfo = companyInfoService.getCompanyInfo();
-            Tenant tenant = tenantRepository.findByName(TenantContext.getTenantId())
-                    .orElse(null);
+            Tenant tenant = tenantRepository.findByTenantId(TenantContext.getTenantId())
+                    .orElseThrow(() -> new IllegalStateException("Tenant not found for context: " + TenantContext.getTenantId()));
             JobDetails jobDetails = jobDetailsRepository.findByEmployeeId(employeeId)
                     .orElse(new JobDetails());
 
