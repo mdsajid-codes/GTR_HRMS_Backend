@@ -1,14 +1,17 @@
 package com.example.multi_tanent.tenant.service;
 
 import com.example.multi_tanent.config.FileStorageProperties;
+import com.example.multi_tanent.config.TenantContext;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,5 +76,56 @@ public class FileStorageService {
 
     public Path getFileStorageLocation() {
         return fileStorageLocation;
+    }
+
+    /**
+     * Stores a file from a byte array into a specified subdirectory.
+     *
+     * @param fileBytes    The byte array of the file to store.
+     * @param subDirectory The subdirectory within the main upload directory (e.g., "barcodes", "logos").
+     * @param filename     The desired filename.
+     * @return The relative path to the stored file (e.g., "barcodes/my-barcode.png").
+     */
+    public String storeFile(byte[] fileBytes, String subDirectory, String filename) {
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalStateException("Cannot store file without a tenant context.");
+        }
+
+        try {
+            String cleanFilename = StringUtils.cleanPath(filename);
+            if (cleanFilename.contains("..")) {
+                throw new RuntimeException("Sorry! Filename contains invalid path sequence " + cleanFilename);
+            }
+
+            // Create tenant-specific path: <upload-dir>/<tenant-id>/<sub-dir>
+            Path tenantDirPath = this.fileStorageLocation.resolve(tenantId).normalize();
+            Path subDirPath = tenantDirPath.resolve(subDirectory).normalize();
+            Files.createDirectories(subDirPath);
+
+            Path targetLocation = subDirPath.resolve(cleanFilename);
+            Files.write(targetLocation, fileBytes);
+
+            return Paths.get(subDirectory, cleanFilename).toString().replace("\\", "/"); // Ensure consistent path separators
+        } catch (IOException ex) {
+            throw new RuntimeException("Could not store file " + filename + ". Please try again!", ex);
+        }
+    }
+
+    private String buildFileUrl(String relativePath, String tenantId) {
+        // The relativePath from storeFile already includes the subdirectory (e.g., "barcodes/file.png")
+        // We need to prepend the main upload path and the tenant ID.
+        return ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/uploads/") // This path must match MvcConfig's resource handler
+                .path(tenantId + "/")
+                .path(relativePath)
+                .build()
+                .toUriString();
+    }
+
+    private String getRelativePathFromFullUrl(String fullUrl) {
+        // This is a helper to extract the storable part of the URL if needed for deletion
+        // e.g., "http://.../uploads/tenant1/barcodes/file.png" -> "tenant1/barcodes/file.png"
+        return fullUrl.substring(fullUrl.indexOf("/uploads/") + "/uploads/".length());
     }
 }

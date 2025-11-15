@@ -48,7 +48,6 @@
 			<version>5.0.4</version> <!-- Use a recent version -->
 		</dependency>
 		<dependency>
-			<!-- The kernel and layout dependencies will be transitively managed by html2pdf -->
 			<groupId>com.google.zxing</groupId>
 			<artifactId>core</artifactId>
 			<version>3.5.1</version>
