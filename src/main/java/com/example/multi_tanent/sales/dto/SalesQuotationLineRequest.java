@@ -11,5 +11,6 @@ public class SalesQuotationLineRequest {
     private BigDecimal quantity;
     private BigDecimal unitPrice;
     private BigDecimal discount;
-    private BigDecimal taxRate;
+    private Long unitId;
+    private Long taxId;
 }

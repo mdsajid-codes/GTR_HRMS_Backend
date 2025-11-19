@@ -1,5 +1,7 @@
 package com.example.multi_tanent.sales.service;
 
+import com.example.multi_tanent.production.repository.ProTaxRepository;
+import com.example.multi_tanent.production.repository.ProUnitRepository;
 import com.example.multi_tanent.sales.dto.SalesQuotationLineRequest;
 import com.example.multi_tanent.sales.dto.SalesQuotationLineResponse;
 import com.example.multi_tanent.sales.entity.SaleProduct;
@@ -26,6 +28,8 @@ public class SalesQuotationLineService {
     private final SalesQuotationRepository quotationRepo;
     private final SalesQuotationLineRepository itemRepo;
     private final SaleProductRepository productRepo;
+    private final ProUnitRepository unitRepo;
+    private final ProTaxRepository taxRepo;
     private final SalesQuotationService quotationService; // To recalculate totals
 
     public SalesQuotationLineResponse addLine(Long quotationId, SalesQuotationLineRequest req) {
@@ -87,10 +91,24 @@ public class SalesQuotationLineService {
             item.setProduct(product);
         }
         item.setDescription(req.getDescription());
+
+        if (req.getUnitId() != null) {
+            item.setUnit(unitRepo.findById(req.getUnitId())
+                    .orElseThrow(() -> new EntityNotFoundException("Unit not found: " + req.getUnitId())));
+        } else {
+            item.setUnit(null);
+        }
+
+        if (req.getTaxId() != null) {
+            item.setTax(taxRepo.findById(req.getTaxId())
+                    .orElseThrow(() -> new EntityNotFoundException("Tax not found: " + req.getTaxId())));
+        } else {
+            item.setTax(null);
+        }
+
         item.setQuantity(req.getQuantity() != null ? req.getQuantity() : BigDecimal.ZERO);
         item.setUnitPrice(req.getUnitPrice() != null ? req.getUnitPrice() : BigDecimal.ZERO);
         item.setDiscount(req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO);
-        item.setTaxRate(req.getTaxRate());
         // Line total calculation
         BigDecimal itemTotal = (item.getUnitPrice() != null ? item.getUnitPrice() : BigDecimal.ZERO)
                 .multiply(item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO)
@@ -99,6 +117,20 @@ public class SalesQuotationLineService {
     }
 
     private SalesQuotationLineResponse toResponse(SalesQuotationLine i) {
-        return SalesQuotationLineResponse.builder().id(i.getId()).productId(i.getProduct() != null ? i.getProduct().getId() : null).productName(i.getProduct() != null ? i.getProduct().getName() : null).description(i.getDescription()).quantity(i.getQuantity()).unitPrice(i.getUnitPrice()).discount(i.getDiscount()).taxRate(i.getTaxRate()).lineTotal(i.getLineTotal()).build();
+        return SalesQuotationLineResponse.builder()
+                .id(i.getId())
+                .productId(i.getProduct() != null ? i.getProduct().getId() : null)
+                .productName(i.getProduct() != null ? i.getProduct().getName() : null)
+                .description(i.getDescription())
+                .quantity(i.getQuantity())
+                .unitPrice(i.getUnitPrice())
+                .unitId(i.getUnit() != null ? i.getUnit().getId() : null)
+                .unitName(i.getUnit() != null ? i.getUnit().getName() : null)
+                .discount(i.getDiscount())
+                .taxId(i.getTax() != null ? i.getTax().getId() : null)
+                .taxCode(i.getTax() != null ? i.getTax().getCode() : null)
+                .taxRate(i.getTax() != null ? i.getTax().getRate() : null)
+                .lineTotal(i.getLineTotal())
+                .build();
     }
 }

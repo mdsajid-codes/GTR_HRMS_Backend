@@ -14,7 +14,11 @@ public class SalesOrderLineResponse {
     private String description;
     private BigDecimal quantity;
     private BigDecimal unitPrice;
+    private Long unitId;
+    private String unitName;
     private BigDecimal discount;
-    private BigDecimal taxRate;
+    private Long taxId;
+    private String taxCode;
+    private BigDecimal taxRate; // The rate from the ProTax entity
     private BigDecimal lineTotal;
 }

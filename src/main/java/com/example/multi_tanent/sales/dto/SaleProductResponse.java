@@ -29,4 +29,12 @@ public class SaleProductResponse {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    private Long categoryId;
+
+    private String categoryName;
+
+    private Long subCategoryId;
+
+    private String subCategoryName;
 }

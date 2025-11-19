@@ -8,8 +8,10 @@ import com.example.multi_tanent.config.TenantContext;
 import com.example.multi_tanent.crm.dto.CrmEventRequest;
 import com.example.multi_tanent.crm.dto.CrmEventResponse;
 import com.example.multi_tanent.crm.entity.Contact;
+import com.example.multi_tanent.crm.entity.CrmLead;
 import com.example.multi_tanent.crm.entity.CrmEvent;
 import com.example.multi_tanent.crm.repository.ContactRepository;
+import com.example.multi_tanent.crm.repository.CrmLeadRepository;
 import com.example.multi_tanent.crm.repository.CrmEventRepository;
 import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
@@ -27,6 +29,7 @@ public class CrmEventService {
     private final CrmEventRepository eventRepo;
     private final EmployeeRepository employeeRepo;
     private final ContactRepository  contactRepo;
+    private final CrmLeadRepository leadRepository;
     private final TenantRepository tenantRepo;
 
     private Tenant currentTenant() {
@@ -50,6 +53,18 @@ public class CrmEventService {
                 .orElseThrow(() -> new EntityNotFoundException("Event not found: " + id));
         return toResponse(e);
     }
+
+    @Transactional(readOnly = true)
+    public List<CrmEventResponse> getEventsByLeadId(Long leadId) {
+        Tenant t = currentTenant();
+        // Ensure the lead exists for the current tenant before fetching events
+        leadRepository.findByIdAndTenantId(leadId, t.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Lead not found with id: " + leadId));
+
+        return eventRepo.findByTenantIdAndLeadIdOrderByDateDescFromTimeDesc(t.getId(), leadId)
+                .stream().map(this::toResponse).toList();
+    }
+
 
     public CrmEventResponse create(CrmEventRequest req) {
         Tenant t = currentTenant();
@@ -114,6 +129,14 @@ public class CrmEventService {
             e.setContacts(new HashSet<>(contactRepo.findAllById(req.getContactIds())));
         }
 
+        // lead
+        if (req.getLeadId() != null) {
+            CrmLead lead = leadRepository.findById(req.getLeadId())
+                    .orElseThrow(() -> new EntityNotFoundException("Lead not found with id: " + req.getLeadId()));
+            e.setLead(lead);
+        } else {
+            e.setLead(null);
+        }
         e.setStatus(req.getStatus());
         e.setPriority(req.getPriority());
         e.setMeetingType(req.getMeetingType());
@@ -136,6 +159,7 @@ public class CrmEventService {
                 .employeeNames(e.getEmployees().stream().map(emp -> emp.getFirstName() + " " + emp.getLastName()).toList()) // adapt getter
                 .contactIds(e.getContacts().stream().map(Contact::getId).toList())
                 .contactNames(e.getContacts().stream().map(c -> c.getFirstName() + " " + c.getLastName()).toList()) // adapt getter
+                .leadId(e.getLead() != null ? e.getLead().getId() : null)
                 .status(e.getStatus())
                 .priority(e.getPriority())
                 .meetingType(e.getMeetingType())

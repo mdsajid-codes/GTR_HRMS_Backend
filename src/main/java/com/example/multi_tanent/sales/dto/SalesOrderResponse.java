@@ -1,5 +1,6 @@
 package com.example.multi_tanent.sales.dto;
 
+import com.example.multi_tanent.sales.entity.SalesTermAndCondition;
 import com.example.multi_tanent.sales.enums.DocumentStatus;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +28,7 @@ public class SalesOrderResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long version;
+    private SalesTermAndConditionResponse termAndCondition;
     private List<SalesOrderLineResponse> lines;
+    private List<SalesAttachmentResponse> attachments;
 }

@@ -1,5 +1,6 @@
 package com.example.multi_tanent.sales.dto;
 
+import com.example.multi_tanent.sales.entity.SalesTermAndCondition;
 import com.example.multi_tanent.sales.enums.DocumentStatus;
 import com.example.multi_tanent.sales.enums.InvoiceType;
 import lombok.Builder;
@@ -30,5 +31,7 @@ public class SalesInvoiceResponse {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long version;
+    private SalesTermAndConditionResponse termAndCondition;
     private List<SalesInvoiceLineResponse> lines;
+    private List<SalesAttachmentResponse> attachments;
 }

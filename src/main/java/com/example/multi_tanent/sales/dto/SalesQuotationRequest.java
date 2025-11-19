@@ -18,4 +18,5 @@ public class SalesQuotationRequest {
     private DocumentStatus status;
     private String notes;
     private List<SalesQuotationLineRequest> items;
+    private Long termAndConditionId;
 }

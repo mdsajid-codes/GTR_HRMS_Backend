@@ -63,7 +63,8 @@ public class SecurityConfig {
 
         // Shared/Base Tenant Endpoints
         .requestMatchers("/api/users/**").authenticated()
-        .requestMatchers("/api/locations/**").authenticated()
+        .requestMatchers("/api/locations/**").authenticated() 
+        .requestMatchers("/api/parties/**").authenticated()
 
         // HRMS Module Endpoints
         .requestMatchers("/api/base/**", "/api/employees/**", "/api/job-details/**").authenticated()
@@ -88,6 +89,9 @@ public class SecurityConfig {
         
         // CRM Module Endpoints
         .requestMatchers("/api/crm/**").authenticated()
+
+        // Sales Module Endpoints
+        .requestMatchers("/api/sales/**").authenticated()
                 
         .anyRequest().authenticated() // Secure all other API endpoints by default
       )

@@ -52,6 +52,8 @@ package com.example.multi_tanent.crm.controller;
 
 import com.example.multi_tanent.crm.dto.CrmLeadRequest;
 import com.example.multi_tanent.crm.dto.CrmLeadResponse;
+import com.example.multi_tanent.crm.dto.CrmLeadStatusUpdateRequest;
+import com.example.multi_tanent.crm.dto.CrmLeadStageUpdateRequest;
 import com.example.multi_tanent.crm.services.CrmLeadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -97,5 +99,15 @@ public class CrmLeadController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
         service.deleteLead(id);
+    }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<CrmLeadResponse> updateStatus(@PathVariable Long id, @Valid @RequestBody CrmLeadStatusUpdateRequest req) {
+        return ResponseEntity.ok(service.updateLeadStatus(id, req.getStatus()));
+    }
+
+    @PutMapping("/{id}/stage")
+    public ResponseEntity<CrmLeadResponse> updateCurrentStage(@PathVariable Long id, @Valid @RequestBody CrmLeadStageUpdateRequest req) {
+        return ResponseEntity.ok(service.updateLeadStage(id, req.getStageId()));
     }
 }

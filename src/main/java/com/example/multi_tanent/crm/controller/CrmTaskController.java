@@ -30,6 +30,11 @@ public class CrmTaskController {
         return ResponseEntity.ok(service.getById(id));
     }
 
+    @GetMapping("/lead/{leadId}")
+    public ResponseEntity<List<CrmTaskResponse>> getTasksByLeadId(@PathVariable Long leadId) {
+        return ResponseEntity.ok(service.getTasksByLeadId(leadId));
+    }
+
     @PostMapping
     public ResponseEntity<CrmTaskResponse> create(@Valid @RequestBody CrmTaskRequest req) {
         CrmTaskResponse created = service.create(req);

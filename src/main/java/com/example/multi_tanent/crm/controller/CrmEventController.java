@@ -28,6 +28,11 @@ public class CrmEventController {
         return ResponseEntity.ok(service.getById(id));
     }
 
+    @GetMapping("/lead/{leadId}")
+    public ResponseEntity<List<CrmEventResponse>> getEventsByLeadId(@PathVariable Long leadId) {
+        return ResponseEntity.ok(service.getEventsByLeadId(leadId));
+    }
+
     @PostMapping
     public ResponseEntity<CrmEventResponse> create(@Valid @RequestBody CrmEventRequest req) {
         return ResponseEntity.ok(service.create(req));

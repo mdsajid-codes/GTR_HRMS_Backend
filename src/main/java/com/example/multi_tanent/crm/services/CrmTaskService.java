@@ -157,8 +157,10 @@ import com.example.multi_tanent.config.TenantContext;
 import com.example.multi_tanent.crm.dto.CrmTaskRequest;
 import com.example.multi_tanent.crm.dto.CrmTaskResponse;
 import com.example.multi_tanent.crm.dto.SimpleIdNameDto;
+import com.example.multi_tanent.crm.entity.CrmLead;
 import com.example.multi_tanent.crm.entity.Contact;
 import com.example.multi_tanent.crm.entity.CrmTask;
+import com.example.multi_tanent.crm.repository.CrmLeadRepository;
 import com.example.multi_tanent.crm.repository.ContactRepository;
 import com.example.multi_tanent.crm.repository.CrmTaskRepository;
 import com.example.multi_tanent.spersusers.enitity.Employee;
@@ -186,6 +188,7 @@ public class CrmTaskService {
     private final TenantRepository tenantRepo;
 
     private final EmployeeRepository employeeRepository;
+    private final CrmLeadRepository leadRepository;
     private final ContactRepository contactRepository;
 
     private Tenant currentTenant() {
@@ -210,6 +213,16 @@ public class CrmTaskService {
         return toResponse(e);
     }
 
+    @Transactional(readOnly = true)
+    public List<CrmTaskResponse> getTasksByLeadId(Long leadId) {
+        Tenant t = currentTenant();
+        // Ensure the lead exists for the current tenant before fetching tasks
+        leadRepository.findByIdAndTenantId(leadId, t.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Lead not found with id: " + leadId));
+
+        return taskRepo.findByTenantIdAndLeadIdOrderByDueDateAscIdAsc(t.getId(), leadId)
+                .stream().map(this::toResponse).toList();
+    }
     public CrmTaskResponse create(CrmTaskRequest req) {
         Tenant t = currentTenant();
 
@@ -237,6 +250,12 @@ public class CrmTaskService {
         if (req.getContactIds() != null && !req.getContactIds().isEmpty()) {
             Set<Contact> cons = new LinkedHashSet<>(contactRepository.findAllById(req.getContactIds()));
             e.setContacts(cons);
+        }
+
+        if (req.getLeadId() != null) {
+            CrmLead lead = leadRepository.findById(req.getLeadId())
+                    .orElseThrow(() -> new EntityNotFoundException("Lead not found with id: " + req.getLeadId()));
+            e.setLead(lead);
         }
 
         return toResponse(taskRepo.save(e));
@@ -272,6 +291,13 @@ public class CrmTaskService {
             e.setContacts(cons);
         }
 
+        if (req.getLeadId() != null) {
+            CrmLead lead = leadRepository.findById(req.getLeadId())
+                    .orElseThrow(() -> new EntityNotFoundException("Lead not found with id: " + req.getLeadId()));
+            e.setLead(lead);
+        } else {
+            e.setLead(null);
+        }
         return toResponse(taskRepo.save(e));
     }
 
@@ -308,6 +334,7 @@ public class CrmTaskService {
                                 c.getId(),
                                 fullName(c.getFirstName(), c.getLastName())))
                         .collect(Collectors.toList()))
+                .leadId(e.getLead() != null ? e.getLead().getId() : null)
                 .status(e.getStatus())
                 .createdAt(e.getCreatedAt() != null ? dtf.format(e.getCreatedAt()) : null)
                 .updatedAt(e.getUpdatedAt() != null ? dtf.format(e.getUpdatedAt()) : null)

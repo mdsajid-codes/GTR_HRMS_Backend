@@ -1,5 +1,8 @@
 package com.example.multi_tanent.sales.entity;
 
+import com.example.multi_tanent.production.entity.ProCategory;
+import com.example.multi_tanent.production.entity.ProSubCategory;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
 import com.example.multi_tanent.sales.base.AbstractAuditable;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -11,7 +14,7 @@ import java.math.BigDecimal;
 @Setter
 @Getter
 @Table(name = "sales_products", indexes = {
-        @Index(name = "ix_product_sku", columnList = "sku", unique = true)
+        @Index(name = "ix_product_tenant_sku", columnList = "tenant_id, sku", unique = true)
 })
 public class SaleProduct extends AbstractAuditable {
 
@@ -19,7 +22,11 @@ public class SaleProduct extends AbstractAuditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 64, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
+
+    @Column(nullable = false, length = 64)
     private String sku;
 
     @Column(nullable = false, length = 150)
@@ -40,4 +47,11 @@ public class SaleProduct extends AbstractAuditable {
     @Column(length = 20)
     private String status;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private ProCategory category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sub_category_id")
+    private ProSubCategory subCategory;
 }

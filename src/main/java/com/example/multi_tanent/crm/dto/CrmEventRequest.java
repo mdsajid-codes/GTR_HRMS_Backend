@@ -32,7 +32,8 @@ public class CrmEventRequest {
     @NotNull private EventStatus status;
     @NotNull private EventPriority priority;
 
+    private Long leadId;             // optional
+
     private MeetingType meetingType; // optional
     private String meetingWith;      // optional
 }
-

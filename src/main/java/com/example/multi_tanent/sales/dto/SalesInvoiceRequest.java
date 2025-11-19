@@ -21,4 +21,5 @@ public class SalesInvoiceRequest {
     private String notes;
     private Long sourceSalesOrderId;
     private List<SalesInvoiceLineRequest> lines;
+    private Long termAndConditionId;
 }

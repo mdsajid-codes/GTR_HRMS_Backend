@@ -1,5 +1,7 @@
 package com.example.multi_tanent.sales.service;
 
+import com.example.multi_tanent.production.repository.ProTaxRepository;
+import com.example.multi_tanent.production.repository.ProUnitRepository;
 import com.example.multi_tanent.sales.dto.SalesInvoiceLineRequest;
 import com.example.multi_tanent.sales.dto.SalesInvoiceLineResponse;
 import com.example.multi_tanent.sales.entity.SaleProduct;
@@ -26,6 +28,8 @@ public class SalesInvoiceLineService {
     private final SalesInvoiceRepository invoiceRepo;
     private final SalesInvoiceLineRepository lineRepo;
     private final SaleProductRepository productRepo;
+    private final ProUnitRepository unitRepo;
+    private final ProTaxRepository taxRepo;
     private final SalesInvoiceService invoiceService; // To recalculate totals
 
     public SalesInvoiceLineResponse addLine(Long invoiceId, SalesInvoiceLineRequest req) {
@@ -73,16 +77,44 @@ public class SalesInvoiceLineService {
                     .orElseThrow(() -> new EntityNotFoundException("Product not found: " + req.getProductId()));
             line.setProduct(product);
         }
+
         line.setDescription(req.getDescription());
+
+        if (req.getUnitId() != null) {
+            line.setUnit(unitRepo.findById(req.getUnitId())
+                    .orElseThrow(() -> new EntityNotFoundException("Unit not found: " + req.getUnitId())));
+        } else {
+            line.setUnit(null);
+        }
+
+        if (req.getTaxId() != null) {
+            line.setTax(taxRepo.findById(req.getTaxId())
+                    .orElseThrow(() -> new EntityNotFoundException("Tax not found: " + req.getTaxId())));
+        } else {
+            line.setTax(null);
+        }
+
         line.setQuantity(req.getQuantity() != null ? req.getQuantity() : BigDecimal.ZERO);
         line.setUnitPrice(req.getUnitPrice() != null ? req.getUnitPrice() : BigDecimal.ZERO);
         line.setDiscount(req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO);
-        line.setTaxRate(req.getTaxRate());
-        BigDecimal lineTotal = line.getUnitPrice().multiply(line.getQuantity()).subtract(line.getDiscount());
+
+        BigDecimal lineTotal = (line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO)
+                .multiply(line.getQuantity() != null ? line.getQuantity() : BigDecimal.ZERO)
+                .subtract(line.getDiscount() != null ? line.getDiscount() : BigDecimal.ZERO);
         line.setLineTotal(lineTotal.setScale(2, RoundingMode.HALF_UP));
     }
 
     private SalesInvoiceLineResponse toResponse(SalesInvoiceLine l) {
-        return SalesInvoiceLineResponse.builder().id(l.getId()).productId(l.getProduct() != null ? l.getProduct().getId() : null).productName(l.getProduct() != null ? l.getProduct().getName() : null).description(l.getDescription()).quantity(l.getQuantity()).unitPrice(l.getUnitPrice()).discount(l.getDiscount()).taxRate(l.getTaxRate()).lineTotal(l.getLineTotal()).build();
+        return SalesInvoiceLineResponse.builder()
+                .id(l.getId()).productId(l.getProduct() != null ? l.getProduct().getId() : null)
+                .productName(l.getProduct() != null ? l.getProduct().getName() : null)
+                .description(l.getDescription()).quantity(l.getQuantity()).unitPrice(l.getUnitPrice())
+                .unitId(l.getUnit() != null ? l.getUnit().getId() : null)
+                .unitName(l.getUnit() != null ? l.getUnit().getName() : null)
+                .discount(l.getDiscount())
+                .taxId(l.getTax() != null ? l.getTax().getId() : null)
+                .taxCode(l.getTax() != null ? l.getTax().getCode() : null)
+                .taxRate(l.getTax() != null ? l.getTax().getRate() : null)
+                .lineTotal(l.getLineTotal()).build();
     }
 }

@@ -1,16 +1,15 @@
 package com.example.multi_tanent.sales.service;
 
-import com.example.multi_tanent.sales.dto.SalesQuotationLineRequest;
-import com.example.multi_tanent.sales.dto.SalesQuotationLineResponse;
-import com.example.multi_tanent.sales.dto.SalesQuotationRequest;
-import com.example.multi_tanent.sales.dto.SalesQuotationResponse;
-import com.example.multi_tanent.sales.entity.SaleCustomer;
-import com.example.multi_tanent.sales.entity.SaleProduct;
-import com.example.multi_tanent.sales.entity.SalesQuotation;
-import com.example.multi_tanent.sales.entity.SalesQuotationLine;
-import com.example.multi_tanent.sales.repository.SaleCustomerRepository;
-import com.example.multi_tanent.sales.repository.SaleProductRepository;
-import com.example.multi_tanent.sales.repository.SalesQuotationRepository;
+import com.example.multi_tanent.config.TenantContext;
+import com.example.multi_tanent.production.repository.ProTaxRepository;
+import com.example.multi_tanent.production.repository.ProUnitRepository;
+import com.example.multi_tanent.sales.dto.*;
+import com.example.multi_tanent.sales.entity.*;
+import com.example.multi_tanent.sales.enums.DocumentStatus;
+import com.example.multi_tanent.sales.enums.DocumentType;
+import com.example.multi_tanent.sales.repository.*;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -29,6 +28,17 @@ public class SalesQuotationService {
     private final SalesQuotationRepository quotationRepo;
     private final SaleCustomerRepository customerRepo;
     private final SaleProductRepository productRepo;
+    private final ProUnitRepository unitRepo;
+    private final ProTaxRepository taxRepo;
+    private final SalesTermAndConditionRepository termAndConditionRepo;
+    private final SalesAttachmentRepository attachmentRepo;
+    private final TenantRepository tenantRepo;
+
+    private Tenant getCurrentTenant() {
+        String tenantId = TenantContext.getTenantId();
+        return tenantRepo.findByTenantId(tenantId)
+                .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
+    }
 
     public SalesQuotationResponse create(SalesQuotationRequest req) {
         if (quotationRepo.existsByNumber(req.getNumber())) {
@@ -76,6 +86,14 @@ public class SalesQuotationService {
         quotationRepo.delete(quotation);
     }
 
+    @Transactional
+    public void markAsOrdered(Long quotationId) {
+        SalesQuotation quotation = quotationRepo.findById(quotationId)
+                .orElseThrow(() -> new EntityNotFoundException("Quotation not found: " + quotationId));
+        quotation.setStatus(DocumentStatus.ORDERED);
+        quotationRepo.save(quotation);
+    }
+
     public void recalculateQuotationTotals(Long quotationId) {
         SalesQuotation quotation = quotationRepo.findById(quotationId)
                 .orElseThrow(() -> new EntityNotFoundException("Quotation not found: " + quotationId));
@@ -92,13 +110,18 @@ public class SalesQuotationService {
         entity.setNotes(req.getNotes());
 
         if (req.getCustomerId() != null) {
-            // The SaleCustomerRepository seems to be for 'SaleContact', which is likely a typo.
-            // I'll assume it should be SaleCustomer and that it has a findByIdAndTenantId method.
             SaleCustomer customer = customerRepo.findById(req.getCustomerId())
                     .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + req.getCustomerId()));
             entity.setCustomer(customer);
         } else {
             entity.setCustomer(null);
+        }
+
+        if (req.getTermAndConditionId() != null) {
+            Long tenantId = getCurrentTenant().getId();
+            entity.setTermAndCondition(termAndConditionRepo.findByTenantIdAndId(tenantId, req.getTermAndConditionId()).orElse(null));
+        } else {
+            entity.setTermAndCondition(null);
         }
 
         entity.getItems().clear();
@@ -113,11 +136,24 @@ public class SalesQuotationService {
                     line.setProduct(product);
                 }
                 line.setDescription(lineReq.getDescription());
+
+                if (lineReq.getUnitId() != null) {
+                    line.setUnit(unitRepo.findById(lineReq.getUnitId())
+                            .orElseThrow(() -> new EntityNotFoundException("Unit not found: " + lineReq.getUnitId())));
+                }
+
+                if (lineReq.getTaxId() != null) {
+                    line.setTax(taxRepo.findById(lineReq.getTaxId())
+                            .orElseThrow(() -> new EntityNotFoundException("Tax not found: " + lineReq.getTaxId())));
+                }
+
                 line.setQuantity(lineReq.getQuantity() != null ? lineReq.getQuantity() : BigDecimal.ZERO);
                 line.setUnitPrice(lineReq.getUnitPrice() != null ? lineReq.getUnitPrice() : BigDecimal.ZERO);
                 line.setDiscount(lineReq.getDiscount() != null ? lineReq.getDiscount() : BigDecimal.ZERO);
-                line.setTaxRate(lineReq.getTaxRate());
-                BigDecimal lineTotal = line.getUnitPrice().multiply(line.getQuantity()).subtract(line.getDiscount());
+
+                BigDecimal lineTotal = (line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO)
+                        .multiply(line.getQuantity() != null ? line.getQuantity() : BigDecimal.ZERO)
+                        .subtract(line.getDiscount() != null ? line.getDiscount() : BigDecimal.ZERO);
                 line.setLineTotal(lineTotal.setScale(2, RoundingMode.HALF_UP));
                 entity.getItems().add(line);
             }
@@ -127,8 +163,8 @@ public class SalesQuotationService {
     private void recalculateTotals(SalesQuotation entity) {
         BigDecimal subtotal = entity.getItems().stream().map(SalesQuotationLine::getLineTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal taxTotal = entity.getItems().stream()
-                .filter(l -> l.getTaxRate() != null && l.getTaxRate().compareTo(BigDecimal.ZERO) > 0)
-                .map(l -> l.getLineTotal().multiply(l.getTaxRate().divide(new BigDecimal("100"))))
+                .filter(l -> l.getTax() != null && l.getTax().getRate() != null && l.getTax().getRate().compareTo(BigDecimal.ZERO) > 0)
+                .map(l -> l.getLineTotal().multiply(l.getTax().getRate().divide(new BigDecimal("100"))))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         entity.setSubtotal(subtotal.setScale(2, RoundingMode.HALF_UP));
@@ -138,10 +174,37 @@ public class SalesQuotationService {
 
     private SalesQuotationResponse toResponse(SalesQuotation e) {
         List<SalesQuotationLineResponse> lineResponses = e.getItems().stream().map(this::toLineResponse).collect(Collectors.toList());
-        return SalesQuotationResponse.builder().id(e.getId()).number(e.getNumber()).date(e.getDate()).expiryDate(e.getExpiryDate()).customerId(e.getCustomer() != null ? e.getCustomer().getId() : null).customerName(e.getCustomer() != null ? e.getCustomer().getName() : null).currency(e.getCurrency()).status(e.getStatus()).subtotal(e.getSubtotal()).taxTotal(e.getTaxTotal()).grandTotal(e.getGrandTotal()).notes(e.getNotes()).createdAt(e.getCreatedAt()).updatedAt(e.getUpdatedAt()).version(e.getVersion()).items(lineResponses).build();
+        List<SalesAttachmentResponse> attachmentResponses = attachmentRepo.findByDocTypeAndDocId(DocumentType.QUOTATION, e.getId())
+                .stream().map(SalesAttachmentResponse::fromEntity).collect(Collectors.toList());
+
+        return SalesQuotationResponse.builder()
+                .id(e.getId()).number(e.getNumber()).date(e.getDate()).expiryDate(e.getExpiryDate())
+                .customerId(e.getCustomer() != null ? e.getCustomer().getId() : null)
+                .customerName(e.getCustomer() != null ? e.getCustomer().getName() : null)
+                .currency(e.getCurrency()).status(e.getStatus()).subtotal(e.getSubtotal())
+                .taxTotal(e.getTaxTotal()).grandTotal(e.getGrandTotal()).notes(e.getNotes())
+                .termAndCondition(SalesTermAndConditionResponse.fromEntity(e.getTermAndCondition()))
+                .createdAt(e.getCreatedAt()).updatedAt(e.getUpdatedAt()).version(e.getVersion())
+                .items(lineResponses)
+                .attachments(attachmentResponses)
+                .build();
     }
 
     private SalesQuotationLineResponse toLineResponse(SalesQuotationLine l) {
-        return SalesQuotationLineResponse.builder().id(l.getId()).productId(l.getProduct() != null ? l.getProduct().getId() : null).productName(l.getProduct() != null ? l.getProduct().getName() : null).description(l.getDescription()).quantity(l.getQuantity()).unitPrice(l.getUnitPrice()).discount(l.getDiscount()).taxRate(l.getTaxRate()).lineTotal(l.getLineTotal()).build();
+        return SalesQuotationLineResponse.builder()
+                .id(l.getId())
+                .productId(l.getProduct() != null ? l.getProduct().getId() : null)
+                .productName(l.getProduct() != null ? l.getProduct().getName() : null)
+                .description(l.getDescription())
+                .quantity(l.getQuantity())
+                .unitPrice(l.getUnitPrice())
+                .unitId(l.getUnit() != null ? l.getUnit().getId() : null)
+                .unitName(l.getUnit() != null ? l.getUnit().getName() : null)
+                .discount(l.getDiscount())
+                .taxId(l.getTax() != null ? l.getTax().getId() : null)
+                .taxCode(l.getTax() != null ? l.getTax().getCode() : null)
+                .taxRate(l.getTax() != null ? l.getTax().getRate() : null)
+                .lineTotal(l.getLineTotal())
+                .build();
     }
 }

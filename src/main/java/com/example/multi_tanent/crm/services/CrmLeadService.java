@@ -2,6 +2,7 @@
 
     import com.example.multi_tanent.config.TenantContext;
     import com.example.multi_tanent.crm.dto.CrmLeadRequest;
+    import com.example.multi_tanent.crm.enums.CrmLeadStatus;
     import com.example.multi_tanent.crm.dto.CrmLeadResponse;
     import com.example.multi_tanent.crm.entity.*;
     import com.example.multi_tanent.crm.repository.*;
@@ -85,6 +86,26 @@ import com.example.multi_tanent.crm.repository.LeadSourceRepository;
                 throw new EntityNotFoundException("Lead not found with id: " + id);
             }
             leadRepository.deleteById(id);
+        }
+
+        public CrmLeadResponse updateLeadStatus(Long id, CrmLeadStatus status) {
+            CrmLead lead = leadRepository.findByIdAndTenantId(id, currentTenant().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Lead not found with id: " + id));
+            
+            lead.setStatus(status);
+            return toResponse(leadRepository.save(lead));
+        }
+
+        public CrmLeadResponse updateLeadStage(Long leadId, Long stageId) {
+            Tenant tenant = currentTenant();
+            CrmLead lead = leadRepository.findByIdAndTenantId(leadId, tenant.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Lead not found with id: " + leadId));
+
+            CrmLeadStage newStage = leadStageRepository.findByIdAndTenantId(stageId, tenant.getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Lead Stage not found with id: " + stageId));
+
+            lead.setCurrentStage(newStage);
+            return toResponse(leadRepository.save(lead));
         }
 
         private void mapReqToEntity(CrmLeadRequest r, CrmLead e) {

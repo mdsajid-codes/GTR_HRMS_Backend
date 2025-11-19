@@ -36,9 +36,10 @@ public class CrmEventResponse {
     private List<Long> contactIds;
     private List<String> contactNames;
 
+    private Long leadId;
+
     private EventStatus status;
     private EventPriority  priority;
     private MeetingType meetingType;
     private String meetingWith;
 }
-

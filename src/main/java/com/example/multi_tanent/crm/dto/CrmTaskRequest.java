@@ -31,6 +31,9 @@ public class CrmTaskRequest {
     private Set<Long> employeeIds;
     private Set<Long> contactIds;
 
+    // Link to lead
+    private Long leadId;
+
     // Optional status (e.g., "OPEN", "DONE")
     private String status;
 }

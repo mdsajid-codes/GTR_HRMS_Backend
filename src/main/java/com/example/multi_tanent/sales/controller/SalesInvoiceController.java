@@ -3,6 +3,7 @@ package com.example.multi_tanent.sales.controller;
 import com.example.multi_tanent.sales.dto.SalesInvoiceRequest;
 import com.example.multi_tanent.sales.dto.SalesInvoiceResponse;
 import com.example.multi_tanent.sales.service.SalesInvoiceService;
+import com.example.multi_tanent.sales.service.SalesOrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +17,19 @@ import java.util.List;
 public class SalesInvoiceController {
 
     private final SalesInvoiceService invoiceService;
+    private final SalesOrderService orderService;
 
     @PostMapping
     public ResponseEntity<SalesInvoiceResponse> createInvoice(@RequestBody SalesInvoiceRequest request) {
         return new ResponseEntity<>(invoiceService.create(request), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/from-order/{orderId}")
+    public ResponseEntity<SalesInvoiceResponse> createInvoiceFromOrder(@PathVariable Long orderId) {
+        SalesInvoiceResponse response = invoiceService.createFromOrder(orderId);
+        // Mark the original order as invoiced
+        orderService.markAsInvoiced(orderId);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping

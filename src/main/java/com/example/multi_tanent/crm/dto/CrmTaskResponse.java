@@ -25,6 +25,8 @@ public class CrmTaskResponse {
     private List<SimpleIdNameDto> employees; // id + name
     private List<SimpleIdNameDto> contacts;  // id + name
 
+    private Long leadId;
+
     private String status;
     private String createdAt;
     private String updatedAt;

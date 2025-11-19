@@ -18,4 +18,5 @@ public class SalesOrderRequest {
     private String notes;
     private Long sourceQuotationId;
     private List<SalesOrderLineRequest> lines;
+    private Long termAndConditionId;
 }

@@ -16,5 +16,6 @@ public interface CrmEventRepository extends JpaRepository<CrmEvent, Long> {
     // simple availability query (same date overlap)
     List<CrmEvent> findByTenantIdAndDateAndEmployees_IdAndFromTimeLessThanAndToTimeGreaterThan(
             Long tenantId, LocalDate date, Long employeeId, LocalTime end, LocalTime start);
-}
 
+    List<CrmEvent> findByTenantIdAndLeadIdOrderByDateDescFromTimeDesc(Long tenantId, Long leadId);
+}

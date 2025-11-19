@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface CrmTaskRepository extends JpaRepository<CrmTask, Long> {
     List<CrmTask> findByTenantIdOrderByDueDateAscIdAsc(Long tenantId);
     Optional<CrmTask> findByIdAndTenantId(Long id, Long tenantId);
+    List<CrmTask> findByTenantIdAndLeadIdOrderByDueDateAscIdAsc(Long tenantId, Long leadId);
 }
-
