@@ -46,7 +46,7 @@ public class PartyRequest {
     private String vatNumber;
     private PartyBase.VatTreatment vatTreatment;
     private String vatTrnNumber;
-
+    
     private String city;
     private String region;
     private String currency;

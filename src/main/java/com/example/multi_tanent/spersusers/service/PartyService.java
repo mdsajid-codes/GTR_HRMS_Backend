@@ -8,10 +8,20 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +38,19 @@ public class PartyService {
     private final OtherPersonRepository otherPersonRepository;
     private final BaseBankDetailsRepository bankDetailsRepository;
     private final CustomFieldRepository customFieldRepository;
+
+    // Headers for the Excel template and import logic
+    private static final String[] HEADERS = {
+            "PartyType (CUSTOMER/VENDOR)", "CompanyName", "CustomerCode", "PrimaryContactPerson",
+            "Mobile", "ContactEmail", "ContactPhone", "WorkPhone", "Website",
+            "PANNumber", "VATNumber", "VATTreatment (REGISTERED/UNREGISTERED)", "VAT_TRN_Number",
+            "City", "Region", "Currency", "OpeningBalance", "OpeningBalanceType (DEBIT/CREDIT)",
+            "CreditLimitAllowed", "CreditPeriodAllowed",
+            "BillingAddress_Attention", "BillingAddress_AddressLine", "BillingAddress_City", "BillingAddress_State", "BillingAddress_ZipCode", "BillingAddress_Country",
+            "ShippingAddress_Attention", "ShippingAddress_AddressLine", "ShippingAddress_City", "ShippingAddress_State", "ShippingAddress_ZipCode", "ShippingAddress_Country",
+            // Bank Details
+            "BankName", "BankAccountNumber", "BankIFSCCode", "BankIBANCode", "BankCorporateId", "BankBranchLocation", "BankBranchAddress", "BankBeneficiaryEmail"
+    };
 
     private Tenant getCurrentTenant() {
         String tenantId = TenantContext.getTenantId();
@@ -207,6 +230,250 @@ public class PartyService {
         customFieldRepository.deleteById(customFieldId);
     }
 
+    @Transactional
+    public List<String> bulkImportParties(MultipartFile file) throws IOException {
+        List<String> errors = new ArrayList<>();
+        List<PartyRequest> partyRequests = new ArrayList<>();
+
+        try (InputStream is = file.getInputStream(); Workbook workbook = new XSSFWorkbook(is)) {
+            Sheet sheet = workbook.getSheetAt(0);
+            int rowNumber = 0;
+            for (Row row : sheet) {
+                if (rowNumber++ == 0) continue; // Skip header row
+
+                try {
+                    PartyRequest request = parseRowToPartyRequest(row);
+                    if (request != null) {
+                        partyRequests.add(request);
+                    }
+                } catch (Exception e) {
+                    errors.add("Error in row " + rowNumber + ": " + e.getMessage());
+                }
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            return errors; // Return parsing errors before attempting to save
+        }
+
+        for (int i = 0; i < partyRequests.size(); i++) {
+            try {
+                create(partyRequests.get(i));
+            } catch (Exception e) {
+                errors.add("Error saving party from row " + (i + 2) + ": " + e.getMessage());
+            }
+        }
+
+        return errors;
+    }
+
+    private PartyRequest parseRowToPartyRequest(Row row) {
+        PartyRequest req = new PartyRequest();
+
+        String partyTypeStr = getCellValueAsString(row.getCell(0));
+        if (partyTypeStr == null || partyTypeStr.isBlank()) {
+            // If the first column is empty, we assume it's a blank row and skip it.
+            return null;
+        }
+        req.setPartyType(PartyBase.PartyType.valueOf(partyTypeStr.toUpperCase()));
+
+        req.setCompanyName(getCellValueAsString(row.getCell(1)));
+        req.setCustomerCode(getCellValueAsString(row.getCell(2)));
+        req.setPrimaryContactPerson(getCellValueAsString(row.getCell(3)));
+        req.setMobile(getCellValueAsString(row.getCell(4)));
+        req.setContactEmail(getCellValueAsString(row.getCell(5)));
+        req.setContactPhone(getCellValueAsString(row.getCell(6)));
+        req.setWorkPhone(getCellValueAsString(row.getCell(7)));
+        req.setWebsite(getCellValueAsString(row.getCell(8)));
+        req.setPanNumber(getCellValueAsString(row.getCell(9)));
+        req.setVatNumber(getCellValueAsString(row.getCell(10)));
+        String vatTreatmentStr = getCellValueAsString(row.getCell(11));
+        if (vatTreatmentStr != null && !vatTreatmentStr.isBlank()) {
+            req.setVatTreatment(PartyBase.VatTreatment.valueOf(vatTreatmentStr.toUpperCase()));
+        }
+        req.setVatTrnNumber(getCellValueAsString(row.getCell(12)));
+        req.setCity(getCellValueAsString(row.getCell(13)));
+        req.setRegion(getCellValueAsString(row.getCell(14)));
+        req.setCurrency(getCellValueAsString(row.getCell(15)));
+        req.setOpeningBalance(getCellValueAsBigDecimal(row.getCell(16)));
+        String balanceTypeStr = getCellValueAsString(row.getCell(17));
+        if (balanceTypeStr != null && !balanceTypeStr.isBlank()) {
+            req.setOpeningBalanceType(PartyBase.BalanceType.valueOf(balanceTypeStr.toUpperCase()));
+        }
+        req.setCreditLimitAllowed(getCellValueAsBigDecimal(row.getCell(18)));
+        req.setCreditPeriodAllowed(getCellValueAsInteger(row.getCell(19)));
+
+        PartyRequest.AddressRequest billingAddress = new PartyRequest.AddressRequest();
+        billingAddress.setAttention(getCellValueAsString(row.getCell(20)));
+        billingAddress.setAddressLine(getCellValueAsString(row.getCell(21)));
+        billingAddress.setCity(getCellValueAsString(row.getCell(22)));
+        billingAddress.setState(getCellValueAsString(row.getCell(23)));
+        billingAddress.setZipCode(getCellValueAsString(row.getCell(24)));
+        billingAddress.setCountry(getCellValueAsString(row.getCell(25)));
+        req.setBillingAddress(billingAddress);
+
+        PartyRequest.AddressRequest shippingAddress = new PartyRequest.AddressRequest();
+        shippingAddress.setAttention(getCellValueAsString(row.getCell(26)));
+        shippingAddress.setAddressLine(getCellValueAsString(row.getCell(27)));
+        shippingAddress.setCity(getCellValueAsString(row.getCell(28)));
+        shippingAddress.setState(getCellValueAsString(row.getCell(29)));
+        shippingAddress.setZipCode(getCellValueAsString(row.getCell(30)));
+        shippingAddress.setCountry(getCellValueAsString(row.getCell(31)));
+        req.setShippingAddress(shippingAddress);
+
+        // Parse Bank Details (supports one bank detail entry per row)
+        String bankName = getCellValueAsString(row.getCell(32));
+        if (bankName != null && !bankName.isBlank()) {
+            BaseBankDetailsRequest bankDetailsRequest = new BaseBankDetailsRequest();
+            bankDetailsRequest.setBankName(bankName);
+            bankDetailsRequest.setAccountNumber(getCellValueAsString(row.getCell(33)));
+            bankDetailsRequest.setIfsCode(getCellValueAsString(row.getCell(34)));
+            bankDetailsRequest.setIbanCode(getCellValueAsString(row.getCell(35)));
+            bankDetailsRequest.setCorporateId(getCellValueAsString(row.getCell(36)));
+            bankDetailsRequest.setLocationBranch(getCellValueAsString(row.getCell(37)));
+            bankDetailsRequest.setBranchAddress(getCellValueAsString(row.getCell(38)));
+            bankDetailsRequest.setBeneficiaryMailId(getCellValueAsString(row.getCell(39)));
+            req.setBankDetails(List.of(bankDetailsRequest));
+        }
+
+        return req;
+    }
+
+    private String getCellValueAsString(Cell cell) {
+        if (cell == null || cell.getCellType() == CellType.BLANK) return null;
+        return switch (cell.getCellType()) {
+            case STRING -> cell.getStringCellValue();
+            case NUMERIC -> new DataFormatter().formatCellValue(cell);
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> cell.getCellFormula(); // Or evaluate formula if needed
+            default -> null;
+        };
+    }
+
+    private BigDecimal getCellValueAsBigDecimal(Cell cell) {
+        String val = getCellValueAsString(cell);
+        return (val != null && !val.isEmpty()) ? new BigDecimal(val) : null;
+    }
+
+    private Integer getCellValueAsInteger(Cell cell) {
+        String val = getCellValueAsString(cell);
+        return (val != null && !val.isEmpty()) ? new BigDecimal(val).intValue() : null;
+    }
+
+
+    public byte[] generateBulkUploadTemplate() throws IOException {
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Parties");
+
+            // Header Font
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            headerFont.setFontHeightInPoints((short) 12);
+
+            // Header Cell Style
+            CellStyle headerCellStyle = workbook.createCellStyle();
+            headerCellStyle.setFont(headerFont);
+
+            // Create Header Row
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < HEADERS.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(HEADERS[i]);
+                cell.setCellStyle(headerCellStyle);
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
+    public byte[] exportPartiesToExcel() throws IOException {
+        Long tenantId = getCurrentTenant().getId();
+        List<BaseCustomer> parties = repository.findByTenantId(tenantId);
+
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Parties");
+
+            // Header Font & Style
+            Font headerFont = workbook.createFont();
+            headerFont.setBold(true);
+            CellStyle headerCellStyle = workbook.createCellStyle();
+            headerCellStyle.setFont(headerFont);
+
+            // Create Header Row
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < HEADERS.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(HEADERS[i]);
+                cell.setCellStyle(headerCellStyle);
+            }
+
+            // Create Data Rows
+            int rowIdx = 1;
+            for (BaseCustomer party : parties) {
+                Row row = sheet.createRow(rowIdx++);
+
+                row.createCell(0).setCellValue(party.getPartyType() != null ? party.getPartyType().name() : "");
+                row.createCell(1).setCellValue(party.getCompanyName());
+                row.createCell(2).setCellValue(party.getCustomerCode());
+                row.createCell(3).setCellValue(party.getPrimaryContactPerson());
+                row.createCell(4).setCellValue(party.getMobile());
+                row.createCell(5).setCellValue(party.getContactEmail());
+                row.createCell(6).setCellValue(party.getContactPhone());
+                row.createCell(7).setCellValue(party.getWorkPhone());
+                row.createCell(8).setCellValue(party.getWebsite());
+                row.createCell(9).setCellValue(party.getPanNumber());
+                row.createCell(10).setCellValue(party.getVatNumber());
+                row.createCell(11).setCellValue(party.getVatTreatment() != null ? party.getVatTreatment().name() : "");
+                row.createCell(12).setCellValue(party.getVatTrnNumber());
+                row.createCell(13).setCellValue(party.getCity());
+                row.createCell(14).setCellValue(party.getRegion());
+                row.createCell(15).setCellValue(party.getCurrency());
+                row.createCell(16).setCellValue(party.getOpeningBalance() != null ? party.getOpeningBalance().toString() : "");
+                row.createCell(17).setCellValue(party.getOpeningBalanceType() != null ? party.getOpeningBalanceType().name() : "");
+                row.createCell(18).setCellValue(party.getCreditLimitAllowed() != null ? party.getCreditLimitAllowed().toString() : "");
+                row.createCell(19).setCellValue(party.getCreditPeriodAllowed() != null ? party.getCreditPeriodAllowed().toString() : "");
+
+                PartyBase.Address billing = party.getBillingAddress();
+                if (billing != null) {
+                    row.createCell(20).setCellValue(billing.getAttention());
+                    row.createCell(21).setCellValue(billing.getAddressLine());
+                    row.createCell(22).setCellValue(billing.getCity());
+                    row.createCell(23).setCellValue(billing.getState());
+                    row.createCell(24).setCellValue(billing.getZipCode());
+                    row.createCell(25).setCellValue(billing.getCountry());
+                }
+
+                PartyBase.Address shipping = party.getShippingAddress();
+                if (shipping != null) {
+                    row.createCell(26).setCellValue(shipping.getAttention());
+                    row.createCell(27).setCellValue(shipping.getAddressLine());
+                    row.createCell(28).setCellValue(shipping.getCity());
+                    row.createCell(29).setCellValue(shipping.getState());
+                    row.createCell(30).setCellValue(shipping.getZipCode());
+                    row.createCell(31).setCellValue(shipping.getCountry());
+                }
+
+                // Export the first bank detail, if available
+                if (party.getBankDetails() != null && !party.getBankDetails().isEmpty()) {
+                    BaseBankDetails bank = party.getBankDetails().get(0);
+                    row.createCell(32).setCellValue(bank.getBankName());
+                    row.createCell(33).setCellValue(bank.getAccountNumber());
+                    row.createCell(34).setCellValue(bank.getIfsCode());
+                    row.createCell(35).setCellValue(bank.getIbanCode());
+                    row.createCell(36).setCellValue(bank.getCorporateId());
+                    row.createCell(37).setCellValue(bank.getLocationBranch());
+                    row.createCell(38).setCellValue(bank.getBranchAddress());
+                    row.createCell(39).setCellValue(bank.getBeneficiaryMailId());
+                }
+            }
+
+            workbook.write(out);
+            return out.toByteArray();
+        }
+    }
+
     private void mapRequestToEntity(PartyRequest req, BaseCustomer entity) {
         // Map PartyBase fields
         if (req.getPartyType() == null) {
@@ -280,6 +547,9 @@ public class PartyService {
                 op.setEmailAddress(opReq.getEmailAddress());
                 op.setWorkPhone(opReq.getWorkPhone());
                 op.setMobile(opReq.getMobile());
+                op.setSkypeNameOrNumber(opReq.getSkypeNameOrNumber());
+                op.setDesignation(opReq.getDesignation());
+                op.setDepartment(opReq.getDepartment());
                 entity.getOtherPersons().add(op);
             });
         }

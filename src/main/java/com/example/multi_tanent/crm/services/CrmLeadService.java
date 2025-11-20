@@ -36,6 +36,7 @@ import com.example.multi_tanent.crm.repository.LeadSourceRepository;
         private final EmployeeRepository employeeRepository;
         private final CrmLeadStageRepository leadStageRepository;
         private final LocationRepository locationRepository;
+        private final ContactService contactService;
         private final LeadSourceRepository leadSourceRepository;
 
         private Tenant currentTenant() {
@@ -54,7 +55,12 @@ import com.example.multi_tanent.crm.repository.LeadSourceRepository;
             }
 
             lead.setTenant(tenant);
-            return toResponse(leadRepository.save(lead));
+            CrmLead savedLead = leadRepository.save(lead);
+
+            // Use the ContactService to create or update the contact from the lead
+            contactService.createOrUpdateContactFromLead(savedLead);
+
+            return toResponse(savedLead);
         }
 
         @Transactional(readOnly = true)
@@ -78,7 +84,12 @@ import com.example.multi_tanent.crm.repository.LeadSourceRepository;
                 throw new IllegalArgumentException("Lead with number '" + request.getLeadNo() + "' already exists for this tenant.");
             }
 
-            return toResponse(leadRepository.save(lead));
+            CrmLead updatedLead = leadRepository.save(lead);
+
+            // Also update the associated contact
+            contactService.createOrUpdateContactFromLead(updatedLead);
+
+            return toResponse(updatedLead);
         }
 
         public void deleteLead(Long id) {

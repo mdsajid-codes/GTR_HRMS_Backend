@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class ContactDto {
 
   private Long id;
+  private Long leadId;
   private String firstName;
   private String lastName;
   private String email;
@@ -25,6 +26,7 @@ public class ContactDto {
     }
     return new ContactDto(
         contact.getId(),
+        contact.getLead() != null ? contact.getLead().getId() : null,
         contact.getFirstName(),
         contact.getLastName(),
         contact.getEmail(),

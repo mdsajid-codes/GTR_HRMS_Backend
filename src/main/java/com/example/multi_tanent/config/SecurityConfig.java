@@ -89,6 +89,7 @@ public class SecurityConfig {
         
         // CRM Module Endpoints
         .requestMatchers("/api/crm/**").authenticated()
+        .requestMatchers("/api/contacts/**").authenticated()
 
         // Sales Module Endpoints
         .requestMatchers("/api/sales/**").authenticated()

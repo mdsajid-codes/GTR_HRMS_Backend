@@ -7,6 +7,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -32,6 +33,11 @@ public class Contact {
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "tenant_id", nullable = false)
   private Tenant tenant;
+
+  /** Optional: Link this contact to a specific lead */
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "lead_id", foreignKey = @ForeignKey(name = "fk_contact_lead"))
+  private CrmLead lead;
 
   @Column(nullable = false) 
   private String firstName;
