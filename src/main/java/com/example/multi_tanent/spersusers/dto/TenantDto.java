@@ -12,6 +12,11 @@ public class TenantDto {
     private String contactEmail;
     private String contactPhone;
     private String address;
+    private String smtpHost;
+    private Integer smtpPort;
+    private String smtpUsername;
+    // smtpPassword is not exposed in DTO for security reasons
+    private String companyEmail;
 
     public static TenantDto fromEntity(Tenant tenant) {
         if (tenant == null) {
@@ -23,6 +28,12 @@ public class TenantDto {
         dto.setContactEmail(tenant.getContactEmail());
         dto.setContactPhone(tenant.getContactPhone());
         dto.setAddress(tenant.getAddress());
+
+        dto.setSmtpHost(tenant.getSmtpHost());
+        dto.setSmtpPort(tenant.getSmtpPort());
+        dto.setSmtpUsername(tenant.getSmtpUsername());
+        dto.setCompanyEmail(tenant.getCompanyEmail());
+
 
         if (tenant.getLogoImgUrl() != null && !tenant.getLogoImgUrl().isBlank()) {
             String fullUrl = ServletUriComponentsBuilder.fromCurrentContextPath()

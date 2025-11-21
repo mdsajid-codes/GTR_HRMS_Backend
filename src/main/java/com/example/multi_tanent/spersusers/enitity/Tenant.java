@@ -32,6 +32,22 @@ public class Tenant {
 
     private String address;
 
+    // SMTP Configuration
+    @Column(name = "smtp_host")
+    private String smtpHost;
+
+    @Column(name = "smtp_port")
+    private Integer smtpPort;
+
+    @Column(name = "smtp_username")
+    private String smtpUsername;
+
+    @Column(name = "smtp_password")
+    private String smtpPassword; // In a real app, this should be encrypted
+
+    @Column(name = "company_email")
+    private String companyEmail; // Default 'from' address for this tenant
+
     private OffsetDateTime createdAt;
 
     @PrePersist

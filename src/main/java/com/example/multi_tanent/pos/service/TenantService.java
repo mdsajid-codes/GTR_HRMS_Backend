@@ -30,9 +30,17 @@ public class TenantService {
 
     public Tenant updateCurrentTenant(UpdateTenantRequest updateRequest) {
         Tenant tenant = getCurrentTenant().orElseThrow(() -> new IllegalStateException("Tenant not found in current context."));
-        tenant.setContactEmail(updateRequest.getContactEmail());
-        tenant.setContactPhone(updateRequest.getContactPhone());
-        tenant.setAddress(updateRequest.getAddress());
+        if (updateRequest.getName() != null) tenant.setName(updateRequest.getName());
+        if (updateRequest.getContactEmail() != null) tenant.setContactEmail(updateRequest.getContactEmail());
+        if (updateRequest.getContactPhone() != null) tenant.setContactPhone(updateRequest.getContactPhone());
+        if (updateRequest.getAddress() != null) tenant.setAddress(updateRequest.getAddress());
+
+        // Update SMTP settings
+        if (updateRequest.getSmtpHost() != null) tenant.setSmtpHost(updateRequest.getSmtpHost());
+        if (updateRequest.getSmtpPort() != null) tenant.setSmtpPort(updateRequest.getSmtpPort());
+        if (updateRequest.getSmtpUsername() != null) tenant.setSmtpUsername(updateRequest.getSmtpUsername());
+        if (updateRequest.getSmtpPassword() != null) tenant.setSmtpPassword(updateRequest.getSmtpPassword());
+        if (updateRequest.getCompanyEmail() != null) tenant.setCompanyEmail(updateRequest.getCompanyEmail());
         return tenantRepository.save(tenant);
     }
 
@@ -51,6 +59,13 @@ public class TenantService {
         dto.setContactEmail(tenant.getContactEmail());
         dto.setContactPhone(tenant.getContactPhone());
         dto.setAddress(tenant.getAddress());
+
+        // Include SMTP settings in the DTO
+        dto.setSmtpHost(tenant.getSmtpHost());
+        dto.setSmtpPort(tenant.getSmtpPort());
+        dto.setSmtpUsername(tenant.getSmtpUsername());
+        // Password is intentionally omitted for security
+        dto.setCompanyEmail(tenant.getCompanyEmail());
         return dto;
     }
 }
