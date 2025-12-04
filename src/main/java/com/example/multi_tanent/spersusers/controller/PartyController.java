@@ -37,9 +37,19 @@ public class PartyController {
     }
 
     @GetMapping
-    public PagedResponse<PartyResponse> getAll(@RequestParam(required = false) PartyBase.PartyType type, @PageableDefault(size = 10) Pageable pageable) {
-        Page<PartyResponse> page = partyService.getAll(type, pageable);
-        return new PagedResponse<>(page);
+    public ResponseEntity<PagedResponse<PartyResponse>> getAll(
+            @RequestParam(required = false) String type,
+            @PageableDefault(size = 10) Pageable pageable) {
+        PartyBase.PartyType partyType = null;
+        if (type != null && !type.isEmpty()) {
+            try {
+                partyType = PartyBase.PartyType.valueOf(type.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Ignore invalid type or handle as needed
+            }
+        }
+        Page<PartyResponse> page = partyService.getAll(partyType, pageable);
+        return ResponseEntity.ok(new PagedResponse<>(page));
     }
 
     @GetMapping("/{id}")
@@ -59,7 +69,8 @@ public class PartyController {
     }
 
     @PostMapping("/{partyId}/other-persons")
-    public ResponseEntity<?> addOtherPerson(@PathVariable Long partyId, @Valid @RequestBody OtherPersonRequest request) {
+    public ResponseEntity<?> addOtherPerson(@PathVariable Long partyId,
+            @Valid @RequestBody OtherPersonRequest request) {
         return new ResponseEntity<>(partyService.addOtherPersonToParty(partyId, request), HttpStatus.CREATED);
     }
 
@@ -75,11 +86,13 @@ public class PartyController {
             if (errors.isEmpty()) {
                 return ResponseEntity.ok("Parties imported successfully.");
             } else {
-                // Returning errors with a 207 Multi-Status or 400 Bad Request is also a good option.
+                // Returning errors with a 207 Multi-Status or 400 Bad Request is also a good
+                // option.
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
             }
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process file: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to process file: " + e.getMessage());
         }
     }
 

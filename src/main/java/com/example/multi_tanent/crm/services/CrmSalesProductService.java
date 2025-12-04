@@ -1,0 +1,164 @@
+package com.example.multi_tanent.crm.services;
+
+import com.example.multi_tanent.crm.dto.CrmSalesProductRequest;
+import com.example.multi_tanent.crm.dto.CrmSalesProductResponse;
+import com.example.multi_tanent.crm.entity.CrmSalesProduct;
+import com.example.multi_tanent.crm.repository.CrmSalesProductRepository;
+import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.TenantRepository;
+import com.example.multi_tanent.config.TenantContext;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+public class CrmSalesProductService {
+
+        private final CrmSalesProductRepository repository;
+        private final TenantRepository tenantRepository;
+        private final com.example.multi_tanent.tenant.service.FileStorageService fileStorageService;
+
+        @Transactional
+        public CrmSalesProductResponse createProduct(CrmSalesProductRequest request,
+                        org.springframework.web.multipart.MultipartFile imageFile) {
+                String tenantIdentifier = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+
+                CrmSalesProduct product = new CrmSalesProduct();
+                product.setTenant(tenant);
+                mapRequestToEntity(request, product);
+
+                if (imageFile != null && !imageFile.isEmpty()) {
+                        String imageUrl = fileStorageService.storeFile(imageFile, "crm-products", true);
+                        product.setImageUrl(imageUrl);
+                }
+
+                CrmSalesProduct savedProduct = repository.save(product);
+                return mapEntityToResponse(savedProduct);
+        }
+
+        @Transactional(readOnly = true)
+        public List<CrmSalesProductResponse> getAllProducts() {
+                String tenantIdentifier = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+                return repository.findByTenantId(tenant.getId()).stream()
+                                .map(this::mapEntityToResponse)
+                                .collect(Collectors.toList());
+        }
+
+        @Transactional(readOnly = true)
+        public org.springframework.data.domain.Page<CrmSalesProductResponse> getAllProducts(
+                        org.springframework.data.domain.Pageable pageable) {
+                String tenantIdentifier = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+                return repository.findByTenantId(tenant.getId(), pageable)
+                                .map(this::mapEntityToResponse);
+        }
+
+        @Transactional(readOnly = true)
+        public CrmSalesProductResponse getProductById(Long id) {
+                String tenantIdentifier = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+                CrmSalesProduct product = repository.findByIdAndTenantId(id, tenant.getId())
+                                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+                return mapEntityToResponse(product);
+        }
+
+        @Transactional
+        public CrmSalesProductResponse updateProduct(Long id, CrmSalesProductRequest request,
+                        org.springframework.web.multipart.MultipartFile imageFile) {
+                String tenantIdentifier = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+                CrmSalesProduct product = repository.findByIdAndTenantId(id, tenant.getId())
+                                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+
+                if (request != null) {
+                        mapRequestToEntity(request, product);
+                }
+
+                if (imageFile != null && !imageFile.isEmpty()) {
+                        String imageUrl = fileStorageService.storeFile(imageFile, "crm-products", true);
+                        product.setImageUrl(imageUrl);
+                }
+
+                CrmSalesProduct updatedProduct = repository.save(product);
+                return mapEntityToResponse(updatedProduct);
+        }
+
+        @Transactional
+        public void deleteProduct(Long id) {
+                String tenantIdentifier = TenantContext.getTenantId();
+                Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+                CrmSalesProduct product = repository.findByIdAndTenantId(id, tenant.getId())
+                                .orElseThrow(() -> new EntityNotFoundException("Product not found"));
+                repository.delete(product);
+        }
+
+        public org.springframework.core.io.Resource loadFileAsResource(String fileName) {
+                return fileStorageService.loadFileAsResource(fileName, true);
+        }
+
+        private void mapRequestToEntity(CrmSalesProductRequest request, CrmSalesProduct product) {
+                if (request.getItemType() != null)
+                        product.setItemType(request.getItemType());
+                if (request.getIsPurchase() != null)
+                        product.setPurchase(request.getIsPurchase());
+                if (request.getIsSales() != null)
+                        product.setSales(request.getIsSales());
+                if (request.getItemCode() != null)
+                        product.setItemCode(request.getItemCode());
+                if (request.getName() != null)
+                        product.setName(request.getName());
+                if (request.getDescription() != null)
+                        product.setDescription(request.getDescription());
+                if (request.getImageUrl() != null)
+                        product.setImageUrl(request.getImageUrl());
+                if (request.getUnitOfMeasure() != null)
+                        product.setUnitOfMeasure(request.getUnitOfMeasure());
+                if (request.getReorderLimit() != null)
+                        product.setReorderLimit(request.getReorderLimit());
+                if (request.getVatClassificationCode() != null)
+                        product.setVatClassificationCode(request.getVatClassificationCode());
+                if (request.getPurchasePrice() != null)
+                        product.setPurchasePrice(request.getPurchasePrice());
+                if (request.getSalesPrice() != null)
+                        product.setSalesPrice(request.getSalesPrice());
+                if (request.getTax() != null)
+                        product.setTax(request.getTax());
+                if (request.getTaxRate() != null)
+                        product.setTaxRate(request.getTaxRate());
+        }
+
+        private CrmSalesProductResponse mapEntityToResponse(CrmSalesProduct product) {
+                CrmSalesProductResponse response = new CrmSalesProductResponse();
+                response.setId(product.getId());
+                response.setItemType(product.getItemType());
+                response.setPurchase(product.isPurchase());
+                response.setSales(product.isSales());
+                response.setItemCode(product.getItemCode());
+                response.setName(product.getName());
+                response.setDescription(product.getDescription());
+                response.setImageUrl(product.getImageUrl());
+                response.setUnitOfMeasure(product.getUnitOfMeasure());
+                response.setReorderLimit(product.getReorderLimit());
+                response.setVatClassificationCode(product.getVatClassificationCode());
+                response.setPurchasePrice(product.getPurchasePrice());
+                response.setSalesPrice(product.getSalesPrice());
+                response.setTax(product.getTax());
+                response.setTaxRate(product.getTaxRate());
+                response.setCreatedAt(product.getCreatedAt());
+                response.setUpdatedAt(product.getUpdatedAt());
+                return response;
+        }
+}

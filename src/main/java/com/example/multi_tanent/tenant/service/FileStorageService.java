@@ -35,7 +35,8 @@ public class FileStorageService {
 
     public String storeFile(MultipartFile file, String employeeCode) {
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
-        String fileName = employeeCode + "_" + System.currentTimeMillis() + "_" + originalFileName.replaceAll("[^a-zA-Z0-9._-]", "");
+        String fileName = employeeCode + "_" + System.currentTimeMillis() + "_"
+                + originalFileName.replaceAll("[^a-zA-Z0-9._-]", "");
 
         try {
             if (fileName.contains("..")) {
@@ -51,9 +52,54 @@ public class FileStorageService {
         }
     }
 
-    public Resource loadFileAsResource(String fileName) {
+    public String storeFile(MultipartFile file, String subDirectory, boolean isTenantSpecific) {
+        String tenantId = TenantContext.getTenantId();
+        if (isTenantSpecific && (tenantId == null || tenantId.isBlank())) {
+            throw new IllegalStateException("Cannot store file without a tenant context.");
+        }
+
+        String originalFileName = StringUtils.cleanPath(file.getOriginalFilename());
+        String fileName = System.currentTimeMillis() + "_" + originalFileName.replaceAll("[^a-zA-Z0-9._-]", "");
+
         try {
-            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            if (fileName.contains("..")) {
+                throw new RuntimeException("Sorry! Filename contains invalid path sequence " + fileName);
+            }
+
+            Path targetDir = this.fileStorageLocation;
+            if (isTenantSpecific) {
+                targetDir = targetDir.resolve(tenantId);
+            }
+            targetDir = targetDir.resolve(subDirectory).normalize();
+
+            Files.createDirectories(targetDir);
+
+            Path targetLocation = targetDir.resolve(fileName);
+            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+            return Paths.get(subDirectory, fileName).toString().replace("\\", "/");
+        } catch (IOException ex) {
+            throw new RuntimeException("Could not store file " + fileName + ". Please try again!", ex);
+        }
+    }
+
+    public Resource loadFileAsResource(String fileName) {
+        return loadFileAsResource(fileName, false);
+    }
+
+    public Resource loadFileAsResource(String fileName, boolean isTenantSpecific) {
+        try {
+            Path filePath;
+            if (isTenantSpecific) {
+                String tenantId = TenantContext.getTenantId();
+                if (tenantId == null || tenantId.isBlank()) {
+                    throw new IllegalStateException("Cannot load tenant file without a tenant context.");
+                }
+                filePath = this.fileStorageLocation.resolve(tenantId).resolve(fileName).normalize();
+            } else {
+                filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            }
+
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists() && resource.isReadable()) {
                 return resource;
@@ -82,9 +128,11 @@ public class FileStorageService {
      * Stores a file from a byte array into a specified subdirectory.
      *
      * @param fileBytes    The byte array of the file to store.
-     * @param subDirectory The subdirectory within the main upload directory (e.g., "barcodes", "logos").
+     * @param subDirectory The subdirectory within the main upload directory (e.g.,
+     *                     "barcodes", "logos").
      * @param filename     The desired filename.
-     * @return The relative path to the stored file (e.g., "barcodes/my-barcode.png").
+     * @return The relative path to the stored file (e.g.,
+     *         "barcodes/my-barcode.png").
      */
     public String storeFile(byte[] fileBytes, String subDirectory, String filename) {
         String tenantId = TenantContext.getTenantId();
@@ -106,14 +154,16 @@ public class FileStorageService {
             Path targetLocation = subDirPath.resolve(cleanFilename);
             Files.write(targetLocation, fileBytes);
 
-            return Paths.get(subDirectory, cleanFilename).toString().replace("\\", "/"); // Ensure consistent path separators
+            return Paths.get(subDirectory, cleanFilename).toString().replace("\\", "/"); // Ensure consistent path
+                                                                                         // separators
         } catch (IOException ex) {
             throw new RuntimeException("Could not store file " + filename + ". Please try again!", ex);
         }
     }
 
     private String buildFileUrl(String relativePath, String tenantId) {
-        // The relativePath from storeFile already includes the subdirectory (e.g., "barcodes/file.png")
+        // The relativePath from storeFile already includes the subdirectory (e.g.,
+        // "barcodes/file.png")
         // We need to prepend the main upload path and the tenant ID.
         return ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/uploads/") // This path must match MvcConfig's resource handler
@@ -124,8 +174,10 @@ public class FileStorageService {
     }
 
     private String getRelativePathFromFullUrl(String fullUrl) {
-        // This is a helper to extract the storable part of the URL if needed for deletion
-        // e.g., "http://.../uploads/tenant1/barcodes/file.png" -> "tenant1/barcodes/file.png"
+        // This is a helper to extract the storable part of the URL if needed for
+        // deletion
+        // e.g., "http://.../uploads/tenant1/barcodes/file.png" ->
+        // "tenant1/barcodes/file.png"
         return fullUrl.substring(fullUrl.indexOf("/uploads/") + "/uploads/".length());
     }
 }

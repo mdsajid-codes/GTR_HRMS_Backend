@@ -1,5 +1,6 @@
 package com.example.multi_tanent.sales.dto;
 
+import com.example.multi_tanent.sales.enums.QuotationType;
 import com.example.multi_tanent.sales.enums.SalesStatus;
 import lombok.Data;
 
@@ -9,19 +10,18 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
-public class SalesOrderResponse {
+public class QuotationResponse {
     private Long id;
-    private LocalDate salesOrderDate;
+    private LocalDate quotationDate;
     private Long customerId;
-    private String customerName;
-    private String salesOrderNumber;
-    private String reference;
-    private String customerPoNo;
-    private LocalDate customerPoDate;
+    private String customerName; // Added for convenience
     private Long salespersonId;
     private String salespersonName;
-    private String saleType;
-    private List<SalesOrderItemResponse> items;
+    private String quotationNumber;
+    private String reference;
+    private LocalDate expiryDate;
+    private QuotationType quotationType;
+    private List<QuotationItemResponse> items;
     private BigDecimal subTotal;
     private BigDecimal totalDiscount;
     private BigDecimal grossTotal;

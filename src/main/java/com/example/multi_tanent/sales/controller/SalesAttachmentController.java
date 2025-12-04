@@ -1,52 +1,49 @@
 package com.example.multi_tanent.sales.controller;
 
-import com.example.multi_tanent.sales.dto.SalesAttachmentResponse;
-import com.example.multi_tanent.sales.enums.DocumentType;
-import com.example.multi_tanent.sales.service.SalesAttachmentService;
+import com.example.multi_tanent.tenant.service.FileStorageService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.List;
 
 @RestController
-@RequestMapping("/api/sales/attachments")
+@RequestMapping("/api/sales/attachments/quotations")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class SalesAttachmentController {
 
-    private final SalesAttachmentService attachmentService;
+    private final FileStorageService fileStorageService;
 
-    @PostMapping
-    public ResponseEntity<SalesAttachmentResponse> uploadAttachment(
-            @RequestParam("docType") DocumentType docType,
-            @RequestParam("docId") Long docId,
-            @RequestParam("file") MultipartFile file) throws IOException {
+    @GetMapping("/**")
+    public ResponseEntity<Resource> getAttachment(HttpServletRequest request) {
+        String requestUri = request.getRequestURI();
+        // Extract path after /api/sales/attachments/
+        String filePath = requestUri.substring(requestUri.indexOf("/attachments/") + "/attachments/".length());
+        // URL decode the file path to handle spaces and special characters
+        filePath = java.net.URLDecoder.decode(filePath, java.nio.charset.StandardCharsets.UTF_8);
 
-        if (file.isEmpty()) {
-            return ResponseEntity.badRequest().build();
+        Resource resource = fileStorageService.loadFileAsResource(filePath, true);
+
+        String contentType = null;
+        try {
+            contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+        } catch (IOException ex) {
+            // fallback
         }
-        SalesAttachmentResponse response = attachmentService.attachFile(docType, docId, file);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
 
-    @GetMapping
-    public ResponseEntity<List<SalesAttachmentResponse>> getAttachments(
-            @RequestParam("docType") DocumentType docType,
-            @RequestParam("docId") Long docId) {
-        return ResponseEntity.ok(attachmentService.getAttachmentsForDocument(docType, docId));
-    }
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
 
-    @DeleteMapping("/{attachmentId}")
-    public ResponseEntity<Void> deleteAttachment(
-            @RequestParam("docType") DocumentType docType,
-            @RequestParam("docId") Long docId,
-            @PathVariable Long attachmentId) {
-        attachmentService.deleteAttachment(docType, docId, attachmentId);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 }

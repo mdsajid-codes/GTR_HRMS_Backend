@@ -1,6 +1,6 @@
 package com.example.multi_tanent.sales.repository;
 
-import com.example.multi_tanent.sales.entity.SalesOrder;
+import com.example.multi_tanent.sales.entity.Quotation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,8 +9,8 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface SalesOrderRepository extends JpaRepository<SalesOrder, Long> {
-    Page<SalesOrder> findByTenantId(Long tenantId, Pageable pageable);
+public interface QuotationRepository extends JpaRepository<Quotation, Long> {
+    Page<Quotation> findByTenantId(Long tenantId, Pageable pageable);
 
-    Optional<SalesOrder> findByIdAndTenantId(Long id, Long tenantId);
+    Optional<Quotation> findByIdAndTenantId(Long id, Long tenantId);
 }

@@ -1,6 +1,5 @@
 package com.example.multi_tanent.spersusers.enitity;
 
-import com.example.multi_tanent.sales.entity.SaleCustomer;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

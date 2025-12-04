@@ -1,7 +1,7 @@
 package com.example.multi_tanent.spersusers.dto;
 
 import com.example.multi_tanent.spersusers.base.PartyBase;
-import com.example.multi_tanent.spersusers.base.PartyBase;
+
 import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
 import lombok.Builder;
 import lombok.Data;
@@ -132,9 +132,12 @@ public class PartyResponse {
                 .createdDate(entity.getCreatedDate())
                 .primaryContactPersonFull(entity.getPrimaryContactPersonFull())
                 .active(entity.getActive())
-                .otherPersons(entity.getOtherPersons().stream().map(OtherPersonResponse::fromEntity).collect(Collectors.toList()))
-                .customFields(entity.getCustomFields().stream().map(CustomFieldResponse::fromEntity).collect(Collectors.toList()))
-                .bankDetails(entity.getBankDetails().stream().map(BaseBankDetailsResponse::fromEntity).collect(Collectors.toList()))
+                .otherPersons(entity.getOtherPersons().stream().map(OtherPersonResponse::fromEntity)
+                        .collect(Collectors.toList()))
+                .customFields(entity.getCustomFields().stream().map(CustomFieldResponse::fromEntity)
+                        .collect(Collectors.toList()))
+                .bankDetails(entity.getBankDetails().stream().map(BaseBankDetailsResponse::fromEntity)
+                        .collect(Collectors.toList()))
                 .build();
     }
 }

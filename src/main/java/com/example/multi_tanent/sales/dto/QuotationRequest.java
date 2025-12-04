@@ -1,27 +1,26 @@
 package com.example.multi_tanent.sales.dto;
 
+import com.example.multi_tanent.sales.enums.QuotationType;
 import com.example.multi_tanent.sales.enums.SalesStatus;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
-public class SalesOrderRequest {
-    private LocalDate salesOrderDate;
+public class QuotationRequest {
+    private LocalDate quotationDate;
     private Long customerId;
-    private String reference;
-    private String customerPoNo;
-    private LocalDate customerPoDate;
     private Long salespersonId;
-    private String saleType;
-    private List<SalesOrderItemRequest> items;
+    private String reference;
+    private LocalDate expiryDate;
+    private QuotationType quotationType;
+    private List<QuotationItemRequest> items;
     private String termsAndConditions;
     private String notes;
     private String emailTo;
     private SalesStatus status;
-    private BigDecimal totalDiscount;
-    private BigDecimal otherCharges;
     private String template;
+    private java.math.BigDecimal totalDiscount;
+    private java.math.BigDecimal otherCharges;
 }

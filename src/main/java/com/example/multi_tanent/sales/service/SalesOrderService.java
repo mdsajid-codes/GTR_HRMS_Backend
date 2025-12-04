@@ -1,250 +1,391 @@
 package com.example.multi_tanent.sales.service;
 
 import com.example.multi_tanent.config.TenantContext;
-import com.example.multi_tanent.production.repository.ProTaxRepository;
-import com.example.multi_tanent.production.repository.ProUnitRepository;
-import com.example.multi_tanent.sales.dto.*;
-import com.example.multi_tanent.sales.entity.*;
-import com.example.multi_tanent.sales.enums.DocumentStatus;
-import com.example.multi_tanent.sales.enums.DocumentType;
-import com.example.multi_tanent.sales.repository.*;
+import com.example.multi_tanent.crm.entity.CrmSalesProduct;
+import com.example.multi_tanent.crm.repository.CrmSalesProductRepository;
+import com.example.multi_tanent.sales.dto.SalesOrderItemRequest;
+import com.example.multi_tanent.sales.dto.SalesOrderItemResponse;
+import com.example.multi_tanent.sales.dto.SalesOrderRequest;
+import com.example.multi_tanent.sales.dto.SalesOrderResponse;
+import com.example.multi_tanent.sales.entity.SalesOrder;
+import com.example.multi_tanent.sales.entity.SalesOrderItem;
+import com.example.multi_tanent.sales.enums.SalesStatus;
+import com.example.multi_tanent.sales.repository.SalesOrderRepository;
+import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
+import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
+import com.example.multi_tanent.spersusers.repository.PartyRepository;
+import com.example.multi_tanent.tenant.employee.repository.EmployeeRepository;
 import com.example.multi_tanent.spersusers.repository.TenantRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class SalesOrderService {
 
-    private final SalesOrderRepository orderRepo;
-    private final SalesQuotationRepository quotationRepo;
-    private final SaleCustomerRepository customerRepo;
-    private final SaleProductRepository productRepo;
-    private final ProUnitRepository unitRepo;
-    private final ProTaxRepository taxRepo;
-    private final SalesTermAndConditionRepository termAndConditionRepo;
-    private final SalesAttachmentRepository attachmentRepo;
-    private final TenantRepository tenantRepo;
+    private final SalesOrderRepository salesOrderRepository;
+    private final PartyRepository partyRepository;
+    private final EmployeeRepository employeeRepository;
+    private final CrmSalesProductRepository productRepository;
+    private final TenantRepository tenantRepository;
+    private final com.example.multi_tanent.production.repository.ProCategoryRepository categoryRepository;
+    private final com.example.multi_tanent.production.repository.ProSubCategoryRepository subCategoryRepository;
+    private final com.example.multi_tanent.tenant.service.FileStorageService fileStorageService;
+    private final com.example.multi_tanent.sales.repository.QuotationRepository quotationRepository;
 
-    private Tenant getCurrentTenant() {
-        String tenantId = TenantContext.getTenantId();
-        return tenantRepo.findByTenantId(tenantId)
-                .orElseThrow(() -> new IllegalStateException("Tenant not found: " + tenantId));
-    }
+    @Transactional
+    public SalesOrderResponse createSalesOrder(SalesOrderRequest request,
+            org.springframework.web.multipart.MultipartFile[] attachments) {
+        String tenantIdentifier = TenantContext.getTenantId();
+        Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
 
-    public SalesOrderResponse create(SalesOrderRequest req) {
-        if (orderRepo.existsByNumber(req.getNumber())) {
-            throw new IllegalArgumentException("Sales Order with number '" + req.getNumber() + "' already exists.");
+        BaseCustomer customer = partyRepository.findByTenantIdAndId(tenant.getId(), request.getCustomerId())
+                .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
+
+        SalesOrder salesOrder = new SalesOrder();
+        salesOrder.setTenant(tenant);
+        salesOrder.setCustomer(customer);
+        salesOrder.setSalesOrderNumber("SO-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        salesOrder.setStatus(SalesStatus.DRAFT);
+
+        mapRequestToEntity(request, salesOrder, tenant.getId());
+
+        if (attachments != null && attachments.length > 0) {
+            for (org.springframework.web.multipart.MultipartFile file : attachments) {
+                if (!file.isEmpty()) {
+                    String fileUrl = fileStorageService.storeFile(file, "sales_orders", true);
+                    salesOrder.getAttachments().add(fileUrl);
+                }
+            }
         }
 
-        SalesOrder order = new SalesOrder();
-        applyRequestToEntity(req, order);
-        recalculateTotals(order);
+        calculateTotals(salesOrder);
 
-        return toResponse(orderRepo.save(order));
+        SalesOrder savedSalesOrder = salesOrderRepository.save(salesOrder);
+        return mapEntityToResponse(savedSalesOrder);
     }
 
     @Transactional
-    public SalesOrderResponse createFromQuotation(Long quotationId) {
-        // 1. Find the source quotation
-        SalesQuotation quotation = quotationRepo.findById(quotationId)
-                .orElseThrow(() -> new EntityNotFoundException("Quotation not found: " + quotationId));
+    public SalesOrderResponse updateSalesOrder(Long id, SalesOrderRequest request,
+            org.springframework.web.multipart.MultipartFile[] attachments) {
+        String tenantIdentifier = TenantContext.getTenantId();
+        Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
 
-        // 2. Create a new SalesOrder
-        SalesOrder order = new SalesOrder();
-        order.setNumber("SO-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase()); // Generate a temporary unique number
-        order.setDate(java.time.LocalDate.now());
-        order.setStatus(DocumentStatus.DRAFT);
+        SalesOrder salesOrder = salesOrderRepository.findByIdAndTenantId(id, tenant.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found"));
 
-        // 3. Copy header details
-        order.setCustomer(quotation.getCustomer());
-        order.setCurrency(quotation.getCurrency());
-        order.setNotes("Created from Quotation: " + quotation.getNumber());
-        order.setTermAndCondition(quotation.getTermAndCondition());
-        order.setSourceQuotation(quotation);
-
-        // 4. Copy line items
-        for (SalesQuotationLine quoteLine : quotation.getItems()) {
-            SalesOrderLine orderLine = new SalesOrderLine();
-            orderLine.setSalesOrder(order);
-            orderLine.setProduct(quoteLine.getProduct());
-            orderLine.setDescription(quoteLine.getDescription());
-            orderLine.setQuantity(quoteLine.getQuantity());
-            orderLine.setUnitPrice(quoteLine.getUnitPrice());
-            orderLine.setDiscount(quoteLine.getDiscount());
-            orderLine.setUnit(quoteLine.getUnit());
-            orderLine.setTax(quoteLine.getTax());
-            orderLine.setLineTotal(quoteLine.getLineTotal());
-            order.getLines().add(orderLine);
+        if (request.getCustomerId() != null) {
+            BaseCustomer customer = partyRepository.findByTenantIdAndId(tenant.getId(), request.getCustomerId())
+                    .orElseThrow(() -> new EntityNotFoundException("Customer not found"));
+            salesOrder.setCustomer(customer);
         }
 
-        recalculateTotals(order);
-        return toResponse(orderRepo.save(order));
+        mapRequestToEntity(request, salesOrder, tenant.getId());
+
+        if (attachments != null && attachments.length > 0) {
+            for (org.springframework.web.multipart.MultipartFile file : attachments) {
+                if (!file.isEmpty()) {
+                    String fileUrl = fileStorageService.storeFile(file, "sales_orders", true);
+                    salesOrder.getAttachments().add(fileUrl);
+                }
+            }
+        }
+
+        calculateTotals(salesOrder);
+
+        SalesOrder updatedSalesOrder = salesOrderRepository.save(salesOrder);
+        return mapEntityToResponse(updatedSalesOrder);
     }
 
-    public SalesOrderResponse update(Long id, SalesOrderRequest req) {
-        SalesOrder order = orderRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found: " + id));
+    @Transactional(readOnly = true)
+    public SalesOrderResponse getSalesOrderById(Long id) {
+        String tenantIdentifier = TenantContext.getTenantId();
+        Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
 
-        if (!order.getNumber().equals(req.getNumber()) && orderRepo.existsByNumber(req.getNumber())) {
-            throw new IllegalArgumentException("Sales Order with number '" + req.getNumber() + "' already exists.");
-        }
+        SalesOrder salesOrder = salesOrderRepository.findByIdAndTenantId(id, tenant.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found"));
 
-        applyRequestToEntity(req, order);
-        recalculateTotals(order);
-        return toResponse(orderRepo.save(order));
+        return mapEntityToResponse(salesOrder);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SalesOrderResponse> getAllSalesOrders(Pageable pageable) {
+        String tenantIdentifier = TenantContext.getTenantId();
+        Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+
+        return salesOrderRepository.findByTenantId(tenant.getId(), pageable)
+                .map(this::mapEntityToResponse);
     }
 
     @Transactional
-    public void markAsInvoiced(Long orderId) {
-        SalesOrder order = orderRepo.findById(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found: " + orderId));
-        order.setStatus(DocumentStatus.INVOICED);
-        orderRepo.save(order);
+    public void deleteSalesOrder(Long id) {
+        String tenantIdentifier = TenantContext.getTenantId();
+        Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+
+        SalesOrder salesOrder = salesOrderRepository.findByIdAndTenantId(id, tenant.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found"));
+
+        salesOrderRepository.delete(salesOrder);
     }
 
-    @Transactional(readOnly = true)
-    public SalesOrderResponse getById(Long id) {
-        return orderRepo.findById(id)
-                .map(this::toResponse)
-                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found: " + id));
+    @Transactional
+    public SalesOrderResponse updateStatus(Long id, SalesStatus status) {
+        String tenantIdentifier = TenantContext.getTenantId();
+        Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
+
+        SalesOrder salesOrder = salesOrderRepository.findByIdAndTenantId(id, tenant.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found"));
+
+        salesOrder.setStatus(status);
+        SalesOrder updatedSalesOrder = salesOrderRepository.save(salesOrder);
+        return mapEntityToResponse(updatedSalesOrder);
     }
 
-    @Transactional(readOnly = true)
-    public List<SalesOrderResponse> getAll() {
-        return orderRepo.findAll()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
+    @Transactional
+    public SalesOrderResponse createSalesOrderFromQuotation(Long quotationId) {
+        String tenantIdentifier = TenantContext.getTenantId();
+        Tenant tenant = tenantRepository.findByTenantId(tenantIdentifier)
+                .orElseThrow(() -> new EntityNotFoundException("Tenant not found"));
 
-    public void delete(Long id) {
-        SalesOrder order = orderRepo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found: " + id));
-        orderRepo.delete(order);
-    }
+        com.example.multi_tanent.sales.entity.Quotation quotation = quotationRepository.findById(quotationId)
+                .orElseThrow(() -> new EntityNotFoundException("Quotation not found"));
 
-    public void recalculateOrderTotals(Long orderId) {
-        SalesOrder order = orderRepo.findById(orderId)
-                .orElseThrow(() -> new EntityNotFoundException("Sales Order not found: " + orderId));
-        recalculateTotals(order);
-        orderRepo.save(order);
-    }
-
-    private void applyRequestToEntity(SalesOrderRequest req, SalesOrder entity) {
-        entity.setNumber(req.getNumber());
-        entity.setDate(req.getDate());
-        entity.setCurrency(req.getCurrency());
-        entity.setStatus(req.getStatus());
-        entity.setNotes(req.getNotes());
-
-        if (req.getCustomerId() != null) {
-            SaleCustomer customer = customerRepo.findById(req.getCustomerId())
-                    .orElseThrow(() -> new EntityNotFoundException("Customer not found: " + req.getCustomerId()));
-            entity.setCustomer(customer);
+        // Verify tenant ownership
+        if (!quotation.getTenant().getId().equals(tenant.getId())) {
+            throw new EntityNotFoundException("Quotation not found");
         }
 
-        if (req.getSourceQuotationId() != null) {
-            SalesQuotation quotation = quotationRepo.findById(req.getSourceQuotationId())
-                    .orElseThrow(() -> new EntityNotFoundException("Source Quotation not found: " + req.getSourceQuotationId()));
-            entity.setSourceQuotation(quotation);
+        SalesOrder salesOrder = new SalesOrder();
+        salesOrder.setTenant(tenant);
+        salesOrder.setCustomer(quotation.getCustomer());
+        salesOrder.setSalesOrderNumber("SO-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        salesOrder.setStatus(SalesStatus.DRAFT);
+        salesOrder.setSalesOrderDate(java.time.LocalDate.now());
+        salesOrder.setReference(quotation.getReference());
+        salesOrder.setTermsAndConditions(quotation.getTermsAndConditions());
+        salesOrder.setNotes(quotation.getNotes());
+        salesOrder.setEmailTo(quotation.getEmailTo());
+        salesOrder.setTemplate(quotation.getTemplate());
+        salesOrder.setSalesperson(quotation.getSalesperson());
+        // salesOrder.setSalesperson(quotation.getSalesperson()); // Assuming Quotation
+        // has salesperson, but it wasn't in the entity view earlier?
+        // Checking Quotation entity again... it doesn't seem to have salesperson field
+        // in the view I saw earlier.
+        // Wait, SalesOrder has salesperson. If Quotation doesn't, we skip it.
+
+        // Map items
+        salesOrder.getItems().clear(); // Should be empty anyway
+        for (com.example.multi_tanent.sales.entity.QuotationItem qItem : quotation.getItems()) {
+            SalesOrderItem item = new SalesOrderItem();
+            item.setSalesOrder(salesOrder);
+            item.setCrmProduct(qItem.getCrmProduct());
+            item.setItemCode(qItem.getItemCode());
+            item.setItemName(qItem.getItemName());
+            item.setCategory(qItem.getCategory());
+            item.setSubcategory(qItem.getSubcategory());
+            item.setQuantity(qItem.getQuantity());
+            item.setRate(qItem.getRate());
+            item.setTaxValue(qItem.getTaxValue());
+            item.setTaxExempt(qItem.isTaxExempt());
+            item.setTaxPercentage(qItem.getTaxPercentage());
+            item.setAmount(qItem.getAmount());
+
+            salesOrder.getItems().add(item);
         }
 
-        if (req.getTermAndConditionId() != null) {
-            Long tenantId = getCurrentTenant().getId();
-            entity.setTermAndCondition(termAndConditionRepo.findByTenantIdAndId(tenantId, req.getTermAndConditionId()).orElse(null));
-        } else {
-            entity.setTermAndCondition(null);
+        calculateTotals(salesOrder);
+
+        SalesOrder savedSalesOrder = salesOrderRepository.save(salesOrder);
+
+        // Optionally update quotation status
+        quotation.setStatus(SalesStatus.CONVERTED); // If CONVERTED status exists
+        quotationRepository.save(quotation);
+
+        return mapEntityToResponse(savedSalesOrder);
+    }
+
+    private void mapRequestToEntity(SalesOrderRequest request, SalesOrder salesOrder, Long tenantId) {
+        if (request.getSalesOrderDate() != null)
+            salesOrder.setSalesOrderDate(request.getSalesOrderDate());
+        if (request.getReference() != null)
+            salesOrder.setReference(request.getReference());
+        if (request.getCustomerPoNo() != null)
+            salesOrder.setCustomerPoNo(request.getCustomerPoNo());
+        if (request.getCustomerPoDate() != null)
+            salesOrder.setCustomerPoDate(request.getCustomerPoDate());
+        if (request.getSalespersonId() != null) {
+            Employee employee = employeeRepository.findById(request.getSalespersonId())
+                    .orElseThrow(() -> new EntityNotFoundException("Salesperson not found"));
+            salesOrder.setSalesperson(employee);
         }
+        if (request.getSaleType() != null)
+            salesOrder.setSaleType(request.getSaleType());
+        if (request.getTermsAndConditions() != null)
+            salesOrder.setTermsAndConditions(request.getTermsAndConditions());
+        if (request.getNotes() != null)
+            salesOrder.setNotes(request.getNotes());
+        if (request.getEmailTo() != null)
+            salesOrder.setEmailTo(request.getEmailTo());
+        if (request.getStatus() != null)
+            salesOrder.setStatus(request.getStatus());
+        if (request.getTotalDiscount() != null)
+            salesOrder.setTotalDiscount(request.getTotalDiscount());
+        if (request.getOtherCharges() != null)
+            salesOrder.setOtherCharges(request.getOtherCharges());
+        if (request.getTemplate() != null)
+            salesOrder.setTemplate(request.getTemplate());
 
-        entity.getLines().clear();
-        if (req.getLines() != null) {
-            for (SalesOrderLineRequest lineReq : req.getLines()) {
-                SalesOrderLine line = new SalesOrderLine();
-                line.setSalesOrder(entity);
+        if (request.getItems() != null) {
+            salesOrder.getItems().clear();
+            for (SalesOrderItemRequest itemRequest : request.getItems()) {
+                SalesOrderItem item = new SalesOrderItem();
+                item.setSalesOrder(salesOrder);
 
-                if (lineReq.getProductId() != null) {
-                    SaleProduct product = productRepo.findById(lineReq.getProductId())
-                            .orElseThrow(() -> new EntityNotFoundException("Product not found: " + lineReq.getProductId()));
-                    line.setProduct(product);
+                CrmSalesProduct product = productRepository.findByIdAndTenantId(itemRequest.getCrmProductId(), tenantId)
+                        .orElseThrow(() -> new EntityNotFoundException(
+                                "Product not found: " + itemRequest.getCrmProductId()));
+
+                item.setCrmProduct(product);
+                item.setItemCode(itemRequest.getItemCode() != null ? itemRequest.getItemCode() : product.getItemCode());
+                item.setItemName(itemRequest.getItemName() != null ? itemRequest.getItemName() : product.getName());
+
+                if (itemRequest.getCategoryId() != null) {
+                    com.example.multi_tanent.production.entity.ProCategory category = categoryRepository
+                            .findById(itemRequest.getCategoryId())
+                            .orElseThrow(() -> new EntityNotFoundException("Category not found"));
+                    item.setCategory(category);
                 }
-                line.setDescription(lineReq.getDescription());
 
-                if (lineReq.getUnitId() != null) {
-                    line.setUnit(unitRepo.findById(lineReq.getUnitId())
-                            .orElseThrow(() -> new EntityNotFoundException("Unit not found: " + lineReq.getUnitId())));
+                if (itemRequest.getSubcategoryId() != null) {
+                    com.example.multi_tanent.production.entity.ProSubCategory subCategory = subCategoryRepository
+                            .findById(itemRequest.getSubcategoryId())
+                            .orElseThrow(() -> new EntityNotFoundException("SubCategory not found"));
+                    item.setSubcategory(subCategory);
                 }
 
-                if (lineReq.getTaxId() != null) {
-                    line.setTax(taxRepo.findById(lineReq.getTaxId())
-                            .orElseThrow(() -> new EntityNotFoundException("Tax not found: " + lineReq.getTaxId())));
-                }
+                item.setQuantity(itemRequest.getQuantity());
+                item.setRate(itemRequest.getRate());
+                item.setTaxValue(itemRequest.getTaxValue());
+                item.setTaxExempt(itemRequest.isTaxExempt());
+                item.setTaxPercentage(itemRequest.getTaxPercentage());
 
-                line.setQuantity(lineReq.getQuantity() != null ? lineReq.getQuantity() : BigDecimal.ZERO);
-                line.setUnitPrice(lineReq.getUnitPrice() != null ? lineReq.getUnitPrice() : BigDecimal.ZERO);
-                line.setDiscount(lineReq.getDiscount() != null ? lineReq.getDiscount() : BigDecimal.ZERO);
+                // Calculate amount for item
+                BigDecimal amount = item.getRate().multiply(BigDecimal.valueOf(item.getQuantity()));
+                item.setAmount(amount);
 
-                BigDecimal lineTotal = (line.getUnitPrice() != null ? line.getUnitPrice() : BigDecimal.ZERO)
-                        .multiply(line.getQuantity() != null ? line.getQuantity() : BigDecimal.ZERO)
-                        .subtract(line.getDiscount() != null ? line.getDiscount() : BigDecimal.ZERO);
-                line.setLineTotal(lineTotal.setScale(2, RoundingMode.HALF_UP));
-                entity.getLines().add(line);
+                salesOrder.getItems().add(item);
             }
         }
     }
 
-    private void recalculateTotals(SalesOrder entity) {
-        BigDecimal subtotal = entity.getLines().stream().map(SalesOrderLine::getLineTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal taxTotal = entity.getLines().stream()
-                .filter(l -> l.getTax() != null && l.getTax().getRate() != null && l.getTax().getRate().compareTo(BigDecimal.ZERO) > 0)
-                .map(l -> l.getLineTotal().multiply(l.getTax().getRate().divide(new BigDecimal("100"))))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    private void calculateTotals(SalesOrder salesOrder) {
+        BigDecimal subTotal = BigDecimal.ZERO;
+        BigDecimal totalTax = BigDecimal.ZERO;
 
-        entity.setSubtotal(subtotal.setScale(2, RoundingMode.HALF_UP));
-        entity.setTaxTotal(taxTotal.setScale(2, RoundingMode.HALF_UP));
-        entity.setGrandTotal(subtotal.add(taxTotal).setScale(2, RoundingMode.HALF_UP));
+        for (SalesOrderItem item : salesOrder.getItems()) {
+            subTotal = subTotal.add(item.getAmount());
+            if (!item.isTaxExempt() && item.getTaxValue() != null) {
+                totalTax = totalTax.add(item.getTaxValue());
+            }
+        }
+
+        salesOrder.setSubTotal(subTotal);
+        salesOrder.setTotalTax(totalTax);
+
+        BigDecimal discount = salesOrder.getTotalDiscount() != null ? salesOrder.getTotalDiscount() : BigDecimal.ZERO;
+        salesOrder.setTotalDiscount(discount);
+
+        BigDecimal otherCharges = salesOrder.getOtherCharges() != null ? salesOrder.getOtherCharges() : BigDecimal.ZERO;
+        salesOrder.setOtherCharges(otherCharges);
+
+        BigDecimal grossTotal = subTotal.subtract(discount);
+        salesOrder.setGrossTotal(grossTotal);
+
+        salesOrder.setNetTotal(grossTotal.add(totalTax).add(salesOrder.getOtherCharges()));
     }
 
-    private SalesOrderResponse toResponse(SalesOrder e) {
-        List<SalesOrderLineResponse> lineResponses = e.getLines().stream().map(this::toLineResponse).collect(Collectors.toList());
-        List<SalesAttachmentResponse> attachmentResponses = attachmentRepo.findByDocTypeAndDocId(DocumentType.ORDER, e.getId())
-                .stream().map(SalesAttachmentResponse::fromEntity).collect(Collectors.toList());
+    private SalesOrderResponse mapEntityToResponse(SalesOrder salesOrder) {
+        SalesOrderResponse response = new SalesOrderResponse();
+        response.setId(salesOrder.getId());
+        response.setSalesOrderDate(salesOrder.getSalesOrderDate());
+        if (salesOrder.getCustomer() != null) {
+            response.setCustomerId(salesOrder.getCustomer().getId());
+            response.setCustomerName(salesOrder.getCustomer().getCompanyName());
+        }
+        response.setSalesOrderNumber(salesOrder.getSalesOrderNumber());
+        response.setReference(salesOrder.getReference());
+        response.setCustomerPoNo(salesOrder.getCustomerPoNo());
+        response.setCustomerPoDate(salesOrder.getCustomerPoDate());
+        if (salesOrder.getSalesperson() != null) {
+            response.setSalespersonId(salesOrder.getSalesperson().getId());
+            String fullName = salesOrder.getSalesperson().getFirstName();
+            if (salesOrder.getSalesperson().getLastName() != null) {
+                fullName += " " + salesOrder.getSalesperson().getLastName();
+            }
+            response.setSalespersonName(fullName);
+        }
+        response.setSaleType(salesOrder.getSaleType());
 
-        return SalesOrderResponse.builder()
-                .id(e.getId()).number(e.getNumber()).date(e.getDate())
-                .customerId(e.getCustomer() != null ? e.getCustomer().getId() : null)
-                .customerName(e.getCustomer() != null ? e.getCustomer().getName() : null)
-                .currency(e.getCurrency()).status(e.getStatus()).subtotal(e.getSubtotal())
-                .taxTotal(e.getTaxTotal()).grandTotal(e.getGrandTotal()).notes(e.getNotes())
-                .sourceQuotationId(e.getSourceQuotation() != null ? e.getSourceQuotation().getId() : null)
-                .termAndCondition(SalesTermAndConditionResponse.fromEntity(e.getTermAndCondition()))
-                .createdAt(e.getCreatedAt()).updatedAt(e.getUpdatedAt()).version(e.getVersion())
-                .lines(lineResponses)
-                .attachments(attachmentResponses)
-                .build();
-    }
+        List<SalesOrderItemResponse> itemResponses = salesOrder.getItems().stream().map(item -> {
+            SalesOrderItemResponse itemResponse = new SalesOrderItemResponse();
+            itemResponse.setId(item.getId());
+            if (item.getCrmProduct() != null) {
+                itemResponse.setCrmProductId(item.getCrmProduct().getId());
+            }
+            itemResponse.setItemCode(item.getItemCode());
+            itemResponse.setItemName(item.getItemName());
+            if (item.getCategory() != null) {
+                itemResponse.setCategoryId(item.getCategory().getId());
+                itemResponse.setCategoryName(item.getCategory().getName());
+            }
+            if (item.getSubcategory() != null) {
+                itemResponse.setSubcategoryId(item.getSubcategory().getId());
+                itemResponse.setSubcategoryName(item.getSubcategory().getName());
+            }
+            itemResponse.setQuantity(item.getQuantity());
+            itemResponse.setRate(item.getRate());
+            itemResponse.setAmount(item.getAmount());
+            itemResponse.setTaxValue(item.getTaxValue());
+            itemResponse.setTaxExempt(item.isTaxExempt());
+            itemResponse.setTaxPercentage(item.getTaxPercentage());
+            return itemResponse;
+        }).collect(Collectors.toList());
 
-    private SalesOrderLineResponse toLineResponse(SalesOrderLine l) {
-        return SalesOrderLineResponse.builder()
-                .id(l.getId()).productId(l.getProduct() != null ? l.getProduct().getId() : null)
-                .productName(l.getProduct() != null ? l.getProduct().getName() : null)
-                .description(l.getDescription()).quantity(l.getQuantity()).unitPrice(l.getUnitPrice())
-                .unitId(l.getUnit() != null ? l.getUnit().getId() : null)
-                .unitName(l.getUnit() != null ? l.getUnit().getName() : null)
-                .discount(l.getDiscount())
-                .taxId(l.getTax() != null ? l.getTax().getId() : null)
-                .taxCode(l.getTax() != null ? l.getTax().getCode() : null)
-                .taxRate(l.getTax() != null ? l.getTax().getRate() : null)
-                .lineTotal(l.getLineTotal()).build();
+        response.setItems(itemResponses);
+        response.setSubTotal(salesOrder.getSubTotal());
+        response.setTotalDiscount(salesOrder.getTotalDiscount());
+        response.setGrossTotal(salesOrder.getGrossTotal());
+        response.setTotalTax(salesOrder.getTotalTax());
+        response.setOtherCharges(salesOrder.getOtherCharges());
+        response.setNetTotal(salesOrder.getNetTotal());
+        response.setTermsAndConditions(salesOrder.getTermsAndConditions());
+        response.setNotes(salesOrder.getNotes());
+        response.setAttachments(new ArrayList<>(salesOrder.getAttachments()));
+        response.setEmailTo(salesOrder.getEmailTo());
+        response.setStatus(salesOrder.getStatus());
+        response.setTemplate(salesOrder.getTemplate());
+        response.setCreatedBy(salesOrder.getCreatedBy());
+        response.setUpdatedBy(salesOrder.getUpdatedBy());
+        response.setCreatedAt(salesOrder.getCreatedAt());
+        response.setUpdatedAt(salesOrder.getUpdatedAt());
+
+        return response;
     }
 }

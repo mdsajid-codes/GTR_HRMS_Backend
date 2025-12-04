@@ -2,56 +2,84 @@ package com.example.multi_tanent.sales.controller;
 
 import com.example.multi_tanent.sales.dto.SalesOrderRequest;
 import com.example.multi_tanent.sales.dto.SalesOrderResponse;
+import com.example.multi_tanent.sales.enums.SalesStatus;
+import com.example.multi_tanent.sales.service.SalesOrderPdfService;
 import com.example.multi_tanent.sales.service.SalesOrderService;
-import com.example.multi_tanent.sales.service.SalesQuotationService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/sales/orders")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class SalesOrderController {
 
-    private final SalesOrderService orderService;
-    private final SalesQuotationService quotationService;
+    private final SalesOrderService salesOrderService;
+    private final SalesOrderPdfService salesOrderPdfService;
 
-    @PostMapping
-    public ResponseEntity<SalesOrderResponse> createOrder(@RequestBody SalesOrderRequest request) {
-        return new ResponseEntity<>(orderService.create(request), HttpStatus.CREATED);
+    @PostMapping(consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SalesOrderResponse> createSalesOrder(
+            @RequestPart("salesOrder") SalesOrderRequest request,
+            @RequestPart(value = "attachments", required = false) org.springframework.web.multipart.MultipartFile[] attachments) {
+        return ResponseEntity.ok(salesOrderService.createSalesOrder(request, attachments));
     }
 
-    @PostMapping("/from-quotation/{quotationId}")
-    public ResponseEntity<SalesOrderResponse> createOrderFromQuotation(@PathVariable Long quotationId) {
-        SalesOrderResponse response = orderService.createFromQuotation(quotationId);
-        // Mark the original quotation as ordered
-        quotationService.markAsOrdered(quotationId);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<SalesOrderResponse>> getAllOrders() {
-        return ResponseEntity.ok(orderService.getAll());
+    @PutMapping(value = "/{id}", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<SalesOrderResponse> updateSalesOrder(@PathVariable Long id,
+            @RequestPart("salesOrder") SalesOrderRequest request,
+            @RequestPart(value = "attachments", required = false) org.springframework.web.multipart.MultipartFile[] attachments) {
+        return ResponseEntity.ok(salesOrderService.updateSalesOrder(id, request, attachments));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SalesOrderResponse> getOrderById(@PathVariable Long id) {
-        return ResponseEntity.ok(orderService.getById(id));
+    public ResponseEntity<SalesOrderResponse> getSalesOrderById(@PathVariable Long id) {
+        return ResponseEntity.ok(salesOrderService.getSalesOrderById(id));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<SalesOrderResponse> updateOrder(@PathVariable Long id, @RequestBody SalesOrderRequest request) {
-        return ResponseEntity.ok(orderService.update(id, request));
+    @GetMapping
+    public ResponseEntity<Page<SalesOrderResponse>> getAllSalesOrders(@PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(salesOrderService.getAllSalesOrders(pageable));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        orderService.delete(id);
+    public ResponseEntity<Void> deleteSalesOrder(@PathVariable Long id) {
+        salesOrderService.deleteSalesOrder(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<SalesOrderResponse> updateStatus(@PathVariable Long id, @RequestParam SalesStatus status) {
+        return ResponseEntity.ok(salesOrderService.updateStatus(id, status));
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) {
+        SalesOrderResponse salesOrder = salesOrderService.getSalesOrderById(id);
+        byte[] pdfBytes = salesOrderPdfService.generateSalesOrderPdf(salesOrder);
+
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=sales_order_" + salesOrder.getSalesOrderNumber() + ".pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+    @PostMapping("/generate-pdf")
+    public ResponseEntity<byte[]> generatePdfFromHtml(
+            @RequestBody com.example.multi_tanent.sales.dto.PdfGenerationRequest request) {
+        byte[] pdfBytes = salesOrderPdfService.generatePdfFromHtml(request.getHtmlContent());
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=generated_invoice.pdf")
+                .contentType(org.springframework.http.MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+    }
+
+    @PostMapping("/from-quotation/{quotationId}")
+    public ResponseEntity<SalesOrderResponse> createSalesOrderFromQuotation(@PathVariable Long quotationId) {
+        return ResponseEntity.ok(salesOrderService.createSalesOrderFromQuotation(quotationId));
     }
 }

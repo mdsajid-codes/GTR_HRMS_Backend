@@ -1,8 +1,8 @@
 package com.example.multi_tanent.sales.entity;
 
+import com.example.multi_tanent.sales.enums.QuotationType;
 import com.example.multi_tanent.sales.enums.SalesStatus;
 import com.example.multi_tanent.spersusers.enitity.BaseCustomer;
-import com.example.multi_tanent.spersusers.enitity.Employee;
 import com.example.multi_tanent.spersusers.enitity.Tenant;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,9 +21,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "sales_orders")
+@Table(name = "quotations")
 @EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
-public class SalesOrder {
+public class Quotation {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,33 +33,31 @@ public class SalesOrder {
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
-    @Column(name = "sales_order_date")
-    private LocalDate salesOrderDate;
+    @Column(name = "quotation_date")
+    private LocalDate quotationDate;
 
     @ManyToOne
     @JoinColumn(name = "customer_id")
     private BaseCustomer customer;
 
-    @Column(name = "sales_order_number", unique = true)
-    private String salesOrderNumber;
+    @ManyToOne
+    @JoinColumn(name = "salesperson_id")
+    private com.example.multi_tanent.spersusers.enitity.Employee salesperson;
+
+    @Column(name = "quotation_number", unique = true)
+    private String quotationNumber;
 
     private String reference;
 
-    @Column(name = "customer_po_no")
-    private String customerPoNo;
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
 
-    @Column(name = "customer_po_date")
-    private LocalDate customerPoDate;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quotation_type")
+    private QuotationType quotationType;
 
-    @ManyToOne
-    @JoinColumn(name = "salesperson_id")
-    private Employee salesperson;
-
-    @Column(name = "sale_type")
-    private String saleType;
-
-    @OneToMany(mappedBy = "salesOrder", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SalesOrderItem> items = new ArrayList<>();
+    @OneToMany(mappedBy = "quotation", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<QuotationItem> items = new ArrayList<>();
 
     @Column(name = "sub_total")
     private BigDecimal subTotal;
@@ -87,15 +85,15 @@ public class SalesOrder {
     private String notes;
 
     @ElementCollection
-    @CollectionTable(name = "sales_order_attachments", joinColumns = @JoinColumn(name = "sales_order_id"))
+    @CollectionTable(name = "quotation_attachments", joinColumns = @JoinColumn(name = "quotation_id"))
     @Column(name = "attachment_url")
     private List<String> attachments = new ArrayList<>();
 
-    @Column(name = "template")
-    private String template;
-
     @Column(name = "email_to")
     private String emailTo;
+
+    @Column(name = "template")
+    private String template;
 
     @Enumerated(EnumType.STRING)
     private SalesStatus status;
