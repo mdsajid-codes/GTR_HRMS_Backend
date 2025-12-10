@@ -1,0 +1,204 @@
+nohup: ignoring input
+[[1;34mINFO[m] Scanning for projects...
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m----------------------< [0;36mcom.example:multi_tanent[0;1m >----------------------[m
+[[1;34mINFO[m] [1mBuilding multi_tanent 0.0.1-SNAPSHOT[m
+[[1;34mINFO[m] [1m--------------------------------[ jar ]---------------------------------[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m>>> [0;32mspring-boot-maven-plugin:3.5.5:run[m [1m(default-cli)[0;1m > [0;1mtest-compile[m @ [36mmulti_tanent[0;1m >>>[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:3.3.1:resources[m [1m(default-resources)[m @ [36mmulti_tanent[0;1m ---[m
+[[1;34mINFO[m] Copying 2 resources from src/main/resources to target/classes
+[[1;34mINFO[m] Copying 2 resources from src/main/resources to target/classes
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.14.0:compile[m [1m(default-compile)[m @ [36mmulti_tanent[0;1m ---[m
+[[1;34mINFO[m] Recompiling the module because of [1mchanged source code[m.
+[[1;34mINFO[m] Compiling 911 source files with javac [debug parameters release 21] to target/classes
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmTaskStage.java:[59,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmTaskStage.java:[62,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmTaskStage.java:[66,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProInventoryType.java:[38,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProWorkGroup.java:[43,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProWorkGroup.java:[46,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProWorkGroup.java:[54,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmNotificationTemplate.java:[59,19] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmNotificationTemplate.java:[69,49] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProManageTask.java:[71,27] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmLeadStage.java:[35,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmLeadStage.java:[38,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmEvent.java:[75,27] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmEvent.java:[84,26] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProProcess.java:[40,39] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmTodoItem.java:[56,24] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmTodoItem.java:[60,26] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmNotificationModuleSetting.java:[30,19] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/pos/entity/Inventory.java:[30,18] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ToolParameter.java:[38,38] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/dto/CrmTodoFilterRequest.java:[28,22] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/dto/CrmTodoFilterRequest.java:[38,20] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/dto/CrmTodoFilterRequest.java:[39,23] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/dto/CrmKpiResponse.java:[19,38] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/dto/CrmKpiResponse.java:[20,41] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProWorkStation.java:[50,28] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/crm/entity/CrmTodoLabel.java:[29,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProTools.java:[56,34] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;33mWARNING[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/production/entity/ProTools.java:[59,33] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[[1;34mINFO[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/config/SecurityConfig.java: /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/config/SecurityConfig.java uses or overrides a deprecated API.
+[[1;34mINFO[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/config/SecurityConfig.java: Recompile with -Xlint:deprecation for details.
+[[1;34mINFO[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/spersusers/controller/EmployeeController.java: /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/spersusers/controller/EmployeeController.java uses unchecked or unsafe operations.
+[[1;34mINFO[m] /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/main/java/com/example/multi_tanent/spersusers/controller/EmployeeController.java: Recompile with -Xlint:unchecked for details.
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-resources-plugin:3.3.1:testResources[m [1m(default-testResources)[m @ [36mmulti_tanent[0;1m ---[m
+[[1;34mINFO[m] skip non existing resourceDirectory /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/src/test/resources
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mmaven-compiler-plugin:3.14.0:testCompile[m [1m(default-testCompile)[m @ [36mmulti_tanent[0;1m ---[m
+[[1;34mINFO[m] Recompiling the module because of [1mchanged dependency[m.
+[[1;34mINFO[m] Compiling 1 source file with javac [debug parameters release 21] to target/test-classes
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m<<< [0;32mspring-boot-maven-plugin:3.5.5:run[m [1m(default-cli)[0;1m < [0;1mtest-compile[m @ [36mmulti_tanent[0;1m <<<[m
+[[1;34mINFO[m] 
+[[1;34mINFO[m] 
+[[1;34mINFO[m] [1m--- [0;32mspring-boot-maven-plugin:3.5.5:run[m [1m(default-cli)[m @ [36mmulti_tanent[0;1m ---[m
+[[1;34mINFO[m] Attaching agents: []
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.5.5)
+
+2025-12-09T12:30:23.595+05:30  INFO 44967 --- [multi_tanentS] [           main] c.e.multi_tanent.MultiTanentApplication  : Starting MultiTanentApplication using Java 23 with PID 44967 (/home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent/target/classes started by md-sajid in /home/md-sajid/Desktop/Manipal University/Dummy/multi_tanent)
+2025-12-09T12:30:23.602+05:30  INFO 44967 --- [multi_tanentS] [           main] c.e.multi_tanent.MultiTanentApplication  : No active profile set, falling back to 1 default profile: "default"
+2025-12-09T12:30:27.799+05:30  INFO 44967 --- [multi_tanentS] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-09T12:30:27.894+05:30  INFO 44967 --- [multi_tanentS] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 80 ms. Found 3 JPA repository interfaces.
+2025-12-09T12:30:27.897+05:30  INFO 44967 --- [multi_tanentS] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2025-12-09T12:30:29.054+05:30  INFO 44967 --- [multi_tanentS] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 1153 ms. Found 137 JPA repository interfaces.
+2025-12-09T12:30:32.821+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8081 (http)
+2025-12-09T12:30:32.907+05:30  INFO 44967 --- [multi_tanentS] [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2025-12-09T12:30:32.909+05:30  INFO 44967 --- [multi_tanentS] [           main] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.44]
+2025-12-09T12:30:33.088+05:30  INFO 44967 --- [multi_tanentS] [           main] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2025-12-09T12:30:33.090+05:30  INFO 44967 --- [multi_tanentS] [           main] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 9219 ms
+2025-12-09T12:30:33.420+05:30  INFO 44967 --- [multi_tanentS] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-09T12:30:33.560+05:30  INFO 44967 --- [multi_tanentS] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.26.Final
+2025-12-09T12:30:33.645+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-09T12:30:33.837+05:30  INFO 44967 --- [multi_tanentS] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2025-12-09T12:30:35.030+05:30  INFO 44967 --- [multi_tanentS] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@520ee6b3
+2025-12-09T12:30:35.034+05:30  INFO 44967 --- [multi_tanentS] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2025-12-09T12:30:35.163+05:30  WARN 44967 --- [multi_tanentS] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQL8Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-09T12:30:35.167+05:30  WARN 44967 --- [multi_tanentS] [           main] org.hibernate.orm.deprecation            : HHH90000026: MySQL8Dialect has been deprecated; use org.hibernate.dialect.MySQLDialect instead
+2025-12-09T12:30:35.211+05:30  INFO 44967 --- [multi_tanentS] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-09T12:30:36.584+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-09T12:30:39.291+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-09T12:30:39.411+05:30  INFO 44967 --- [multi_tanentS] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-09T12:30:39.481+05:30  INFO 44967 --- [multi_tanentS] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-09T12:30:39.487+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-09T12:30:39.500+05:30  WARN 44967 --- [multi_tanentS] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-09T12:30:39.505+05:30  INFO 44967 --- [multi_tanentS] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [undefined/unknown]
+	Database driver: undefined/unknown
+	Database version: 8.0
+	Autocommit mode: undefined/unknown
+	Isolation level: <unknown>
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-09T12:30:40.072+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-09T12:30:41.619+05:30  WARN 44967 --- [multi_tanentS] [           main] o.h.boot.model.internal.ToOneBinder      : HHH000491: 'com.example.multi_tanent.tenant.base.entity.CompanyInfo.tenant' uses both @NotFound and FetchType.LAZY. @ManyToOne and @OneToOne associations mapped with @NotFound are forced to EAGER fetching.
+2025-12-09T12:30:46.051+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-09T12:30:46.052+05:30  INFO 44967 --- [multi_tanentS] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-09T12:30:47.461+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2025-12-09T12:31:03.902+05:30  WARN 44967 --- [multi_tanentS] [           main] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 2b041e81-ad7e-42cb-987c-9fcf3c614da1
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2025-12-09T12:31:03.922+05:30  INFO 44967 --- [multi_tanentS] [           main] r$InitializeUserDetailsManagerConfigurer : Global AuthenticationManager configured with UserDetailsService bean with name inMemoryUserDetailsManager
+2025-12-09T12:31:05.979+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.v.b.OptionalValidatorFactoryBean     : Failed to set up a Bean Validation provider: jakarta.validation.NoProviderFoundException: Unable to create a Configuration, because no Jakarta Bean Validation provider could be found. Add a provider like Hibernate Validator (RI) to your classpath.
+2025-12-09T12:31:07.007+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8081 (http) with context path '/'
+2025-12-09T12:31:07.041+05:30  INFO 44967 --- [multi_tanentS] [           main] c.e.multi_tanent.MultiTanentApplication  : Started MultiTanentApplication in 45.767 seconds (process running for 47.58)
+Hibernate: 
+    select
+        mt1_0.id,
+        mt1_0.companyName,
+        mt1_0.hrmsAccessCount,
+        mt1_0.jdbcUrl,
+        mt1_0.numberOfLocations,
+        mt1_0.numberOfStore,
+        mt1_0.numberOfUsers,
+        mt1_0.password,
+        mt1_0.serviceModules,
+        mt1_0.status,
+        mt1_0.subscriptionEndDate,
+        mt1_0.subscriptionStartDate,
+        mt1_0.tenantId,
+        mt1_0.username 
+    from
+        master_tenant mt1_0
+2025-12-09T12:31:07.587+05:30  INFO 44967 --- [multi_tanentS] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-09T12:31:07.591+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-09T12:31:07.596+05:30  INFO 44967 --- [multi_tanentS] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2025-12-09T12:31:07.660+05:30  INFO 44967 --- [multi_tanentS] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection com.mysql.cj.jdbc.ConnectionImpl@38e71fcf
+2025-12-09T12:31:07.660+05:30  INFO 44967 --- [multi_tanentS] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2025-12-09T12:31:07.662+05:30  WARN 44967 --- [multi_tanentS] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-09T12:31:07.663+05:30  INFO 44967 --- [multi_tanentS] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 8.0.44
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-09T12:31:08.021+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-09T12:31:08.330+05:30  WARN 44967 --- [multi_tanentS] [           main] o.h.boot.model.internal.ToOneBinder      : HHH000491: 'com.example.multi_tanent.tenant.base.entity.CompanyInfo.tenant' uses both @NotFound and FetchType.LAZY. @ManyToOne and @OneToOne associations mapped with @NotFound are forced to EAGER fetching.
+2025-12-09T12:31:09.124+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-09T12:31:13.413+05:30  INFO 44967 --- [multi_tanentS] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-09T12:31:13.414+05:30  INFO 44967 --- [multi_tanentS] [           main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-09T12:31:13.555+05:30  INFO 44967 --- [multi_tanentS] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2025-12-09T12:31:13.563+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2025-12-09T12:31:13.578+05:30  WARN 44967 --- [multi_tanentS] [           main] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2025-12-09T12:31:13.578+05:30  INFO 44967 --- [multi_tanentS] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 8.0.44
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2025-12-09T12:31:13.948+05:30  INFO 44967 --- [multi_tanentS] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2025-12-09T12:31:14.249+05:30  WARN 44967 --- [multi_tanentS] [           main] o.h.boot.model.internal.ToOneBinder      : HHH000491: 'com.example.multi_tanent.tenant.base.entity.CompanyInfo.tenant' uses both @NotFound and FetchType.LAZY. @ManyToOne and @OneToOne associations mapped with @NotFound are forced to EAGER fetching.
+2025-12-09T12:31:15.431+05:30  INFO 44967 --- [multi_tanentS] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2025-12-09T12:31:19.958+05:30  INFO 44967 --- [multi_tanentS] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2025-12-09T12:31:19.958+05:30  INFO 44967 --- [multi_tanentS] [           main] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+✅ Tenants loaded: [tata5]
+2025-12-09T12:31:19.963+05:30  INFO 44967 --- [multi_tanentS] [           main] c.e.m.config.AppStartupRunner            : 
+----------------------------------------------------------
+	✅ Application 'multi_tanentS' is running! Access URLs:
+	Local: 		http://localhost:8081
+	External: 	http://192.168.1.7:8081
+----------------------------------------------------------
+Hibernate: 
+    select
+        mu1_0.id,
+        mu1_0.passwordHash,
+        mu1_0.roles,
+        mu1_0.username 
+    from
+        master_users mu1_0 
+    where
+        mu1_0.username=?
+2025-12-10T09:20:47.591+05:30  INFO 44967 --- [multi_tanentS] [ionShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-12-10T09:20:47.634+05:30  INFO 44967 --- [multi_tanentS] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
+2025-12-10T09:20:47.954+05:30  INFO 44967 --- [multi_tanentS] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-10T09:20:47.966+05:30  INFO 44967 --- [multi_tanentS] [ionShutdownHook] j.LocalContainerEntityManagerFactoryBean : Closing JPA EntityManagerFactory for persistence unit 'default'
+2025-12-10T09:20:47.969+05:30  INFO 44967 --- [multi_tanentS] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2025-12-10T09:20:48.017+05:30  INFO 44967 --- [multi_tanentS] [ionShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.

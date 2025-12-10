@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 @Service
 public class TenantProvisioningService {
 
-    private final JdbcTemplate masterJdbc;                 // uses masterDataSource
+    private final JdbcTemplate masterJdbc; // uses masterDataSource
     private final MasterTenantRepository masterRepo;
     private final TenantRegistry registry;
     private final PasswordEncoder passwordEncoder;
@@ -52,8 +52,7 @@ public class TenantProvisioningService {
             DataSource masterDataSource,
             MasterTenantRepository masterRepo,
             TenantRegistry registry,
-            PasswordEncoder passwordEncoder
-    ) {
+            PasswordEncoder passwordEncoder) {
         this.masterJdbc = new JdbcTemplate(masterDataSource);
         this.masterRepo = masterRepo;
         this.registry = registry;
@@ -64,14 +63,16 @@ public class TenantProvisioningService {
     public void provision(ProvisionTenantRequest req) {
         // 1) Validate & normalize tenantId -> safe schema name like tenant_<id>
         String tenantId = normalizeTenantId(req.tenantId());
-        String dbName   = "tenant_" + tenantId; // final DB name
+        String dbName = "tenant_" + tenantId; // final DB name
 
         // 2) CREATE DATABASE (needs MySQL user with CREATE privilege)
-        //   NOTE: backtick-quote the dbName & ensure it's safe beforehand
-        masterJdbc.execute("CREATE DATABASE IF NOT EXISTS `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        // NOTE: backtick-quote the dbName & ensure it's safe beforehand
+        masterJdbc.execute(
+                "CREATE DATABASE IF NOT EXISTS `" + dbName + "` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
 
         // 3) Save to master_tenant
-        String jdbcUrl = "jdbc:mysql://" + mysqlHost + ":" + mySqlPort + "/" + dbName;
+        String jdbcUrl = "jdbc:mysql://" + mysqlHost + ":" + mySqlPort + "/" + dbName
+                + "?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true";
         MasterTenant mt = new MasterTenant();
         mt.setTenantId(tenantId);
         mt.setCompanyName(req.companyName());
@@ -104,7 +105,8 @@ public class TenantProvisioningService {
     }
 
     private String normalizeTenantId(String raw) {
-        if (raw == null) throw new IllegalArgumentException("tenantId required");
+        if (raw == null)
+            throw new IllegalArgumentException("tenantId required");
         String id = raw.trim().toLowerCase();
         // only allow [a-z0-9_], replace others with _
         id = id.replaceAll("[^a-z0-9_]", "_");
@@ -145,7 +147,8 @@ public class TenantProvisioningService {
             try (EntityManager em = emf.createEntityManager()) {
                 em.getTransaction().begin();
 
-                // Find the user with the TENANT_ADMIN role. This assumes there is one primary admin.
+                // Find the user with the TENANT_ADMIN role. This assumes there is one primary
+                // admin.
                 User adminUser = em.createQuery("SELECT u FROM User u JOIN u.roles r WHERE r IN (:roles)", User.class)
                         .setParameter("roles", Set.of(Role.HRMS_ADMIN, Role.POS_ADMIN))
                         .getResultStream().findFirst().orElse(null);
@@ -158,13 +161,15 @@ public class TenantProvisioningService {
             }
         }
     }
+
     private void createOrUpdateSchema(DataSource tenantDs, String ddlAction, String... packagesToScan) {
         LocalContainerEntityManagerFactoryBean emfBean = new LocalContainerEntityManagerFactoryBean();
         emfBean.setDataSource(tenantDs);
         emfBean.setPackagesToScan(packagesToScan);
         emfBean.setJpaVendorAdapter(new HibernateJpaVendorAdapter());
         Properties p = new Properties();
-        // Use "create-drop" to avoid issues with dropping non-existent objects on a fresh DB.
+        // Use "create-drop" to avoid issues with dropping non-existent objects on a
+        // fresh DB.
         p.put("hibernate.hbm2ddl.auto", "create");
         p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         p.put("hibernate.globally_quoted_identifiers", "true"); // Helps with reserved keywords and case sensitivity
@@ -187,7 +192,7 @@ public class TenantProvisioningService {
         p.put("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
         emfBean.setJpaProperties(p);
         emfBean.afterPropertiesSet();
-        
+
         EntityManagerFactory emf = emfBean.getObject();
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
@@ -243,7 +248,8 @@ public class TenantProvisioningService {
 
             em.getTransaction().commit();
         } catch (Exception e) {
-            // Re-throw to be handled by the main transactional method, which will cause a rollback
+            // Re-throw to be handled by the main transactional method, which will cause a
+            // rollback
             throw new RuntimeException("Failed to seed initial tenant data", e);
         } finally {
             emfBean.destroy(); // This also closes the EntityManagerFactory

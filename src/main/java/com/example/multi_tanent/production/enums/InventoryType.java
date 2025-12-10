@@ -4,5 +4,5 @@ public enum InventoryType {
     RAW_MATERIAL,
     FINISHED_GOOD,
     SERVICE,
-    OTHER
+    OTHER, SEMI_FINISHED_GOOD
 }

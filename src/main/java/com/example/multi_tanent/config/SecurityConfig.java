@@ -102,6 +102,9 @@ public class SecurityConfig {
             // Sales Module Endpoints
             .requestMatchers("/api/sales/**").authenticated()
             .requestMatchers("/api/sales/attachments/quotations/**").permitAll()
+            .requestMatchers("/api/sales/attachments/rental_quotations/**").permitAll()
+            .requestMatchers("/api/sales/attachments/rental-quotations/**").permitAll()
+            .requestMatchers("/api/sales/attachments/view").permitAll()
 
             .anyRequest().authenticated() // Secure all other API endpoints by default
         )

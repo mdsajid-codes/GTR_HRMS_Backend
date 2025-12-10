@@ -13,18 +13,20 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
 @Entity
 @Table(name = "employees")
 @Getter
 @Setter
-@ToString(exclude = {"user", "location"})
-@EqualsAndHashCode(exclude = {"user", "location"})
+@ToString(exclude = { "user", "location" })
+@EqualsAndHashCode(exclude = { "user", "location" })
 public class Employee {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @OneToOne(optional=false)
-  @JoinColumn(name = "user_id", nullable=false, unique=true)
+  @OneToOne(optional = false)
+  @JoinColumn(name = "user_id", nullable = false, unique = true)
   @JsonBackReference("user-employee")
   private User user; // relational with users (1:1)
 
@@ -32,7 +34,7 @@ public class Employee {
   @JoinColumn(name = "location_id")
   private Location location; // Primary work location
 
-  //Basic Details
+  // Basic Details
   @Column(unique = true)
   private String employeeCode;
 
@@ -43,7 +45,7 @@ public class Employee {
   private String emailPersonal;
   private String phonePrimary;
   private LocalDate dob;
-  
+
   @Enumerated(EnumType.STRING)
   private Gender gender;
 
@@ -59,5 +61,9 @@ public class Employee {
   private String createdBy;
   private LocalDateTime updatedAt;
   private String updatedBy;
+
+  public String getName() {
+    return (firstName != null ? firstName : "") + " " + (lastName != null ? lastName : "");
+  }
 
 }

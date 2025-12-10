@@ -24,7 +24,7 @@ public class StatutoryRule {
 
     // Example for Professional Tax (can be a JSON string for slab-based rules)
     @Lob
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "longtext")
     private String taxSlabsJson;
 
     private boolean isActive;

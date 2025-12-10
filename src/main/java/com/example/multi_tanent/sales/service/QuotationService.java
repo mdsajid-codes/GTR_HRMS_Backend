@@ -62,7 +62,7 @@ public class QuotationService {
         if (attachments != null && attachments.length > 0) {
             for (org.springframework.web.multipart.MultipartFile file : attachments) {
                 if (!file.isEmpty()) {
-                    String fileUrl = fileStorageService.storeFile(file, "quotations", true);
+                    String fileUrl = fileStorageService.storeFile(file, "quotations", false);
                     quotation.getAttachments().add(fileUrl);
                 }
             }
@@ -95,7 +95,7 @@ public class QuotationService {
         if (attachments != null && attachments.length > 0) {
             for (org.springframework.web.multipart.MultipartFile file : attachments) {
                 if (!file.isEmpty()) {
-                    String fileUrl = fileStorageService.storeFile(file, "quotations", true);
+                    String fileUrl = fileStorageService.storeFile(file, "quotations", false);
                     quotation.getAttachments().add(fileUrl);
                 }
             }

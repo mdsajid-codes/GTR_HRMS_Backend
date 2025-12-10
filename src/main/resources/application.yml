@@ -1,15 +1,15 @@
 master:
-    datasource:
-        url: jdbc:mysql://localhost:3306/master_db
-        username: root
-        password : Sajid7254@
+  datasource:
+    url: jdbc:mysql://localhost:3306/master_db
+    username: root
+    password: Sajid7254@
 
 provisioning:
-    datasource:
-        host: localhost
-        username: root
-        password: Sajid7254@
-        port : "3306"
+  datasource:
+    host: "localhost"
+    username: root
+    password: Sajid7254@
+    port: "3306"
 
 spring:
   jpa:
@@ -39,15 +39,14 @@ app:
   company:
     default-email: sales@yourcompany.com
 
-# server:
-#   port: 8080 # Default HTTP port
+server:
+  port: 8080 # Default HTTP port
   # ssl:
   #   enabled: false # Disabled for local development
   #   key-store-type: PKCS12
   #   key-store: classpath:keystore.p12
   #   key-store-password: password
   #   key-alias: myapp
-
 # jdbc:mysql://209.209.40.85:19783/master_db
 # admin
 # gqa6vDtX

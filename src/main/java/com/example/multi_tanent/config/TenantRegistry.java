@@ -22,34 +22,60 @@ public class TenantRegistry {
     this.schemaCreator = schemaCreator;
   }
 
-  public void attachRouting(TenantRoutingDataSource routing) { this.routing = routing; }
+  public void attachRouting(TenantRoutingDataSource routing) {
+    this.routing = routing;
+  }
 
   public void loadAllFromMaster() {
     masterRepo.findAll().forEach(this::addOrUpdateTenant);
   }
 
   public synchronized void addOrUpdateTenant(MasterTenant t) {
-    HikariDataSource ds = new HikariDataSource();
-    ds.setJdbcUrl(t.getJdbcUrl());
-    ds.setUsername(t.getUsername());
-    ds.setPassword(t.getPassword());
-    map.put(t.getTenantId(), ds);
+    try {
+      HikariDataSource ds = new HikariDataSource();
+      String originalUrl = t.getJdbcUrl();
+      // Robustness: ensure we have createDatabaseIfNotExist if missing
+      if (originalUrl != null && !originalUrl.contains("createDatabaseIfNotExist")) {
+        if (originalUrl.contains("?")) {
+          originalUrl += "&createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true";
+        } else {
+          originalUrl += "?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true";
+        }
+      }
+      ds.setJdbcUrl(originalUrl);
+      ds.setUsername(t.getUsername());
+      ds.setPassword(t.getPassword());
 
-    // Ensure the schema for this tenant is up-to-date on load/reload.
-    schemaCreator.ensureSchema(ds, t);
-    refreshRouting();
+      // Validate connection before adding to map (optional, but good for fail-fast)
+      // ds.getConnection().close();
+
+      map.put(t.getTenantId(), ds);
+
+      // Ensure the schema for this tenant is up-to-date on load/reload.
+      schemaCreator.ensureSchema(ds, t);
+      refreshRouting();
+      System.out.println("✅ Successfully loaded tenant: " + t.getTenantId());
+    } catch (Exception e) {
+      System.err.println("❌ Failed to load tenant '" + t.getTenantId() + "': " + e.getMessage());
+      // e.printStackTrace(); // Optional: print stack trace for deeper debugging if
+      // needed
+    }
   }
 
   public synchronized void removeTenant(String tenantId) {
     DataSource ds = map.remove(tenantId);
-    if (ds instanceof HikariDataSource h) h.close();
+    if (ds instanceof HikariDataSource h)
+      h.close();
     refreshRouting();
   }
 
-  public Map<Object,Object> asTargetMap() { return new HashMap<>(map); }
+  public Map<Object, Object> asTargetMap() {
+    return new HashMap<>(map);
+  }
 
   private void refreshRouting() {
-    if (routing == null) return;
+    if (routing == null)
+      return;
     var targets = asTargetMap();
     routing.setTargetDataSources(targets);
     routing.afterPropertiesSet();

@@ -34,7 +34,7 @@ public class SalesDocTemplate {
     private SalesDocType docType;
 
     @Lob
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "longtext")
     private String templateContent; // Stores the HTML template
 
     @Column(name = "is_default")

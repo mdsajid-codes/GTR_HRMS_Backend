@@ -86,7 +86,7 @@ public class SalesOrder {
     @Lob
     private String notes;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "sales_order_attachments", joinColumns = @JoinColumn(name = "sales_order_id"))
     @Column(name = "attachment_url")
     private List<String> attachments = new ArrayList<>();
