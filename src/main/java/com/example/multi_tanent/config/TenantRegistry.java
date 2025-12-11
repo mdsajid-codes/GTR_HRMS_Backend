@@ -46,6 +46,10 @@ public class TenantRegistry {
       ds.setUsername(t.getUsername());
       ds.setPassword(t.getPassword());
 
+      // OPTIMIZATION: Reduce pool size for low-resource environments
+      ds.setMaximumPoolSize(5); // Default is 10
+      ds.setMinimumIdle(1); // Close idle connections to save memory
+
       // Validate connection before adding to map (optional, but good for fail-fast)
       // ds.getConnection().close();
 

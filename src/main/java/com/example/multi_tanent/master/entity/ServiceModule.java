@@ -8,14 +8,16 @@ import java.util.stream.Stream;
 
 /**
  * Represents a single, selectable service module for a tenant.
- * Each module corresponds to a feature set and its associated database entities.
+ * Each module corresponds to a feature set and its associated database
+ * entities.
  */
 public enum ServiceModule {
     // Foundational module, always included.
     USER(true, "com.example.multi_tanent.spersusers.enitity"),
 
     // HRMS Modules
-    HRMS_CORE(false, "com.example.multi_tanent.tenant.base.entity", "com.example.multi_tanent.tenant.employee.entity", USER),
+    HRMS_CORE(false, "com.example.multi_tanent.tenant.base.entity", "com.example.multi_tanent.tenant.employee.entity",
+            USER),
     HRMS_ATTENDANCE(false, "com.example.multi_tanent.tenant.attendance.entity"),
     HRMS_LEAVE(false, "com.example.multi_tanent.tenant.leave.entity"),
     HRMS_PAYROLL(false, "com.example.multi_tanent.tenant.payroll.entity"),
@@ -31,7 +33,10 @@ public enum ServiceModule {
     PRODUCTION(false, "com.example.multi_tanent.production.entity", USER),
 
     // Sales Module
-    SALES(false, "com.example.multi_tanent.sales.entity");
+    SALES(false, "com.example.multi_tanent.sales.entity"),
+
+    // Purchase Module
+    PURCHASE(false, "com.example.multi_tanent.purchases.entity");
 
     private final boolean isFoundation;
     private final List<String> entityPackages;
@@ -54,7 +59,8 @@ public enum ServiceModule {
             return new String[0];
         }
 
-        // If the core HRMS module is present, we MUST also include the attendance module
+        // If the core HRMS module is present, we MUST also include the attendance
+        // module
         // because TimeAttendence entity has a direct dependency on AttendancePolicy.
         if (modules.contains(HRMS_CORE)) {
             modules.add(HRMS_ATTENDANCE);
@@ -79,7 +85,6 @@ public enum ServiceModule {
     private Stream<ServiceModule> getSelfAndAllDependencies() {
         return Stream.concat(
                 Stream.of(this),
-                dependencies.stream().flatMap(ServiceModule::getSelfAndAllDependencies)
-        );
+                dependencies.stream().flatMap(ServiceModule::getSelfAndAllDependencies));
     }
 }

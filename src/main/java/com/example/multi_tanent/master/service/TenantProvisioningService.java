@@ -122,6 +122,9 @@ public class TenantProvisioningService {
         ds.setJdbcUrl(tenant.getJdbcUrl());
         ds.setUsername(tenant.getUsername());
         ds.setPassword(tenant.getPassword());
+        // Optimization: We only need 1-2 connections for provisioning/schema updates
+        ds.setMaximumPoolSize(2);
+        ds.setMinimumIdle(0);
         return ds;
     }
 

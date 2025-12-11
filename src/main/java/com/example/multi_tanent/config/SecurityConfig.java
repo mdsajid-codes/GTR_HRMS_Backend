@@ -136,8 +136,9 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     config.setAllowedOrigins(
-        java.util.List.of("http://localhost:5173", "https://gtrhrms.netlify.app", "http://localhost:8080")); // React
-                                                                                                             // app URL
+        java.util.List.of("http://localhost:5173", "https://javapaas-202946-0.cloudclusters.net",
+            "http://localhost:8080")); // React
+    // app URL
     config.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(java.util.List.of("*"));
     config.setAllowCredentials(true); // If using cookies or auth headers

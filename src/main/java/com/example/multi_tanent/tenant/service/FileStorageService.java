@@ -161,6 +161,18 @@ public class FileStorageService {
         }
     }
 
+    public String buildPublicUrl(String relativePath) {
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            return null;
+        }
+        // If relativePath is null, return null
+        if (relativePath == null) {
+            return null;
+        }
+        return buildFileUrl(relativePath, tenantId);
+    }
+
     private String buildFileUrl(String relativePath, String tenantId) {
         // The relativePath from storeFile already includes the subdirectory (e.g.,
         // "barcodes/file.png")
