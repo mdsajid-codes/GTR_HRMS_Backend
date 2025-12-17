@@ -1,6 +1,5 @@
-package com.example.multi_tanent.tenant.base.entity;
+package com.example.multi_tanent.spersusers.enitity;
 
-import com.example.multi_tanent.spersusers.enitity.Tenant;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
@@ -12,8 +11,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "company_info")
-@Getter @Setter
-@ToString(exclude = {"locations", "bankAccounts", "tenant"})
+@Getter
+@Setter
+@ToString(exclude = { "locations", "bankAccounts", "tenant" })
 public class CompanyInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -53,6 +53,9 @@ public class CompanyInfo {
 
     @Column(name = "mohre_establishment_id")
     private String mohreEstablishmentId; // Ministry of Human Resources & Emiratisation ID
+
+    @Column(name = "employer_bank_routing_code")
+    private String employerBankRoutingCode; // Agent ID (Bank routing code for WPS)
 
     @OneToMany(mappedBy = "companyInfo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CompanyLocation> locations;

@@ -61,6 +61,15 @@ public class Sale {
     @Column(nullable = false)
     private String paymentStatus = "unpaid"; // unpaid, paid, partial
 
+    @Enumerated(EnumType.STRING)
+    private com.example.multi_tanent.pos.enums.OrderType orderType;
+
+    private Integer adultsCount;
+
+    private Integer kidsCount;
+
+    private String salesSource; // e.g., "POS", "Online"
+
     private OffsetDateTime createdAt;
 
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -74,7 +83,9 @@ public class Sale {
 
     @PrePersist
     public void prePersist() {
-        if (createdAt == null) createdAt = OffsetDateTime.now();
-        if (invoiceDate == null) invoiceDate = OffsetDateTime.now();
+        if (createdAt == null)
+            createdAt = OffsetDateTime.now();
+        if (invoiceDate == null)
+            invoiceDate = OffsetDateTime.now();
     }
 }

@@ -9,12 +9,18 @@ import java.util.Optional;
 
 public interface StockMovementRepository extends JpaRepository<StockMovement, Long> {
     List<StockMovement> findByTenantId(Long tenantId);
+
     Optional<StockMovement> findByIdAndTenantId(Long id, Long tenantId);
 
     /**
-     * Deletes all stock movement records associated with a given list of product variant IDs.
+     * Deletes all stock movement records associated with a given list of product
+     * variant IDs.
      * This is used to clean up history before deleting a product.
+     * 
      * @param productVariantIds A list of product variant IDs.
      */
     void deleteByProductVariantIdIn(List<Long> productVariantIds);
+
+    List<StockMovement> findByTenantIdAndReasonContainingIgnoreCaseAndCreatedAtBetween(
+            Long tenantId, String reason, java.time.OffsetDateTime startDate, java.time.OffsetDateTime endDate);
 }

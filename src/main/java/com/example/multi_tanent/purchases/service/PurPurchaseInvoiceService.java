@@ -756,21 +756,17 @@ public class PurPurchaseInvoiceService {
                 }).collect(Collectors.toList());
         rb.lines(lines);
 
-        List<PurPurchaseInvoiceAttachmentResponse> atts;
-        if (inv.getAttachments() != null) {
-            atts = inv.getAttachments().stream()
-                    .map(a -> PurPurchaseInvoiceAttachmentResponse.builder()
-                            .id(a.getId())
-                            .fileName(a.getFileName())
-                            .filePath(a.getFilePath())
-                            .uploadedBy(a.getUploadedBy())
-                            .uploadedAt(a.getUploadedAt())
-                            .url(fileStorageService.buildPublicUrl(a.getFilePath()))
-                            .build())
-                    .collect(Collectors.toList());
-        } else {
-            atts = Collections.emptyList();
-        }
+        List<PurPurchaseInvoiceAttachmentResponse> atts = Optional.ofNullable(inv.getAttachments())
+                .orElse(Collections.emptyList())
+                .stream().map(a -> PurPurchaseInvoiceAttachmentResponse.builder()
+                        .id(a.getId())
+                        .fileName(a.getFileName())
+                        .filePath(a.getFilePath())
+                        .uploadedBy(a.getUploadedBy())
+                        .uploadedAt(a.getUploadedAt())
+ .url(fileStorageService.buildPublicUrl(a.getFilePath()))
+                        .build())
+                .collect(Collectors.toList());
         rb.attachments(atts);
 
         return rb.build();
